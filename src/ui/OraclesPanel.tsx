@@ -109,9 +109,9 @@ export default function OraclesPanel({
     const row = lore.tables[feat]?.find((r) => r.d6 === d6);
     if (!row) return;
 
-    const result = `${row.action} ${row.aspect} ${row.focus}`;
-    const prompt = `Lore Table: feat=${feat}, d6=${d6}`;
-
+    const result = `Action: ${row.action} - Aspect: ${row.aspect} - Focus: ${row.focus}`;
+const prompt = `Lore Table: feat=${feat}, d6=${d6}`;
+    
     setLoreLast({
       feat,
       d6,
