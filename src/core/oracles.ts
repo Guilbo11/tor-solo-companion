@@ -1,6 +1,5 @@
 import { Likelihood, OracleTable, OracleState } from './storage';
 import React, { useEffect, useMemo, useState } from "react";
-import { loadLoreTable, rollD6, rollFrom, LoreTableData } from "../core/loreTable";
 
 export function weightedPick(entries: { text: string; weight?: number }[]): string {
   if (!entries.length) return '(empty table)';
