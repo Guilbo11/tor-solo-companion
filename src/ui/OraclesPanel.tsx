@@ -3,6 +3,42 @@ import { Likelihood, StoredState } from '../core/storage';
 import { askOracle, findTable, makeId, weightedPick } from '../core/oracles';
 import { loadLoreTable, rollD6, rollFrom, LoreTableData } from '../core/loreTable';
 
+type LoreLast = {
+  header: string;
+  details: string;
+  feat: string;
+  d6: number;
+};
+
+function featLabel(feat: string) {
+  if (feat === 'gandalf') return 'Gandalf';
+  if (feat === 'sauron') return 'Sauron';
+  return `Feat ${feat}`;
+}
+
+function featTone(feat: string): 'good' | 'bad' | 'neutral' {
+  if (feat === 'gandalf') return 'good';
+  if (feat === 'sauron') return 'bad';
+  return 'neutral';
+}
+
+function badgeStyle(tone: 'good' | 'bad' | 'neutral'): React.CSSProperties {
+  const base: React.CSSProperties = {
+    display: 'inline-flex',
+    alignItems: 'center',
+    padding: '2px 8px',
+    borderRadius: 999,
+    fontSize: 12,
+    fontWeight: 700,
+    border: '1px solid rgba(255,255,255,0.15)',
+    whiteSpace: 'nowrap',
+  };
+
+  if (tone === 'good') return { ...base, background: 'rgba(100,255,120,0.12)' };
+  if (tone === 'bad') return { ...base, background: 'rgba(255,90,90,0.12)' };
+  return { ...base, background: 'rgba(255,255,255,0.08)' };
+}
+
 export default function OraclesPanel({
   state,
   setState,
@@ -13,14 +49,16 @@ export default function OraclesPanel({
   const [question, setQuestion] = useState('');
   const [likelihood, setLikelihood] = useState<Likelihood>('Possible');
 
-  const [tableId, setTableId] = useState('');
   const [tableName, setTableName] = useState('');
   const [tableJson, setTableJson] = useState('');
 
-  // --- Lore Table state ---
+  // --- Lore Table ---
   const [lore, setLore] = useState<LoreTableData | null>(null);
   const [loreError, setLoreError] = useState<string | null>(null);
-  const [loreLast, setLoreLast] = useState<string>(''); // just for display
+  const [loreLast, setLoreLast] = useState<LoreLast | null>(null);
+
+  // Copy UX
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     loadLoreTable()
@@ -34,11 +72,16 @@ export default function OraclesPanel({
     if (!question.trim()) return;
     const out = askOracle(state.oracle, likelihood);
     const result = `${out.answer} (roll ${out.roll}/100, ${likelihood})`;
-    const history = [
-      { at: new Date().toISOString(), kind: 'Ask' as const, prompt: question.trim(), result },
-      ...state.oracle.history,
-    ];
-    setState({ ...state, oracle: { ...state.oracle, history } });
+    setState({
+      ...state,
+      oracle: {
+        ...state.oracle,
+        history: [
+          { at: new Date().toISOString(), kind: 'Ask' as const, prompt: question.trim(), result },
+          ...state.oracle.history,
+        ],
+      },
+    });
     setQuestion('');
   };
 
@@ -46,213 +89,133 @@ export default function OraclesPanel({
     const t = findTable(state.oracle, id);
     if (!t) return;
     const result = weightedPick(t.entries);
-    const history = [
-      { at: new Date().toISOString(), kind: 'Table' as const, prompt: `Table: ${t.name}`, result },
-      ...state.oracle.history,
-    ];
-    setState({ ...state, oracle: { ...state.oracle, history } });
+    setState({
+      ...state,
+      oracle: {
+        ...state.oracle,
+        history: [
+          { at: new Date().toISOString(), kind: 'Table' as const, prompt: `Table: ${t.name}`, result },
+          ...state.oracle.history,
+        ],
+      },
+    });
   };
 
-  // --- Lore Table roll ---
   const doRollLore = () => {
     if (!lore) return;
 
-    const featKeys = Object.keys(lore.tables); // "sauron" | "gandalf" | "1".."10"
-    if (!featKeys.length) {
-      alert('Lore table is empty.');
-      return;
-    }
-
-    const feat = rollFrom(featKeys);
+    const feat = rollFrom(Object.keys(lore.tables));
     const d6 = rollD6();
     const row = lore.tables[feat]?.find((r) => r.d6 === d6);
-
-    if (!row) {
-      alert(`No row for feat=${feat}, d6=${d6}`);
-      return;
-    }
+    if (!row) return;
 
     const result = `${row.action} ${row.aspect} ${row.focus}`;
     const prompt = `Lore Table: feat=${feat}, d6=${d6}`;
 
-    setLoreLast(`[${feat} • d6=${d6}] ${result}`);
+    setLoreLast({
+      feat,
+      d6,
+      header: prompt,
+      details: `Action: ${row.action} - Aspect: ${row.aspect} - Focus: ${row.focus}`,
+    });
 
-    const history = [
-      { at: new Date().toISOString(), kind: 'Table' as const, prompt, result },
-      ...state.oracle.history,
-    ];
-    setState({ ...state, oracle: { ...state.oracle, history } });
+    setState({
+      ...state,
+      oracle: {
+        ...state.oracle,
+        history: [
+          { at: new Date().toISOString(), kind: 'Table' as const, prompt, result },
+          ...state.oracle.history,
+        ],
+      },
+    });
+
+    setCopied(false);
   };
 
-  const addTable = () => {
-    if (!tableName.trim()) return;
-    let entries: { text: string; weight?: number }[] = [];
-    if (tableJson.trim()) {
-      try {
-        const parsed = JSON.parse(tableJson);
-        if (!Array.isArray(parsed)) throw new Error('Must be a JSON array of strings or objects');
-        entries = parsed.map((x: any) => {
-          if (typeof x === 'string') return { text: x };
-          if (typeof x?.text === 'string')
-            return { text: x.text, weight: typeof x.weight === 'number' ? x.weight : undefined };
-          throw new Error('Bad entry format');
-        });
-      } catch (e: any) {
-        alert(e?.message ?? 'Invalid JSON');
-        return;
-      }
-    }
-    const t = { id: makeId('t'), name: tableName.trim(), entries };
-    setState({ ...state, oracle: { ...state.oracle, tables: [t, ...state.oracle.tables] } });
-    setTableName('');
-    setTableJson('');
-  };
-
-  const removeTable = (id: string) => {
-    if (!confirm('Delete table?')) return;
-    setState({ ...state, oracle: { ...state.oracle, tables: state.oracle.tables.filter((t) => t.id !== id) } });
-  };
-
-  const clearHistory = () => {
-    if (!confirm('Clear oracle history?')) return;
-    setState({ ...state, oracle: { ...state.oracle, history: [] } });
+  const copyLore = async () => {
+    if (!loreLast) return;
+    const txt = `${loreLast.header}\n${loreLast.details}`;
+    await navigator.clipboard.writeText(txt);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1200);
   };
 
   const history = useMemo(() => state.oracle.history.slice(0, 30), [state.oracle.history]);
 
   return (
     <div className="card">
-      <div className="h2">Strider Mode Oracles (engine)</div>
-      <div className="muted small">
-        This panel is a configurable oracle engine. You'll enter/import your Strider Mode tables in JSON (so the app can
-        follow the PDF structure exactly).
-      </div>
+      <div className="h2">Strider Mode Oracles</div>
 
       <hr />
 
-      {/* --- Lore Table section --- */}
-      <div className="h2">Lore Table (static)</div>
-      <div className="muted small">
-        Loaded from <code>public/data/lore-table.json</code>
-      </div>
-
-      {loreError && <div className="muted small" style={{ marginTop: 8 }}>Error: {loreError}</div>}
-
-      <div className="row" style={{ marginTop: 10, alignItems: 'center', gap: 10 }}>
+      {/* Lore Table */}
+      <div className="h2">Lore Table</div>
+      <div className="row" style={{ gap: 10, alignItems: 'center' }}>
         <button className="btn" onClick={doRollLore} disabled={!lore}>
-          Roll Lore Table
+          Roll Lore
         </button>
-        {loreLast && <div className="small">{loreLast}</div>}
-        {!lore && !loreError && <div className="muted small">Loading…</div>}
-      </div>
 
-      <hr />
+        {loreLast && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <div className="row" style={{ gap: 8, alignItems: 'center' }}>
+              <span style={badgeStyle(featTone(loreLast.feat))}>
+                {featLabel(loreLast.feat)}
+              </span>
 
-      <div className="h2">Ask a question (Yes/No/Maybe)</div>
-      <div className="row">
-        <div className="col">
-          <input
-            className="input"
-            value={question}
-            onChange={(e) => setQuestion(e.target.value)}
-            placeholder="Is there a safe shelter nearby?"
-          />
-        </div>
-        <div className="col">
-          <select className="input" value={likelihood} onChange={(e) => setLikelihood(e.target.value as Likelihood)}>
-            {(['Certain', 'Likely', 'Possible', 'Unlikely', 'Very Unlikely'] as Likelihood[]).map((l) => (
-              <option key={l} value={l}>
-                {l}
-              </option>
-            ))}
-          </select>
-        </div>
-        <button className="btn" onClick={doAsk} disabled={!question.trim()}>
-          Ask
-        </button>
-      </div>
+              <strong>{loreLast.header}</strong>
 
-      <hr />
-      <div className="h2">Tables</div>
-      {tables.length === 0 ? (
-        <div className="muted">No tables yet. Add one below.</div>
-      ) : (
-        <div className="row" style={{ flexDirection: 'column', gap: 10 }}>
-          {tables.map((t) => (
-            <div key={t.id} className="card" style={{ padding: 12 }}>
-              <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <div style={{ fontWeight: 700 }}>{t.name}</div>
-                  <div className="small muted">{t.entries.length} entries</div>
-                </div>
-                <div className="row">
-                  <button className="btn" onClick={() => doRollTable(t.id)}>
-                    Roll
-                  </button>
-                  <button className="btn" onClick={() => removeTable(t.id)}>
-                    Delete
-                  </button>
-                </div>
-              </div>
+              <button
+                className="btn"
+                onClick={copyLore}
+                style={{ padding: '2px 8px', fontSize: 12 }}
+                title="Copy result"
+              >
+                {copied ? '✓ Copied' : '📋'}
+              </button>
             </div>
-          ))}
-        </div>
-      )}
+
+            <div className="small">{loreLast.details}</div>
+          </div>
+        )}
+      </div>
 
       <hr />
-      <div className="h2">Add a table</div>
+
+      {/* Ask Oracle */}
+      <div className="h2">Ask a question</div>
       <div className="row">
-        <div className="col">
-          <label className="small muted">Name</label>
-          <input
-            className="input"
-            value={tableName}
-            onChange={(e) => setTableName(e.target.value)}
-            placeholder="Telling Table / Lore Table / Journey Events..."
-          />
-        </div>
-      </div>
-      <div style={{ marginTop: 10 }}>
-        <label className="small muted">Entries JSON (optional)</label>
-        <textarea
+        <input
           className="input"
-          style={{ minHeight: 120 }}
-          value={tableJson}
-          onChange={(e) => setTableJson(e.target.value)}
-          placeholder='Example: ["Result A","Result B"] or [{"text":"A","weight":2}]'
+          value={question}
+          onChange={(e) => setQuestion(e.target.value)}
+          placeholder="Is there a safe shelter nearby?"
         />
-      </div>
-      <div className="row" style={{ marginTop: 10 }}>
-        <button className="btn" onClick={addTable} disabled={!tableName.trim()}>
-          Add table
-        </button>
+        <select
+          className="input"
+          value={likelihood}
+          onChange={(e) => setLikelihood(e.target.value as Likelihood)}
+        >
+          {(['Certain', 'Likely', 'Possible', 'Unlikely', 'Very Unlikely'] as Likelihood[]).map((l) => (
+            <option key={l} value={l}>
+              {l}
+            </option>
+          ))}
+        </select>
+        <button className="btn" onClick={doAsk}>Ask</button>
       </div>
 
       <hr />
+
+      {/* History */}
       <div className="h2">History</div>
-      <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
-        <div className="muted small">Showing last {history.length} items.</div>
-        <button className="btn" onClick={clearHistory} disabled={state.oracle.history.length === 0}>
-          Clear
-        </button>
-      </div>
-      {history.length === 0 ? (
-        <div className="muted" style={{ marginTop: 10 }}>
-          No oracle rolls yet.
+      {history.map((h, i) => (
+        <div key={i} className="card" style={{ padding: 8, marginTop: 6 }}>
+          <div className="small muted">{new Date(h.at).toLocaleString()} — {h.kind}</div>
+          <strong>{h.prompt}</strong>
+          <div>{h.result}</div>
         </div>
-      ) : (
-        <div className="row" style={{ flexDirection: 'column', gap: 10, marginTop: 10 }}>
-          {history.map((h, idx) => (
-            <div key={idx} className="card" style={{ padding: 12 }}>
-              <div className="small muted">
-                {new Date(h.at).toLocaleString()} — {h.kind}
-              </div>
-              <div style={{ fontWeight: 700, marginTop: 6 }}>{h.prompt}</div>
-              <div style={{ marginTop: 6 }}>{h.result}</div>
-            </div>
-          ))}
-        </div>
-      )}
+      ))}
     </div>
   );
 }
