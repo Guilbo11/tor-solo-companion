@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { Likelihood, StoredState } from '../core/storage';
 import { askOracle, findTable, makeId, weightedPick } from '../core/oracles';
+import React, { useEffect, useMemo, useState } from "react";
+import { loadLoreTable, rollD6, rollFrom, LoreTableData } from "../core/loreTable";
 
 export default function OraclesPanel({ state, setState }: { state: StoredState; setState: (s: StoredState) => void }) {
   const [question, setQuestion] = useState('');
