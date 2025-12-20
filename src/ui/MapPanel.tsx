@@ -94,8 +94,8 @@ function fileToCompressedDataUrl(
   file: File,
   opts?: { maxWidth?: number; quality?: number }
 ): Promise<string> {
-  const maxWidth = opts?.maxWidth ?? 1600; // adjust if you want
-  const quality = opts?.quality ?? 0.82;   // 0.7–0.85 good balance
+  const maxWidth = opts?.maxWidth ?? 1600;
+  const quality = opts?.quality ?? 0.82;
 
   return new Promise((resolve, reject) => {
     const r = new FileReader();
@@ -136,6 +136,13 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
 
   const map = state.map;
 
+  // ✅ persisted lock comes from stored state
+  const gridLocked = map.gridLocked ?? false;
+
+  const setGridLocked = (locked: boolean) => {
+    setState({ ...state, map: { ...map, gridLocked: locked } });
+  };
+
   // Category color settings (stored separately in localStorage)
   const [catColors, setCatColors] = useState<CatColors>(() => {
     try {
@@ -160,10 +167,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
   const [nudgeStep, setNudgeStep] = useState<number>(2);
   const dragRef = useRef<{ dragging: boolean; lastX: number; lastY: number }>({ dragging: false, lastX: 0, lastY: 0 });
 
-  // 🔒 Grid lock (prevents accidental movements)
-  const [gridLocked, setGridLocked] = useState<boolean>(false);
-
-  // Calibration mode
+  // Calibration mode (UI-only, not persisted)
   const [calibOn, setCalibOn] = useState(false);
   const [calibDir, setCalibDir] = useState<CalibDir>('E');
   const [calibP1, setCalibP1] = useState<{ x: number; y: number } | null>(null);
@@ -475,9 +479,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
           </div>
 
           <div style={{ marginTop: 12 }}>
-            <div className="h2" style={{ fontSize: 16 }}>
-              Calibration
-            </div>
+            <div className="h2" style={{ fontSize: 16 }}>Calibration</div>
 
             <div className="row" style={{ gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
               <label className="small muted">
@@ -503,9 +505,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
                 style={{ minWidth: 240 }}
               >
                 {CALIB_DIRS.map((d) => (
-                  <option key={d.id} value={d.id}>
-                    {d.label}
-                  </option>
+                  <option key={d.id} value={d.id}>{d.label}</option>
                 ))}
               </select>
 
@@ -530,8 +530,9 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
                   type="checkbox"
                   checked={gridLocked}
                   onChange={(e) => {
-                    setGridLocked(e.target.checked);
-                    if (e.target.checked) {
+                    const locked = e.target.checked;
+                    setGridLocked(locked);
+                    if (locked) {
                       setCalibOn(false);
                       resetCalibration();
                     }
@@ -613,18 +614,10 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
             <div className="col">
               <div className="small muted">Nudge origin</div>
               <div className="row" style={{ gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
-                <button className="btn" onClick={() => nudgeOrigin(0, -nudgeStep)} disabled={gridLocked}>
-                  ↑
-                </button>
-                <button className="btn" onClick={() => nudgeOrigin(-nudgeStep, 0)} disabled={gridLocked}>
-                  ←
-                </button>
-                <button className="btn" onClick={() => nudgeOrigin(nudgeStep, 0)} disabled={gridLocked}>
-                  →
-                </button>
-                <button className="btn" onClick={() => nudgeOrigin(0, nudgeStep)} disabled={gridLocked}>
-                  ↓
-                </button>
+                <button className="btn" onClick={() => nudgeOrigin(0, -nudgeStep)} disabled={gridLocked}>↑</button>
+                <button className="btn" onClick={() => nudgeOrigin(-nudgeStep, 0)} disabled={gridLocked}>←</button>
+                <button className="btn" onClick={() => nudgeOrigin(nudgeStep, 0)} disabled={gridLocked}>→</button>
+                <button className="btn" onClick={() => nudgeOrigin(0, nudgeStep)} disabled={gridLocked}>↓</button>
               </div>
             </div>
           </div>
@@ -669,9 +662,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
               disabled={!selected}
             >
               {CATEGORIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
+                <option key={c} value={c}>{c}</option>
               ))}
             </select>
 
@@ -719,4 +710,3 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
     </div>
   );
 }
-
