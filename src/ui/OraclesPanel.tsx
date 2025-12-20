@@ -68,10 +68,14 @@ export default function OraclesPanel({
 
   const tables = state.oracle.tables;
 
+  // ✅ UPDATED: Strider Mode Telling Table (Feat Die) output
   const doAsk = () => {
     if (!question.trim()) return;
+
     const out = askOracle(state.oracle, likelihood);
-    const result = `${out.answer} (roll ${out.roll}/100, ${likelihood})`;
+    const twistTxt = out.twist ? ' — TWIST/EXTREME' : '';
+    const result = `${out.answer}${twistTxt} (feat ${out.feat}, ${likelihood})`;
+
     setState({
       ...state,
       oracle: {
@@ -82,6 +86,7 @@ export default function OraclesPanel({
         ],
       },
     });
+
     setQuestion('');
   };
 
@@ -110,8 +115,8 @@ export default function OraclesPanel({
     if (!row) return;
 
     const result = `Action: ${row.action} - Aspect: ${row.aspect} - Focus: ${row.focus}`;
-const prompt = `Lore Table: feat=${feat}, d6=${d6}`;
-    
+    const prompt = `Lore Table: feat=${feat}, d6=${d6}`;
+
     setLoreLast({
       feat,
       d6,
@@ -156,12 +161,16 @@ const prompt = `Lore Table: feat=${feat}, d6=${d6}`;
           Roll Lore
         </button>
 
+        {loreError && (
+          <div className="small muted" style={{ marginLeft: 8 }}>
+            Error: {loreError}
+          </div>
+        )}
+
         {loreLast && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             <div className="row" style={{ gap: 8, alignItems: 'center' }}>
-              <span style={badgeStyle(featTone(loreLast.feat))}>
-                {featLabel(loreLast.feat)}
-              </span>
+              <span style={badgeStyle(featTone(loreLast.feat))}>{featLabel(loreLast.feat)}</span>
 
               <strong>{loreLast.header}</strong>
 
@@ -191,18 +200,16 @@ const prompt = `Lore Table: feat=${feat}, d6=${d6}`;
           onChange={(e) => setQuestion(e.target.value)}
           placeholder="Is there a safe shelter nearby?"
         />
-        <select
-          className="input"
-          value={likelihood}
-          onChange={(e) => setLikelihood(e.target.value as Likelihood)}
-        >
+        <select className="input" value={likelihood} onChange={(e) => setLikelihood(e.target.value as Likelihood)}>
           {(['Certain', 'Likely', 'Possible', 'Unlikely', 'Very Unlikely'] as Likelihood[]).map((l) => (
             <option key={l} value={l}>
               {l}
             </option>
           ))}
         </select>
-        <button className="btn" onClick={doAsk}>Ask</button>
+        <button className="btn" onClick={doAsk} disabled={!question.trim()}>
+          Ask
+        </button>
       </div>
 
       <hr />
@@ -211,7 +218,9 @@ const prompt = `Lore Table: feat=${feat}, d6=${d6}`;
       <div className="h2">History</div>
       {history.map((h, i) => (
         <div key={i} className="card" style={{ padding: 8, marginTop: 6 }}>
-          <div className="small muted">{new Date(h.at).toLocaleString()} — {h.kind}</div>
+          <div className="small muted">
+            {new Date(h.at).toLocaleString()} — {h.kind}
+          </div>
           <strong>{h.prompt}</strong>
           <div>{h.result}</div>
         </div>
@@ -219,3 +228,4 @@ const prompt = `Lore Table: feat=${feat}, d6=${d6}`;
     </div>
   );
 }
+
