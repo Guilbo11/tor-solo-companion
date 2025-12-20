@@ -28,19 +28,28 @@ jobs:
           node-version: 20
           cache: npm
 
-      - name: Install dependencies (including devDependencies)
-        run: npm ci --include=dev
+      - name: Show versions
+        run: |
+          node -v
+          npm -v
+
+      # Force npm to include devDependencies even if something sets production mode
+      - name: Install dependencies (force devDependencies)
+        run: npm ci
         env:
           NODE_ENV: development
+          NPM_CONFIG_PRODUCTION: "false"
+          NPM_CONFIG_OMIT: ""
+
+      - name: Debug - verify Vite exists
+        run: |
+          ls -la node_modules/.bin || true
+          npx vite --version
 
       - name: Build site
-        run: npm run build
+        run: npx vite build
         env:
           NODE_ENV: development
-
-      # (optionnel mais utile si jamais ça recasse)
-      # - name: Debug Vite
-      #   run: node -e "console.log('Vite version:', require('./node_modules/vite/package.json').version)"
 
       - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@v3
