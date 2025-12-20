@@ -14,23 +14,30 @@ export type JournalEntry = {
   linkedHex?: string; // e.g. "q:12,r:-4"
 };
 
+export type CalibDir = 'E' | 'NE' | 'NW' | 'W' | 'SW' | 'SE';
+
 export type MapState = {
   // background image as data URL (user-provided file -> stored locally)
   backgroundDataUrl?: string;
 
   // hex overlay settings
-  hexSize: number; // pixels radius
-  origin: { x: number; y: number }; // where axial (0,0) sits in canvas coords
+  hexSize: number; // pixels radius (world coords)
+  origin: { x: number; y: number }; // where axial (0,0) sits in world coords
   notes: Record<string, string>; // hexKey -> note
 
-  // ✅ persist "lock grid"
+  // ✅ persisted UI prefs
   gridLocked?: boolean;
+  nudgeStep?: number;
+  calibDir?: CalibDir;
+
+  // ✅ zoom/pan (view camera)
+  zoom?: number; // 1 = 100%
+  pan?: { x: number; y: number }; // screen-space pixels
 };
 
 export type OracleTable = {
   id: string;
   name: string;
-  // A table is a list of entries; you can also model ranges later if needed.
   entries: { text: string; weight?: number }[];
 };
 
@@ -38,14 +45,25 @@ export type Likelihood = 'Certain' | 'Likely' | 'Possible' | 'Unlikely' | 'Very 
 
 export type OracleState = {
   tables: OracleTable[];
-  // Custom likelihood thresholds for your PDFs (edit in-app).
-  // This is intentionally configurable so you can match Strider Mode precisely.
   likelihood: Record<Likelihood, { yes: number; maybe: number }>;
   history: { at: string; kind: 'Ask' | 'Table'; prompt: string; result: string }[];
 };
 
 const KEY = 'tor_solo_companion_state_v1';
 const MAP_BG_KEY = 'tor_solo_companion_map_bg_v1';
+
+function ensureMapDefaults(m: MapState): MapState {
+  const out: MapState = { ...m };
+
+  if (out.gridLocked === undefined) out.gridLocked = false;
+  if (out.nudgeStep === undefined) out.nudgeStep = 2;
+  if (out.calibDir === undefined) out.calibDir = 'E';
+
+  if (out.zoom === undefined) out.zoom = 1;
+  if (!out.pan) out.pan = { x: 0, y: 0 };
+
+  return out;
+}
 
 export function loadState(): StoredState {
   let base: StoredState;
@@ -72,10 +90,8 @@ export function loadState(): StoredState {
     // ignore
   }
 
-  // Ensure map.gridLocked has a default
-  if (base.map.gridLocked === undefined) {
-    base = { ...base, map: { ...base.map, gridLocked: false } };
-  }
+  // Back-compat defaults
+  base = { ...base, map: ensureMapDefaults(base.map) };
 
   return base;
 }
@@ -91,7 +107,7 @@ export function saveState(state: StoredState) {
   try {
     const withoutBg: StoredState = {
       ...state,
-      map: { ...state.map, backgroundDataUrl: undefined },
+      map: { ...ensureMapDefaults(state.map), backgroundDataUrl: undefined },
     };
     localStorage.setItem(KEY, JSON.stringify(withoutBg));
   } catch (e) {
@@ -117,7 +133,13 @@ export function defaultState(): StoredState {
       hexSize: 28,
       origin: { x: 380, y: 260 },
       notes: {},
-      gridLocked: false, // ✅ default
+
+      gridLocked: false,
+      nudgeStep: 2,
+      calibDir: 'E',
+
+      zoom: 1,
+      pan: { x: 0, y: 0 },
     },
     oracle: {
       tables: [],
@@ -140,9 +162,6 @@ export function exportState(state: StoredState): string {
 export function importState(json: string): StoredState {
   const parsed = JSON.parse(json) as StoredState;
   if (!parsed || parsed.version !== 1) throw new Error('Unsupported file format.');
-
-  // Back-compat: ensure gridLocked exists
-  if (parsed.map.gridLocked === undefined) parsed.map.gridLocked = false;
-
+  parsed.map = ensureMapDefaults(parsed.map);
   return parsed;
 }
