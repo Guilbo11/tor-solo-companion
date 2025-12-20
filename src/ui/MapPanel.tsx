@@ -145,8 +145,21 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
         <div className="col">
           <div className="kv">
             <label className="small muted">Hex size</label>
-            <input className="input" type="number" min={10} max={80} value={map.hexSize}
-              onChange={e => setState({ ...state, map: { ...map, hexSize: parseInt(e.target.value || '28', 10) } })} />
+            <input
+              className="input"
+              type="number"
+              min={2}
+              max={120}
+              step={0.5}
+              value={map.hexSize}
+              onChange={e => {
+                const raw = parseFloat(e.target.value || '28');
+                const safe = Number.isFinite(raw) ? raw : 28;
+                const clamped = Math.max(2, Math.min(120, safe));
+                setState({ ...state, map: { ...map, hexSize: clamped } });
+              }}
+            />
+
             <label className="small muted">Origin X</label>
             <input className="input" type="number" value={map.origin.x}
               onChange={e => setState({ ...state, map: { ...map, origin: { ...map.origin, x: parseInt(e.target.value || '0', 10) } } })} />
