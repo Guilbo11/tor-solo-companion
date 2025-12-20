@@ -1,3 +1,4 @@
+```tsx
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { axialKey, axialToPixel, hexCorners, pixelToAxial } from '../core/hex';
 import { StoredState } from '../core/storage';
@@ -27,7 +28,7 @@ const DEFAULT_COLORS: CatColors = {
   NPC: '#48dbfb',
 };
 
-const CATEGORIES: CategoryName[] = ['None','Rumour','Hazard','Encounter','Location','Clue','Camp','Quest','NPC'];
+const CATEGORIES: CategoryName[] = ['None', 'Rumour', 'Hazard', 'Encounter', 'Location', 'Clue', 'Camp', 'Quest', 'NPC'];
 
 function clamp(n: number, min: number, max: number) {
   return Math.max(min, Math.min(max, n));
@@ -67,9 +68,7 @@ function fileToDataUrl(file: File): Promise<string> {
 
 /**
  * Calibration assumptions:
- * We assume a "pointy-top" axial layout (the typical RedBlobGames formula):
- * pixel = origin + size * f(axial)
- *
+ * pointy-top axial layout (RedBlob style)
  * Neighbor vectors (in pixels, multiplied by size):
  * East:      (sqrt(3), 0)
  * NE:        (sqrt(3)/2, -3/2)
@@ -77,18 +76,16 @@ function fileToDataUrl(file: File): Promise<string> {
  * West:      (-sqrt(3), 0)
  * SW:        (-sqrt(3)/2, 3/2)
  * SE:        (sqrt(3)/2, 3/2)
- *
- * If your hex math uses a different orientation, tell me and I’ll adapt the vectors.
  */
 type CalibDir = 'E' | 'NE' | 'NW' | 'W' | 'SW' | 'SE';
 
 const CALIB_DIRS: { id: CalibDir; label: string; unit: { x: number; y: number } }[] = [
-  { id: 'E',  label: 'East / West (horizontal)', unit: { x: Math.sqrt(3), y: 0 } },
-  { id: 'NE', label: 'North-East',               unit: { x: Math.sqrt(3)/2, y: -1.5 } },
-  { id: 'NW', label: 'North-West',               unit: { x: -Math.sqrt(3)/2, y: -1.5 } },
-  { id: 'W',  label: 'West / East (horizontal)', unit: { x: -Math.sqrt(3), y: 0 } },
-  { id: 'SW', label: 'South-West',               unit: { x: -Math.sqrt(3)/2, y: 1.5 } },
-  { id: 'SE', label: 'South-East',               unit: { x: Math.sqrt(3)/2, y: 1.5 } },
+  { id: 'E', label: 'East / West (horizontal)', unit: { x: Math.sqrt(3), y: 0 } },
+  { id: 'NE', label: 'North-East', unit: { x: Math.sqrt(3) / 2, y: -1.5 } },
+  { id: 'NW', label: 'North-West', unit: { x: -Math.sqrt(3) / 2, y: -1.5 } },
+  { id: 'W', label: 'West / East (horizontal)', unit: { x: -Math.sqrt(3), y: 0 } },
+  { id: 'SW', label: 'South-West', unit: { x: -Math.sqrt(3) / 2, y: 1.5 } },
+  { id: 'SE', label: 'South-East', unit: { x: Math.sqrt(3) / 2, y: 1.5 } },
 ];
 
 function pointFromMouse(ev: React.MouseEvent, canvas: HTMLCanvasElement) {
@@ -126,6 +123,9 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
   const [nudgeStep, setNudgeStep] = useState<number>(2); // px
   const dragRef = useRef<{ dragging: boolean; lastX: number; lastY: number }>({ dragging: false, lastX: 0, lastY: 0 });
 
+  // 🔒 Grid lock (prevents drag + wheel + keyboard nudges)
+  const [gridLocked, setGridLocked] = useState<boolean>(false);
+
   // Calibration mode
   const [calibOn, setCalibOn] = useState(false);
   const [calibDir, setCalibDir] = useState<CalibDir>('E');
@@ -150,7 +150,8 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
 
     let raf = 0;
     const draw = () => {
-      const w = c.width, h = c.height;
+      const w = c.width,
+        h = c.height;
       ctx.clearRect(0, 0, w, h);
 
       // background
@@ -214,7 +215,8 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
       if (selected) {
         const a = selected.match(/q:(-?\d+),r:(-?\d+)/);
         if (a) {
-          const q = parseInt(a[1], 10), r = parseInt(a[2], 10);
+          const q = parseInt(a[1], 10),
+            r = parseInt(a[2], 10);
           const center = axialToPixel({ q, r }, size, origin);
           const corners = hexCorners(center, size);
 
@@ -273,7 +275,6 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
     const p = pointFromMouse(ev, c);
 
     if (calibOn) {
-      // Calibration stepper
       if (!calibP1) {
         setCalibP1(p);
         setCalibP2(null);
@@ -282,29 +283,29 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
       if (!calibP2) {
         setCalibP2(p);
 
-        // compute size + origin from p1 -> p2
         const dx = p.x - calibP1.x;
         const dy = p.y - calibP1.y;
 
-        const dir = CALIB_DIRS.find(d => d.id === calibDir) ?? CALIB_DIRS[0]!;
+        const dir = CALIB_DIRS.find((d) => d.id === calibDir) ?? CALIB_DIRS[0]!;
         const ux = dir.unit.x;
         const uy = dir.unit.y;
 
-        // least-squares scale: size = dot(d, u) / dot(u, u)
-        const denom = (ux * ux + uy * uy);
+        const denom = ux * ux + uy * uy;
         const size = denom > 0 ? (dx * ux + dy * uy) / denom : map.hexSize;
 
         const safeSize = clamp(size, 2, 120);
-
-        // origin = p1 (treat p1 as axial (0,0) center)
         const origin = { x: calibP1.x, y: calibP1.y };
 
         setState({ ...state, map: { ...map, hexSize: safeSize, origin } });
 
+        // After calibration, lock the grid by default (prevents accidental moves)
+        setGridLocked(true);
+        setCalibOn(false);
+        setCalibP1(null);
+        setCalibP2(null);
         return;
       }
 
-      // If both points already set, start over with a new first point
       setCalibP1(p);
       setCalibP2(null);
       return;
@@ -317,7 +318,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
 
   // Canvas: drag to move origin (alignment helper)
   const onMouseDown = (ev: React.MouseEvent) => {
-    if (calibOn) return; // in calibration mode, avoid dragging confusion
+    if (calibOn || gridLocked) return;
     dragRef.current.dragging = true;
     dragRef.current.lastX = ev.clientX;
     dragRef.current.lastY = ev.clientY;
@@ -328,7 +329,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
   };
 
   const onMouseMove = (ev: React.MouseEvent) => {
-    if (calibOn) return;
+    if (calibOn || gridLocked) return;
     if (!dragRef.current.dragging) return;
 
     const dxCss = ev.clientX - dragRef.current.lastX;
@@ -349,7 +350,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
 
   // Canvas: wheel to adjust hex size (alignment helper)
   const onWheel = (ev: React.WheelEvent) => {
-    if (calibOn) return;
+    if (calibOn || gridLocked) return;
     ev.preventDefault();
     const delta = ev.deltaY;
     const next = clamp(map.hexSize + (delta > 0 ? -0.5 : 0.5), 2, 120);
@@ -359,6 +360,8 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
   // Keyboard nudges
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
+      if (gridLocked) return;
+
       const tag = (document.activeElement?.tagName ?? '').toLowerCase();
       if (tag === 'input' || tag === 'textarea' || (document.activeElement as any)?.isContentEditable) return;
 
@@ -379,10 +382,10 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [state, setState, map, nudgeStep]);
+  }, [state, setState, map, nudgeStep, gridLocked]);
 
   // Selected hex note/category
-  const selectedRaw = selected ? (map.notes[selected] ?? '') : '';
+  const selectedRaw = selected ? map.notes[selected] ?? '' : '';
   const parsedSelected = useMemo(() => parseNote(selectedRaw), [selectedRaw]);
   const selectedCategory = parsedSelected.category;
   const selectedText = parsedSelected.text;
@@ -396,8 +399,8 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
     setState({ ...state, map: { ...map, notes } });
   };
 
-  // Nudge buttons
   const nudgeOrigin = (dx: number, dy: number) => {
+    if (gridLocked) return;
     setState({ ...state, map: { ...map, origin: { x: map.origin.x + dx, y: map.origin.y + dy } } });
   };
 
@@ -413,9 +416,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
   return (
     <div className="card">
       <div className="h2">Eriador Map (hex overlay)</div>
-      <div className="muted small">
-        Alignment tips: Use Calibration (2 clicks) to auto-set size+origin. After that, drag/nudge for perfection.
-      </div>
+      <div className="muted small">Calibration: 2 clicks. Then lock grid to avoid accidental moves.</div>
 
       <div className="row" style={{ marginTop: 12 }}>
         <div className="col">
@@ -429,22 +430,23 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
               if (f) onPickBackground(f);
             }}
           />
-          <div className="small muted" style={{ marginTop: 6 }}>
-            Tip: export the Eriador map page as PNG/JPG. We store it locally as a data URL.
-          </div>
 
           <div style={{ marginTop: 12 }}>
-            <div className="h2" style={{ fontSize: 16 }}>Calibration</div>
+            <div className="h2" style={{ fontSize: 16 }}>
+              Calibration
+            </div>
             <div className="row" style={{ gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
               <label className="small muted">
                 <input
                   type="checkbox"
                   checked={calibOn}
                   onChange={(e) => {
+                    if (gridLocked && e.target.checked) return; // don't allow calibration while locked
                     setCalibOn(e.target.checked);
                     resetCalibration();
                   }}
                   style={{ marginRight: 8 }}
+                  disabled={gridLocked}
                 />
                 Enable calibration mode
               </label>
@@ -453,15 +455,17 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
                 className="input"
                 value={calibDir}
                 onChange={(e) => setCalibDir(e.target.value as CalibDir)}
-                disabled={!calibOn}
+                disabled={!calibOn || gridLocked}
                 style={{ minWidth: 240 }}
               >
-                {CALIB_DIRS.map(d => (
-                  <option key={d.id} value={d.id}>{d.label}</option>
+                {CALIB_DIRS.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.label}
+                  </option>
                 ))}
               </select>
 
-              <button className="btn" onClick={resetCalibration} disabled={!calibOn}>
+              <button className="btn" onClick={resetCalibration} disabled={!calibOn || gridLocked}>
                 Reset points
               </button>
             </div>
@@ -471,10 +475,35 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
               <ol style={{ marginTop: 6 }}>
                 <li>Enable calibration.</li>
                 <li>Choose direction (usually “East/West”).</li>
-                <li>Click the center of one printed hex (green dot).</li>
-                <li>Click the center of the adjacent hex in that direction (red dot).</li>
+                <li>Click center of one printed hex (green dot).</li>
+                <li>Click center of adjacent hex in that direction (red dot).</li>
               </ol>
-              After calibration: disable it and fine tune with drag/nudge.
+              After calibration, grid auto-locks (you can unlock below to fine tune).
+            </div>
+
+            <div className="row" style={{ marginTop: 10, gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+              <label className="small muted">
+                <input
+                  type="checkbox"
+                  checked={gridLocked}
+                  onChange={(e) => {
+                    setGridLocked(e.target.checked);
+                    // if locking, also stop calibration
+                    if (e.target.checked) {
+                      setCalibOn(false);
+                      resetCalibration();
+                    }
+                  }}
+                  style={{ marginRight: 8 }}
+                />
+                🔒 Lock grid position/size (disable drag + wheel + keyboard nudges)
+              </label>
+
+              {!gridLocked && (
+                <div className="small muted">
+                  Tip: once aligned, lock it to prevent accidental changes.
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -489,6 +518,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
               max={120}
               step={0.5}
               value={map.hexSize}
+              disabled={gridLocked}
               onChange={(e) => {
                 const raw = parseFloat(e.target.value || '28');
                 const safe = Number.isFinite(raw) ? raw : 28;
@@ -502,6 +532,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
               className="input"
               type="number"
               value={map.origin.x}
+              disabled={gridLocked}
               onChange={(e) =>
                 setState({
                   ...state,
@@ -515,6 +546,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
               className="input"
               type="number"
               value={map.origin.y}
+              disabled={gridLocked}
               onChange={(e) =>
                 setState({
                   ...state,
@@ -534,6 +566,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
                 max={50}
                 step={0.5}
                 value={nudgeStep}
+                disabled={gridLocked}
                 onChange={(e) => setNudgeStep(clamp(parseFloat(e.target.value || '2'), 0.5, 50))}
               />
               <div className="small muted" style={{ marginTop: 6 }}>
@@ -544,18 +577,24 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
             <div className="col">
               <div className="small muted">Nudge origin</div>
               <div className="row" style={{ gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
-                <button className="btn" onClick={() => nudgeOrigin(0, -nudgeStep)}>↑</button>
-                <button className="btn" onClick={() => nudgeOrigin(-nudgeStep, 0)}>←</button>
-                <button className="btn" onClick={() => nudgeOrigin(nudgeStep, 0)}>→</button>
-                <button className="btn" onClick={() => nudgeOrigin(0, nudgeStep)}>↓</button>
+                <button className="btn" onClick={() => nudgeOrigin(0, -nudgeStep)} disabled={gridLocked}>
+                  ↑
+                </button>
+                <button className="btn" onClick={() => nudgeOrigin(-nudgeStep, 0)} disabled={gridLocked}>
+                  ←
+                </button>
+                <button className="btn" onClick={() => nudgeOrigin(nudgeStep, 0)} disabled={gridLocked}>
+                  →
+                </button>
+                <button className="btn" onClick={() => nudgeOrigin(0, nudgeStep)} disabled={gridLocked}>
+                  ↓
+                </button>
               </div>
             </div>
           </div>
 
           <div className="small muted" style={{ marginTop: 10 }}>
-            If it matches in one area but drifts elsewhere:
-            your background image might be low-res or slightly stretched.
-            Try a higher-res export.
+            If alignment drifts on the edges, your image may be stretched/low-res. Try a higher-res export.
           </div>
         </div>
       </div>
@@ -571,7 +610,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
           onMouseLeave={onMouseUp}
           onMouseMove={onMouseMove}
           onWheel={onWheel}
-          style={{ cursor: calibOn ? 'crosshair' : (dragRef.current.dragging ? 'grabbing' : 'grab') }}
+          style={{ cursor: calibOn ? 'crosshair' : gridLocked ? 'default' : dragRef.current.dragging ? 'grabbing' : 'grab' }}
         />
       </div>
 
@@ -592,7 +631,9 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
               disabled={!selected}
             >
               {CATEGORIES.map((c) => (
-                <option key={c} value={c}>{c}</option>
+                <option key={c} value={c}>
+                  {c}
+                </option>
               ))}
             </select>
 
@@ -614,7 +655,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
           <div style={{ marginTop: 12 }}>
             <div className="small muted">Legend</div>
             <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginTop: 6 }}>
-              {CATEGORIES.filter(c => c !== 'None').map((c) => (
+              {CATEGORIES.filter((c) => c !== 'None').map((c) => (
                 <div key={c} className="row" style={{ gap: 6, alignItems: 'center' }}>
                   <span style={{ width: 10, height: 10, borderRadius: 999, background: catColors[c] }} />
                   <span className="small">{c}</span>
@@ -642,3 +683,4 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
     </div>
   );
 }
+```
