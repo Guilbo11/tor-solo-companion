@@ -1,0 +1,43 @@
+{
+  "pack": "tor2e-patrons",
+  "type": "patron",
+  "version": 1,
+  "entries": [
+    {
+      "id": "balin-son-of-fundin",
+      "name": "Balin, Son Of Fundin",
+      "group": "Patrons",
+      "description": ""
+    },
+    {
+      "id": "bilbo-baggins",
+      "name": "Bilbo Baggins",
+      "group": "Patrons",
+      "description": ""
+    },
+    {
+      "id": "cirdan-the-shipwright",
+      "name": "Cirdan The Shipwright",
+      "group": "Patrons",
+      "description": ""
+    },
+    {
+      "id": "gandalf-the-grey",
+      "name": "Gandalf The Grey",
+      "group": "Patrons",
+      "description": ""
+    },
+    {
+      "id": "gilraen-daughter-of-dirhael",
+      "name": "Gilraen, Daughter Of Dirhael",
+      "group": "Patrons",
+      "description": ""
+    },
+    {
+      "id": "tom-bombadil-and-lady-goldberry",
+      "name": "Tom Bombadil And Lady Goldberry",
+      "group": "Patrons",
+      "description": ""
+    }
+  ]
+}
