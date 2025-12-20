@@ -171,10 +171,14 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
   }, [map.backgroundDataUrl]);
 
   const pointersRef = useRef<Map<number, PointerInfo>>(new Map());
-  const dragRef = useRef<{ mode: 'none' | 'pan' | 'origin'; last: { x: number; y: number } | null }>({
-    mode: 'none',
-    last: null,
-  });
+
+  // ✅ drag state with click-vs-drag threshold
+  const dragRef = useRef<{
+    mode: 'none' | 'pan' | 'origin';
+    start: { x: number; y: number } | null; // screen coords
+    last: { x: number; y: number } | null;  // screen coords
+    moved: boolean;
+  }>({ mode: 'none', start: null, last: null, moved: false });
 
   const pinchRef = useRef<{
     active: boolean;
@@ -186,7 +190,6 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
   const distance = (a: PointerInfo, b: PointerInfo) => Math.hypot(a.x - b.x, a.y - b.y);
   const center = (a: PointerInfo, b: PointerInfo) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
 
-  // ✅ Zoom helper: keep world point under screen point
   const zoomAtScreenPoint = (screenP: { x: number; y: number }, factor: number) => {
     const beforeWorld = screenToWorld(screenP, zoom, pan);
     const nextZoom = clamp(zoom * factor, 0.3, 5);
@@ -197,7 +200,6 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
     setZoomPan(nextZoom, nextPan);
   };
 
-  // ✅ Center on selected hex
   const centerOnSelected = () => {
     const c = canvasRef.current;
     if (!c || !selected) return;
@@ -237,13 +239,11 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
       ctx.save();
       ctx.setTransform(zoom, 0, 0, zoom, pan.x, pan.y);
 
-      // Visible world bounds for culling
       const left = -pan.x / zoom;
       const top = -pan.y / zoom;
       const right = (W - pan.x) / zoom;
       const bottom = (H - pan.y) / zoom;
 
-      // Background (fit in base world)
       if (bgImg && bgImg.complete) {
         const scale = Math.min(W / bgImg.width, H / bgImg.height);
         const dw = bgImg.width * scale;
@@ -256,7 +256,6 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
         ctx.fillRect(0, 0, W, H);
       }
 
-      // Grid
       const size = map.hexSize;
       const origin = map.origin;
       const cols = 40;
@@ -299,7 +298,6 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
         }
       }
 
-      // Selection highlight
       if (selected) {
         const a = selected.match(/q:(-?\d+),r:(-?\d+)/);
         if (a) {
@@ -319,7 +317,6 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
         }
       }
 
-      // Calibration markers
       if (calibOn) {
         ctx.globalAlpha = 1.0;
 
@@ -387,7 +384,6 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
         const origin = { x: calibP1.x, y: calibP1.y };
 
         setMap({ hexSize: safeSize, origin });
-
         setGridLocked(true);
         setCalibOn(false);
         resetCalibration();
@@ -403,44 +399,38 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
     setSelected(axialKey(axial));
   };
 
-  // ✅ IMPORTANT: prevent page scrolling while pointer is over canvas.
-  // React's onWheel can be passive in some cases; native listener with {passive:false} is the reliable fix.
+  // Prevent page scroll on wheel; use native listener with passive:false
   useEffect(() => {
     const c = canvasRef.current;
     if (!c) return;
 
     const onWheelNative = (ev: WheelEvent) => {
-      // If the wheel happens on the canvas, we consume it for map zoom.
       ev.preventDefault();
-
       const screenP = pointFromMouseLike(ev, c);
       const factor = ev.deltaY > 0 ? 0.92 : 1.08;
       zoomAtScreenPoint(screenP, factor);
     };
 
     c.addEventListener('wheel', onWheelNative, { passive: false });
-
-    return () => {
-      c.removeEventListener('wheel', onWheelNative as any);
-    };
-    // We intentionally depend on zoom/pan via zoomAtScreenPoint closure
+    return () => c.removeEventListener('wheel', onWheelNative as any);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [zoom, pan.x, pan.y]);
 
-  // Pointer events (drag + pinch)
+  // Pointer events (drag + pinch + click)
+  const CLICK_THRESHOLD_PX = 4;
+
   const onPointerDown = (ev: React.PointerEvent) => {
     const c = canvasRef.current;
     if (!c) return;
 
     try {
       c.setPointerCapture(ev.pointerId);
-    } catch {
-      // ignore
-    }
+    } catch {}
 
     const p = pointFromMouseLike(ev, c);
     pointersRef.current.set(ev.pointerId, p);
 
+    // If 2 pointers -> pinch
     if (pointersRef.current.size === 2) {
       const pts = Array.from(pointersRef.current.values());
       const a = pts[0]!;
@@ -454,18 +444,17 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
       pinchRef.current.worldAnchor = screenToWorld(cent, zoom, pan);
 
       dragRef.current.mode = 'none';
+      dragRef.current.start = null;
       dragRef.current.last = null;
+      dragRef.current.moved = false;
       return;
     }
 
-    if (calibOn) {
-      dragRef.current.mode = 'none';
-      dragRef.current.last = null;
-      return;
-    }
-
-    dragRef.current.mode = gridLocked ? 'pan' : 'origin';
+    // 1 pointer: start potential click/drag
+    dragRef.current.mode = calibOn ? 'none' : (gridLocked ? 'pan' : 'origin');
+    dragRef.current.start = p;
     dragRef.current.last = p;
+    dragRef.current.moved = false;
   };
 
   const onPointerMove = (ev: React.PointerEvent) => {
@@ -476,6 +465,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
     const p = pointFromMouseLike(ev, c);
     pointersRef.current.set(ev.pointerId, p);
 
+    // Pinch zoom
     if (pinchRef.current.active && pointersRef.current.size >= 2) {
       const pts = Array.from(pointersRef.current.values()).slice(0, 2);
       const a = pts[0]!;
@@ -496,12 +486,23 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
       return;
     }
 
-    if (dragRef.current.mode === 'none' || !dragRef.current.last) return;
+    // Drag
+    if (dragRef.current.mode === 'none' || !dragRef.current.last || !dragRef.current.start) return;
 
     const last = dragRef.current.last;
     const dx = p.x - last.x;
     const dy = p.y - last.y;
     dragRef.current.last = p;
+
+    // Update moved flag
+    const fromStartX = p.x - dragRef.current.start.x;
+    const fromStartY = p.y - dragRef.current.start.y;
+    if (!dragRef.current.moved && (Math.abs(fromStartX) > CLICK_THRESHOLD_PX || Math.abs(fromStartY) > CLICK_THRESHOLD_PX)) {
+      dragRef.current.moved = true;
+    }
+
+    // Only apply pan/origin if we've actually moved beyond threshold
+    if (!dragRef.current.moved) return;
 
     if (dragRef.current.mode === 'pan') {
       setZoomPan(zoom, { x: pan.x + dx, y: pan.y + dy });
@@ -520,22 +521,25 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
     const c = canvasRef.current;
     if (!c) return;
 
-    const wasTracked = pointersRef.current.has(ev.pointerId);
+    const p = pointFromMouseLike(ev, c);
+    const had = pointersRef.current.has(ev.pointerId);
     pointersRef.current.delete(ev.pointerId);
 
-    if (pointersRef.current.size < 2) {
-      pinchRef.current.active = false;
-    }
+    // End pinch when <2 pointers
+    if (pointersRef.current.size < 2) pinchRef.current.active = false;
 
+    // If no more pointers, decide click vs drag
     if (pointersRef.current.size === 0) {
-      const wasDragging = dragRef.current.mode !== 'none';
-      dragRef.current.mode = 'none';
-      dragRef.current.last = null;
+      const moved = dragRef.current.moved;
+      const canClick = had && !pinchRef.current.active && !moved;
 
-      // Only treat as click if we were not dragging (simple heuristic)
-      if (wasTracked && !wasDragging && !pinchRef.current.active) {
-        const screenP = pointFromMouseLike(ev, c);
-        handleCanvasClick(screenP);
+      dragRef.current.mode = 'none';
+      dragRef.current.start = null;
+      dragRef.current.last = null;
+      dragRef.current.moved = false;
+
+      if (canClick) {
+        handleCanvasClick(p);
       }
     }
   };
@@ -545,7 +549,9 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
     pinchRef.current.active = false;
     if (pointersRef.current.size === 0) {
       dragRef.current.mode = 'none';
+      dragRef.current.start = null;
       dragRef.current.last = null;
+      dragRef.current.moved = false;
     }
   };
 
@@ -625,13 +631,9 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
           </div>
 
           <div className="row" style={{ marginTop: 10, gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-            <button className="btn" onClick={resetView}>
-              Reset view (zoom/pan)
-            </button>
+            <button className="btn" onClick={resetView}>Reset view (zoom/pan)</button>
 
-            <button className="btn" onClick={centerOnSelected} disabled={!selected}>
-              Center on selected
-            </button>
+            <button className="btn" onClick={centerOnSelected} disabled={!selected}>Center on selected</button>
 
             <label className="small muted" style={{ display: 'inline-flex', alignItems: 'center' }}>
               <input
@@ -686,16 +688,6 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
                 Reset points
               </button>
             </div>
-
-            <div className="small muted" style={{ marginTop: 6 }}>
-              Steps:
-              <ol style={{ marginTop: 6 }}>
-                <li>Enable calibration.</li>
-                <li>Pick direction (usually East/West).</li>
-                <li>Click center of one printed hex (green dot).</li>
-                <li>Click center of adjacent hex in that direction (red dot).</li>
-              </ol>
-            </div>
           </div>
         </div>
 
@@ -749,16 +741,11 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
                 disabled={gridLocked}
                 onChange={(e) => setNudgeStep(clamp(parseFloat(e.target.value || '2'), 0.5, 50))}
               />
-              <div className="small muted" style={{ marginTop: 6 }}>
-                Arrow keys move origin (unlocked). + / − adjust hex size.
-              </div>
             </div>
 
             <div className="col">
               <div className="small muted">Zoom</div>
-              <div className="small" style={{ marginTop: 6 }}>
-                {Math.round(zoom * 100)}%
-              </div>
+              <div className="small" style={{ marginTop: 6 }}>{Math.round(zoom * 100)}%</div>
               <div className="row" style={{ gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
                 <button className="btn" onClick={() => zoomAtScreenPoint({ x: 512, y: 320 }, 1.1)}>+</button>
                 <button className="btn" onClick={() => zoomAtScreenPoint({ x: 512, y: 320 }, 0.9)}>-</button>
@@ -767,12 +754,12 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
           </div>
 
           <div className="small muted" style={{ marginTop: 10 }}>
-            Tip: When locked, drag pans the view. Wheel/pinch zooms around your pointer.
+            Tip: click selects hex (even when locked). Drag pans only after moving ~{CLICK_THRESHOLD_PX}px.
           </div>
         </div>
       </div>
 
-      <div style={{ marginTop: 12 }}>
+      <div style={{ marginTop: 12, overscrollBehavior: 'contain' as any }}>
         <canvas
           ref={canvasRef}
           width={1024}
@@ -783,7 +770,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
           onPointerCancel={onPointerCancel}
           style={{
             touchAction: 'none',
-            overscrollBehavior: 'contain', // ✅ prevents scroll chaining (mobile + some desktop cases)
+            overscrollBehavior: 'contain',
             cursor: calibOn ? 'crosshair' : 'grab',
           }}
         />
@@ -795,7 +782,6 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
         <div className="col">
           <div className="badge">Selected hex</div>
           <div style={{ marginTop: 8, fontWeight: 700 }}>{selected || '—'}</div>
-          <div className="small muted">Click a hex to select. Add a category + note/event.</div>
 
           <div style={{ marginTop: 12 }}>
             <label className="small muted">Category</label>
@@ -817,21 +803,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
                 value={catColors[selectedCategory] ?? '#ffffff'}
                 onChange={(e) => setCategoryColor(selectedCategory, e.target.value)}
                 disabled={!selected}
-                title="Pick dot color"
               />
-              <div className="small muted">Applies to all hexes with this category.</div>
-            </div>
-          </div>
-
-          <div style={{ marginTop: 12 }}>
-            <div className="small muted">Legend</div>
-            <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginTop: 6 }}>
-              {CATEGORIES.filter((c) => c !== 'None').map((c) => (
-                <div key={c} className="row" style={{ gap: 6, alignItems: 'center' }}>
-                  <span style={{ width: 10, height: 10, borderRadius: 999, background: catColors[c] }} />
-                  <span className="small">{c}</span>
-                </div>
-              ))}
             </div>
           </div>
         </div>
