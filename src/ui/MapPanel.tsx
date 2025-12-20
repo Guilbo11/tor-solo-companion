@@ -114,6 +114,17 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [selected, setSelected] = useState<string>('');
 
+  // Keep latest state to avoid stale-closure overwrites (fixes toggles flipping back on scroll/zoom)
+  const stateRef = useRef(state);
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
+
+  const patchMap = (patch: Partial<StoredState['map']>) => {
+    const cur = stateRef.current;
+    setState({ ...cur, map: { ...cur.map, ...patch } });
+  };
+
   const [catColors, setCatColors] = useState<CatColors>(() => {
     try {
       const raw = localStorage.getItem('tor_map_category_colors');
@@ -136,7 +147,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
   const map = state.map;
 
   const gridLocked = map.gridLocked ?? false;
-  const showGrid = map.showGrid ?? true;
+  const showGrid = map.showGrid ?? true; // now means: show GREY lattice only
   const showSettings = map.showSettings ?? true;
 
   const nudgeStep = map.nudgeStep ?? 2;
@@ -145,16 +156,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
   const zoom = map.zoom ?? 1;
   const pan = map.pan ?? { x: 0, y: 0 };
 
-  const setMap = (patch: Partial<typeof map>) => setState({ ...state, map: { ...map, ...patch } });
-
-  const setGridLocked = (locked: boolean) => setMap({ gridLocked: locked });
-  const setShowGrid = (v: boolean) => setMap({ showGrid: v });
-  const setShowSettings = (v: boolean) => setMap({ showSettings: v });
-
-  const setNudgeStep = (v: number) => setMap({ nudgeStep: v });
-  const setCalibDir = (d: CalibDir) => setMap({ calibDir: d });
-
-  const setZoomPan = (nextZoom: number, nextPan: { x: number; y: number }) => setMap({ zoom: nextZoom, pan: nextPan });
+  const setZoomPan = (nextZoom: number, nextPan: { x: number; y: number }) => patchMap({ zoom: nextZoom, pan: nextPan });
   const resetView = () => setZoomPan(1, { x: 0, y: 0 });
 
   // Calibration (UI-only)
@@ -260,13 +262,13 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
         ctx.fillRect(0, 0, W, H);
       }
 
-      // Grid + dots (toggle)
-      if (showGrid) {
-        const size = map.hexSize;
-        const origin = map.origin;
-        const cols = 40;
-        const rows = 30;
+      const size = map.hexSize;
+      const origin = map.origin;
+      const cols = 40;
+      const rows = 30;
 
+      // ✅ 1) Draw GREY lattice only if showGrid = true
+      if (showGrid) {
         ctx.globalAlpha = 0.35;
         ctx.strokeStyle = '#b6c8ff';
         ctx.lineWidth = 1 / zoom;
@@ -290,43 +292,68 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
             for (let i = 1; i < corners.length; i++) ctx.lineTo(corners[i]!.x, corners[i]!.y);
             ctx.closePath();
             ctx.stroke();
+          }
+        }
+      }
+
+      // ✅ 2) Draw NOTE DOTS ALWAYS (even if showGrid is false)
+      {
+        // (slightly higher alpha so they pop)
+        ctx.globalAlpha = 0.85;
+
+        // iterate only visible-ish range (same loops)
+        for (let rr = -rows; rr <= rows; rr++) {
+          for (let qq = -cols; qq <= cols; qq++) {
+            const centerW = axialToPixel({ q: qq, r: rr }, size, origin);
+
+            if (
+              centerW.x < left - size ||
+              centerW.x > right + size ||
+              centerW.y < top - size ||
+              centerW.y > bottom + size
+            ) {
+              continue;
+            }
 
             const key = axialKey({ q: qq, r: rr });
             const rawNote = map.notes[key];
-            if (rawNote) {
-              const parsed = parseNote(rawNote);
-              const col = catColors[parsed.category] ?? catColors.None;
+            if (!rawNote) continue;
 
-              ctx.fillStyle = col;
-              ctx.globalAlpha = 0.75;
-              ctx.beginPath();
-              ctx.arc(centerW.x, centerW.y, 3 / zoom, 0, Math.PI * 2);
-              ctx.fill();
+            const parsed = parseNote(rawNote);
+            const col = catColors[parsed.category] ?? catColors.None;
 
-              ctx.globalAlpha = 0.35;
-              ctx.fillStyle = '#b6c8ff';
-            }
+            ctx.fillStyle = col;
+            ctx.beginPath();
+            ctx.arc(centerW.x, centerW.y, 3 / zoom, 0, Math.PI * 2);
+            ctx.fill();
           }
         }
+      }
 
-        // Selection highlight only when grid is visible
-        if (selected) {
-          const a = selected.match(/q:(-?\d+),r:(-?\d+)/);
-          if (a) {
-            const q = parseInt(a[1], 10);
-            const r = parseInt(a[2], 10);
-            const centerW = axialToPixel({ q, r }, size, origin);
-            const corners = hexCorners(centerW, size);
+      // ✅ 3) Draw SELECTED hex ALWAYS with yellow outline (even if showGrid is false)
+      if (selected) {
+        const a = selected.match(/q:(-?\d+),r:(-?\d+)/);
+        if (a) {
+          const q = parseInt(a[1], 10);
+          const r = parseInt(a[2], 10);
+          const centerW = axialToPixel({ q, r }, size, origin);
+          const corners = hexCorners(centerW, size);
 
-            ctx.globalAlpha = 0.9;
-            ctx.strokeStyle = '#ffd98a';
-            ctx.lineWidth = 2 / zoom;
-            ctx.beginPath();
-            ctx.moveTo(corners[0]!.x, corners[0]!.y);
-            for (let i = 1; i < corners.length; i++) ctx.lineTo(corners[i]!.x, corners[i]!.y);
-            ctx.closePath();
-            ctx.stroke();
-          }
+          ctx.globalAlpha = 0.95;
+          ctx.strokeStyle = '#ffd98a';
+          ctx.lineWidth = 2 / zoom;
+          ctx.beginPath();
+          ctx.moveTo(corners[0]!.x, corners[0]!.y);
+          for (let i = 1; i < corners.length; i++) ctx.lineTo(corners[i]!.x, corners[i]!.y);
+          ctx.closePath();
+          ctx.stroke();
+
+          // optional: center marker for selected, makes it obvious even when grid is hidden
+          ctx.fillStyle = '#ffd98a';
+          ctx.globalAlpha = 0.9;
+          ctx.beginPath();
+          ctx.arc(centerW.x, centerW.y, 2.2 / zoom, 0, Math.PI * 2);
+          ctx.fill();
         }
       }
 
@@ -382,7 +409,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
 
   const onPickBackground = async (file: File) => {
     const dataUrl = await fileToCompressedDataUrl(file, { maxWidth: 1600, quality: 0.82 });
-    setMap({ backgroundDataUrl: dataUrl });
+    patchMap({ backgroundDataUrl: dataUrl });
   };
 
   const handleCanvasClick = (screenP: { x: number; y: number }) => {
@@ -410,8 +437,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
         const safeSize = clamp(size, 2, 120);
         const origin = { x: calibP1.x, y: calibP1.y };
 
-        setMap({ hexSize: safeSize, origin });
-        setGridLocked(true);
+        patchMap({ hexSize: safeSize, origin, gridLocked: true });
         setCalibOn(false);
         resetCalibration();
         return;
@@ -533,7 +559,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
     if (dragRef.current.mode === 'origin') {
       const wdx = dx / zoom;
       const wdy = dy / zoom;
-      setMap({ origin: { x: map.origin.x + wdx, y: map.origin.y + wdy } });
+      patchMap({ origin: { x: map.origin.x + wdx, y: map.origin.y + wdy } });
       return;
     }
   };
@@ -572,7 +598,6 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
     }
   };
 
-  // Note editing
   const selectedRaw = selected ? map.notes[selected] ?? '' : '';
   const parsedSelected = useMemo(() => parseNote(selectedRaw), [selectedRaw]);
   const selectedCategory = parsedSelected.category;
@@ -584,7 +609,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
     const built = buildNote(category, text);
     if (!built.trim()) delete notes[selected];
     else notes[selected] = built;
-    setMap({ notes });
+    patchMap({ notes });
   };
 
   const setCategoryColor = (cat: CategoryName, color: string) => setCatColors((prev) => ({ ...prev, [cat]: color }));
@@ -593,7 +618,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
     <div className="card">
       <div className="h2">Eriador Map</div>
 
-      {/* ALWAYS-VISIBLE: Zoom + key map controls */}
+      {/* Always visible controls */}
       <div className="row" style={{ marginTop: 10, gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
         <button className="btn" onClick={resetView}>Reset view</button>
         <button className="btn" onClick={centerOnSelected} disabled={!selected}>Center on selected</button>
@@ -606,32 +631,41 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
         </div>
 
         <label className="small muted" style={{ display: 'inline-flex', alignItems: 'center' }}>
-          <input type="checkbox" checked={gridLocked} onChange={(e) => {
-            const locked = e.target.checked;
-            setGridLocked(locked);
-            if (locked) {
-              setCalibOn(false);
-              resetCalibration();
-            }
-          }} style={{ marginRight: 8 }} />
+          <input
+            type="checkbox"
+            checked={gridLocked}
+            onChange={(e) => {
+              const locked = e.target.checked;
+              patchMap({ gridLocked: locked });
+              if (locked) {
+                setCalibOn(false);
+                resetCalibration();
+              }
+            }}
+            style={{ marginRight: 8 }}
+          />
           🔒 Lock grid
         </label>
 
         <label className="small muted" style={{ display: 'inline-flex', alignItems: 'center' }}>
-          <input type="checkbox" checked={showGrid} onChange={(e) => setShowGrid(e.target.checked)} style={{ marginRight: 8 }} />
-          🧩 Show hex grid
+          <input
+            type="checkbox"
+            checked={showGrid}
+            onChange={(e) => patchMap({ showGrid: e.target.checked })}
+            style={{ marginRight: 8 }}
+          />
+          🧩 Show hex lattice
         </label>
 
-        <button className="btn" onClick={() => setShowSettings(!showSettings)}>
+        <button className="btn" onClick={() => patchMap({ showSettings: !showSettings })}>
           {showSettings ? 'Hide settings' : 'Show settings'}
         </button>
       </div>
 
-      {/* SETTINGS (hide/reveal) */}
+      {/* Settings block */}
       {showSettings && (
         <>
           <hr />
-
           <div className="row" style={{ marginTop: 12 }}>
             <div className="col">
               <div className="h2" style={{ fontSize: 16 }}>Background image</div>
@@ -670,7 +704,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
                   <select
                     className="input"
                     value={calibDir}
-                    onChange={(e) => setCalibDir(e.target.value as CalibDir)}
+                    onChange={(e) => patchMap({ calibDir: e.target.value as CalibDir })}
                     disabled={!calibOn || gridLocked}
                     style={{ minWidth: 240 }}
                   >
@@ -705,7 +739,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
                   onChange={(e) => {
                     const raw = parseFloat(e.target.value || '28');
                     const safe = Number.isFinite(raw) ? raw : 28;
-                    setMap({ hexSize: clamp(safe, 2, 120) });
+                    patchMap({ hexSize: clamp(safe, 2, 120) });
                   }}
                 />
 
@@ -715,7 +749,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
                   type="number"
                   value={map.origin.x}
                   disabled={gridLocked}
-                  onChange={(e) => setMap({ origin: { ...map.origin, x: parseFloat(e.target.value || '0') } })}
+                  onChange={(e) => patchMap({ origin: { ...map.origin, x: parseFloat(e.target.value || '0') } })}
                 />
 
                 <label className="small muted">Origin Y</label>
@@ -724,7 +758,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
                   type="number"
                   value={map.origin.y}
                   disabled={gridLocked}
-                  onChange={(e) => setMap({ origin: { ...map.origin, y: parseFloat(e.target.value || '0') } })}
+                  onChange={(e) => patchMap({ origin: { ...map.origin, y: parseFloat(e.target.value || '0') } })}
                 />
               </div>
 
@@ -738,7 +772,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
                   step={0.5}
                   value={nudgeStep}
                   disabled={gridLocked}
-                  onChange={(e) => setNudgeStep(clamp(parseFloat(e.target.value || '2'), 0.5, 50))}
+                  onChange={(e) => patchMap({ nudgeStep: clamp(parseFloat(e.target.value || '2'), 0.5, 50) })}
                 />
                 <div className="small muted" style={{ marginTop: 6 }}>
                   Unlocked: drag moves grid. Arrow keys move origin. (+/−) changes hex size.
@@ -749,7 +783,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
         </>
       )}
 
-      {/* MAP CANVAS (always visible) */}
+      {/* Map canvas */}
       <div style={{ marginTop: 12, overscrollBehavior: 'contain' as any }}>
         <canvas
           ref={canvasRef}
@@ -767,9 +801,9 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
         />
       </div>
 
-      {/* BELOW CANVAS (always visible) */}
       <hr />
 
+      {/* Selected hex + notes */}
       <div className="row">
         <div className="col">
           <div className="badge">Selected hex</div>
