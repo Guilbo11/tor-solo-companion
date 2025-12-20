@@ -112,7 +112,6 @@ type PointerInfo = { x: number; y: number };
 
 export default function MapPanel({ state, setState }: { state: StoredState; setState: (s: StoredState) => void }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-
   const [selected, setSelected] = useState<string>('');
 
   const [catColors, setCatColors] = useState<CatColors>(() => {
@@ -137,6 +136,9 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
   const map = state.map;
 
   const gridLocked = map.gridLocked ?? false;
+  const showGrid = map.showGrid ?? true;
+  const showSettings = map.showSettings ?? true;
+
   const nudgeStep = map.nudgeStep ?? 2;
   const calibDir = (map.calibDir ?? 'E') as CalibDir;
 
@@ -146,11 +148,13 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
   const setMap = (patch: Partial<typeof map>) => setState({ ...state, map: { ...map, ...patch } });
 
   const setGridLocked = (locked: boolean) => setMap({ gridLocked: locked });
+  const setShowGrid = (v: boolean) => setMap({ showGrid: v });
+  const setShowSettings = (v: boolean) => setMap({ showSettings: v });
+
   const setNudgeStep = (v: number) => setMap({ nudgeStep: v });
   const setCalibDir = (d: CalibDir) => setMap({ calibDir: d });
 
   const setZoomPan = (nextZoom: number, nextPan: { x: number; y: number }) => setMap({ zoom: nextZoom, pan: nextPan });
-
   const resetView = () => setZoomPan(1, { x: 0, y: 0 });
 
   // Calibration (UI-only)
@@ -172,11 +176,10 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
 
   const pointersRef = useRef<Map<number, PointerInfo>>(new Map());
 
-  // ✅ drag state with click-vs-drag threshold
   const dragRef = useRef<{
     mode: 'none' | 'pan' | 'origin';
-    start: { x: number; y: number } | null; // screen coords
-    last: { x: number; y: number } | null;  // screen coords
+    start: { x: number; y: number } | null;
+    last: { x: number; y: number } | null;
     moved: boolean;
   }>({ mode: 'none', start: null, last: null, moved: false });
 
@@ -244,6 +247,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
       const right = (W - pan.x) / zoom;
       const bottom = (H - pan.y) / zoom;
 
+      // Background
       if (bgImg && bgImg.complete) {
         const scale = Math.min(W / bgImg.width, H / bgImg.height);
         const dw = bgImg.width * scale;
@@ -256,67 +260,77 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
         ctx.fillRect(0, 0, W, H);
       }
 
-      const size = map.hexSize;
-      const origin = map.origin;
-      const cols = 40;
-      const rows = 30;
+      // Grid + dots (toggle)
+      if (showGrid) {
+        const size = map.hexSize;
+        const origin = map.origin;
+        const cols = 40;
+        const rows = 30;
 
-      ctx.globalAlpha = 0.35;
-      ctx.strokeStyle = '#b6c8ff';
-      ctx.lineWidth = 1 / zoom;
+        ctx.globalAlpha = 0.35;
+        ctx.strokeStyle = '#b6c8ff';
+        ctx.lineWidth = 1 / zoom;
 
-      for (let rr = -rows; rr <= rows; rr++) {
-        for (let qq = -cols; qq <= cols; qq++) {
-          const centerW = axialToPixel({ q: qq, r: rr }, size, origin);
+        for (let rr = -rows; rr <= rows; rr++) {
+          for (let qq = -cols; qq <= cols; qq++) {
+            const centerW = axialToPixel({ q: qq, r: rr }, size, origin);
 
-          if (centerW.x < left - size || centerW.x > right + size || centerW.y < top - size || centerW.y > bottom + size) {
-            continue;
-          }
+            if (
+              centerW.x < left - size ||
+              centerW.x > right + size ||
+              centerW.y < top - size ||
+              centerW.y > bottom + size
+            ) {
+              continue;
+            }
 
-          const corners = hexCorners(centerW, size);
-          ctx.beginPath();
-          ctx.moveTo(corners[0]!.x, corners[0]!.y);
-          for (let i = 1; i < corners.length; i++) ctx.lineTo(corners[i]!.x, corners[i]!.y);
-          ctx.closePath();
-          ctx.stroke();
-
-          const key = axialKey({ q: qq, r: rr });
-          const rawNote = map.notes[key];
-          if (rawNote) {
-            const parsed = parseNote(rawNote);
-            const col = catColors[parsed.category] ?? catColors.None;
-
-            ctx.fillStyle = col;
-            ctx.globalAlpha = 0.75;
+            const corners = hexCorners(centerW, size);
             ctx.beginPath();
-            ctx.arc(centerW.x, centerW.y, 3 / zoom, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.moveTo(corners[0]!.x, corners[0]!.y);
+            for (let i = 1; i < corners.length; i++) ctx.lineTo(corners[i]!.x, corners[i]!.y);
+            ctx.closePath();
+            ctx.stroke();
 
-            ctx.globalAlpha = 0.35;
-            ctx.fillStyle = '#b6c8ff';
+            const key = axialKey({ q: qq, r: rr });
+            const rawNote = map.notes[key];
+            if (rawNote) {
+              const parsed = parseNote(rawNote);
+              const col = catColors[parsed.category] ?? catColors.None;
+
+              ctx.fillStyle = col;
+              ctx.globalAlpha = 0.75;
+              ctx.beginPath();
+              ctx.arc(centerW.x, centerW.y, 3 / zoom, 0, Math.PI * 2);
+              ctx.fill();
+
+              ctx.globalAlpha = 0.35;
+              ctx.fillStyle = '#b6c8ff';
+            }
+          }
+        }
+
+        // Selection highlight only when grid is visible
+        if (selected) {
+          const a = selected.match(/q:(-?\d+),r:(-?\d+)/);
+          if (a) {
+            const q = parseInt(a[1], 10);
+            const r = parseInt(a[2], 10);
+            const centerW = axialToPixel({ q, r }, size, origin);
+            const corners = hexCorners(centerW, size);
+
+            ctx.globalAlpha = 0.9;
+            ctx.strokeStyle = '#ffd98a';
+            ctx.lineWidth = 2 / zoom;
+            ctx.beginPath();
+            ctx.moveTo(corners[0]!.x, corners[0]!.y);
+            for (let i = 1; i < corners.length; i++) ctx.lineTo(corners[i]!.x, corners[i]!.y);
+            ctx.closePath();
+            ctx.stroke();
           }
         }
       }
 
-      if (selected) {
-        const a = selected.match(/q:(-?\d+),r:(-?\d+)/);
-        if (a) {
-          const q = parseInt(a[1], 10);
-          const r = parseInt(a[2], 10);
-          const centerW = axialToPixel({ q, r }, size, origin);
-          const corners = hexCorners(centerW, size);
-
-          ctx.globalAlpha = 0.9;
-          ctx.strokeStyle = '#ffd98a';
-          ctx.lineWidth = 2 / zoom;
-          ctx.beginPath();
-          ctx.moveTo(corners[0]!.x, corners[0]!.y);
-          for (let i = 1; i < corners.length; i++) ctx.lineTo(corners[i]!.x, corners[i]!.y);
-          ctx.closePath();
-          ctx.stroke();
-        }
-      }
-
+      // Calibration markers
       if (calibOn) {
         ctx.globalAlpha = 1.0;
 
@@ -345,13 +359,26 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
       }
 
       ctx.restore();
-
       raf = requestAnimationFrame(draw);
     };
 
     raf = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(raf);
-  }, [bgImg, map.hexSize, map.origin, map.notes, selected, catColors, calibOn, calibP1, calibP2, zoom, pan.x, pan.y]);
+  }, [
+    bgImg,
+    map.hexSize,
+    map.origin,
+    map.notes,
+    selected,
+    catColors,
+    calibOn,
+    calibP1,
+    calibP2,
+    zoom,
+    pan.x,
+    pan.y,
+    showGrid,
+  ]);
 
   const onPickBackground = async (file: File) => {
     const dataUrl = await fileToCompressedDataUrl(file, { maxWidth: 1600, quality: 0.82 });
@@ -416,7 +443,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [zoom, pan.x, pan.y]);
 
-  // Pointer events (drag + pinch + click)
+  // Pointer events (click vs drag)
   const CLICK_THRESHOLD_PX = 4;
 
   const onPointerDown = (ev: React.PointerEvent) => {
@@ -430,7 +457,6 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
     const p = pointFromMouseLike(ev, c);
     pointersRef.current.set(ev.pointerId, p);
 
-    // If 2 pointers -> pinch
     if (pointersRef.current.size === 2) {
       const pts = Array.from(pointersRef.current.values());
       const a = pts[0]!;
@@ -450,7 +476,6 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
       return;
     }
 
-    // 1 pointer: start potential click/drag
     dragRef.current.mode = calibOn ? 'none' : (gridLocked ? 'pan' : 'origin');
     dragRef.current.start = p;
     dragRef.current.last = p;
@@ -465,7 +490,6 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
     const p = pointFromMouseLike(ev, c);
     pointersRef.current.set(ev.pointerId, p);
 
-    // Pinch zoom
     if (pinchRef.current.active && pointersRef.current.size >= 2) {
       const pts = Array.from(pointersRef.current.values()).slice(0, 2);
       const a = pts[0]!;
@@ -486,7 +510,6 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
       return;
     }
 
-    // Drag
     if (dragRef.current.mode === 'none' || !dragRef.current.last || !dragRef.current.start) return;
 
     const last = dragRef.current.last;
@@ -494,14 +517,12 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
     const dy = p.y - last.y;
     dragRef.current.last = p;
 
-    // Update moved flag
     const fromStartX = p.x - dragRef.current.start.x;
     const fromStartY = p.y - dragRef.current.start.y;
     if (!dragRef.current.moved && (Math.abs(fromStartX) > CLICK_THRESHOLD_PX || Math.abs(fromStartY) > CLICK_THRESHOLD_PX)) {
       dragRef.current.moved = true;
     }
 
-    // Only apply pan/origin if we've actually moved beyond threshold
     if (!dragRef.current.moved) return;
 
     if (dragRef.current.mode === 'pan') {
@@ -525,10 +546,8 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
     const had = pointersRef.current.has(ev.pointerId);
     pointersRef.current.delete(ev.pointerId);
 
-    // End pinch when <2 pointers
     if (pointersRef.current.size < 2) pinchRef.current.active = false;
 
-    // If no more pointers, decide click vs drag
     if (pointersRef.current.size === 0) {
       const moved = dragRef.current.moved;
       const canClick = had && !pinchRef.current.active && !moved;
@@ -538,9 +557,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
       dragRef.current.last = null;
       dragRef.current.moved = false;
 
-      if (canClick) {
-        handleCanvasClick(p);
-      }
+      if (canClick) handleCanvasClick(p);
     }
   };
 
@@ -555,40 +572,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
     }
   };
 
-  // Keyboard nudges (unlocked only)
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      const tag = (document.activeElement?.tagName ?? '').toLowerCase();
-      if (tag === 'input' || tag === 'textarea' || (document.activeElement as any)?.isContentEditable) return;
-
-      if (e.key === '0' && (e.ctrlKey || e.metaKey)) {
-        e.preventDefault();
-        resetView();
-        return;
-      }
-
-      if (gridLocked) return;
-
-      if (e.key === 'ArrowLeft') {
-        setMap({ origin: { x: map.origin.x - nudgeStep, y: map.origin.y } });
-      } else if (e.key === 'ArrowRight') {
-        setMap({ origin: { x: map.origin.x + nudgeStep, y: map.origin.y } });
-      } else if (e.key === 'ArrowUp') {
-        setMap({ origin: { x: map.origin.x, y: map.origin.y - nudgeStep } });
-      } else if (e.key === 'ArrowDown') {
-        setMap({ origin: { x: map.origin.x, y: map.origin.y + nudgeStep } });
-      } else if (e.key === '+' || e.key === '=') {
-        setMap({ hexSize: clamp(map.hexSize + 0.5, 2, 120) });
-      } else if (e.key === '-' || e.key === '_') {
-        setMap({ hexSize: clamp(map.hexSize - 0.5, 2, 120) });
-      }
-    };
-
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gridLocked, map.origin.x, map.origin.y, map.hexSize, nudgeStep, zoom, pan.x, pan.y]);
-
+  // Note editing
   const selectedRaw = selected ? map.notes[selected] ?? '' : '';
   const parsedSelected = useMemo(() => parseNote(selectedRaw), [selectedRaw]);
   const selectedCategory = parsedSelected.category;
@@ -603,162 +587,169 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
     setMap({ notes });
   };
 
-  const setCategoryColor = (cat: CategoryName, color: string) => {
-    setCatColors((prev) => ({ ...prev, [cat]: color }));
-  };
+  const setCategoryColor = (cat: CategoryName, color: string) => setCatColors((prev) => ({ ...prev, [cat]: color }));
 
   return (
     <div className="card">
-      <div className="h2">Eriador Map (hex overlay)</div>
-      <div className="muted small">
-        Zoom: wheel / pinch. Pan: drag when locked. Move grid: drag when unlocked. Reset view: Ctrl/⌘ + 0.
-      </div>
+      <div className="h2">Eriador Map</div>
 
-      <div className="row" style={{ marginTop: 12 }}>
-        <div className="col">
-          <label className="small muted">Background image</label>
-          <input
-            className="input"
-            type="file"
-            accept="image/*"
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) onPickBackground(f);
-            }}
-          />
-          <div className="small muted" style={{ marginTop: 6 }}>
-            The image is auto-compressed to JPEG for reliable saving.
-          </div>
+      {/* ALWAYS-VISIBLE: Zoom + key map controls */}
+      <div className="row" style={{ marginTop: 10, gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+        <button className="btn" onClick={resetView}>Reset view</button>
+        <button className="btn" onClick={centerOnSelected} disabled={!selected}>Center on selected</button>
 
-          <div className="row" style={{ marginTop: 10, gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-            <button className="btn" onClick={resetView}>Reset view (zoom/pan)</button>
-
-            <button className="btn" onClick={centerOnSelected} disabled={!selected}>Center on selected</button>
-
-            <label className="small muted" style={{ display: 'inline-flex', alignItems: 'center' }}>
-              <input
-                type="checkbox"
-                checked={gridLocked}
-                onChange={(e) => {
-                  const locked = e.target.checked;
-                  setGridLocked(locked);
-                  if (locked) {
-                    setCalibOn(false);
-                    resetCalibration();
-                  }
-                }}
-                style={{ marginRight: 8 }}
-              />
-              🔒 Lock grid (drag pans view, pinch/wheel zoom)
-            </label>
-          </div>
-
-          <div style={{ marginTop: 12 }}>
-            <div className="h2" style={{ fontSize: 16 }}>Calibration</div>
-
-            <div className="row" style={{ gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-              <label className="small muted">
-                <input
-                  type="checkbox"
-                  checked={calibOn}
-                  onChange={(e) => {
-                    if (gridLocked && e.target.checked) return;
-                    setCalibOn(e.target.checked);
-                    resetCalibration();
-                  }}
-                  style={{ marginRight: 8 }}
-                  disabled={gridLocked}
-                />
-                Enable calibration mode
-              </label>
-
-              <select
-                className="input"
-                value={calibDir}
-                onChange={(e) => setCalibDir(e.target.value as CalibDir)}
-                disabled={!calibOn || gridLocked}
-                style={{ minWidth: 240 }}
-              >
-                {CALIB_DIRS.map((d) => (
-                  <option key={d.id} value={d.id}>{d.label}</option>
-                ))}
-              </select>
-
-              <button className="btn" onClick={resetCalibration} disabled={!calibOn || gridLocked}>
-                Reset points
-              </button>
-            </div>
-          </div>
+        <div className="row" style={{ gap: 6, alignItems: 'center' }}>
+          <div className="small muted">Zoom</div>
+          <div className="small" style={{ fontWeight: 700 }}>{Math.round(zoom * 100)}%</div>
+          <button className="btn" onClick={() => zoomAtScreenPoint({ x: 512, y: 320 }, 1.1)}>+</button>
+          <button className="btn" onClick={() => zoomAtScreenPoint({ x: 512, y: 320 }, 0.9)}>-</button>
         </div>
 
-        <div className="col">
-          <div className="kv">
-            <label className="small muted">Hex size</label>
-            <input
-              className="input"
-              type="number"
-              min={2}
-              max={120}
-              step={0.5}
-              value={map.hexSize}
-              disabled={gridLocked}
-              onChange={(e) => {
-                const raw = parseFloat(e.target.value || '28');
-                const safe = Number.isFinite(raw) ? raw : 28;
-                setMap({ hexSize: clamp(safe, 2, 120) });
-              }}
-            />
+        <label className="small muted" style={{ display: 'inline-flex', alignItems: 'center' }}>
+          <input type="checkbox" checked={gridLocked} onChange={(e) => {
+            const locked = e.target.checked;
+            setGridLocked(locked);
+            if (locked) {
+              setCalibOn(false);
+              resetCalibration();
+            }
+          }} style={{ marginRight: 8 }} />
+          🔒 Lock grid
+        </label>
 
-            <label className="small muted">Origin X</label>
-            <input
-              className="input"
-              type="number"
-              value={map.origin.x}
-              disabled={gridLocked}
-              onChange={(e) => setMap({ origin: { ...map.origin, x: parseFloat(e.target.value || '0') } })}
-            />
+        <label className="small muted" style={{ display: 'inline-flex', alignItems: 'center' }}>
+          <input type="checkbox" checked={showGrid} onChange={(e) => setShowGrid(e.target.checked)} style={{ marginRight: 8 }} />
+          🧩 Show hex grid
+        </label>
 
-            <label className="small muted">Origin Y</label>
-            <input
-              className="input"
-              type="number"
-              value={map.origin.y}
-              disabled={gridLocked}
-              onChange={(e) => setMap({ origin: { ...map.origin, y: parseFloat(e.target.value || '0') } })}
-            />
-          </div>
+        <button className="btn" onClick={() => setShowSettings(!showSettings)}>
+          {showSettings ? 'Hide settings' : 'Show settings'}
+        </button>
+      </div>
 
-          <div className="row" style={{ marginTop: 10, alignItems: 'center', gap: 10 }}>
+      {/* SETTINGS (hide/reveal) */}
+      {showSettings && (
+        <>
+          <hr />
+
+          <div className="row" style={{ marginTop: 12 }}>
             <div className="col">
-              <label className="small muted">Nudge step (px)</label>
+              <div className="h2" style={{ fontSize: 16 }}>Background image</div>
               <input
                 className="input"
-                type="number"
-                min={0.5}
-                max={50}
-                step={0.5}
-                value={nudgeStep}
-                disabled={gridLocked}
-                onChange={(e) => setNudgeStep(clamp(parseFloat(e.target.value || '2'), 0.5, 50))}
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) onPickBackground(f);
+                }}
               />
+              <div className="small muted" style={{ marginTop: 6 }}>
+                Image is compressed to JPEG for reliable saving.
+              </div>
+
+              <div style={{ marginTop: 14 }}>
+                <div className="h2" style={{ fontSize: 16 }}>Calibration</div>
+
+                <div className="row" style={{ gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                  <label className="small muted">
+                    <input
+                      type="checkbox"
+                      checked={calibOn}
+                      onChange={(e) => {
+                        if (gridLocked && e.target.checked) return;
+                        setCalibOn(e.target.checked);
+                        resetCalibration();
+                      }}
+                      style={{ marginRight: 8 }}
+                      disabled={gridLocked}
+                    />
+                    Enable calibration mode
+                  </label>
+
+                  <select
+                    className="input"
+                    value={calibDir}
+                    onChange={(e) => setCalibDir(e.target.value as CalibDir)}
+                    disabled={!calibOn || gridLocked}
+                    style={{ minWidth: 240 }}
+                  >
+                    {CALIB_DIRS.map((d) => (
+                      <option key={d.id} value={d.id}>{d.label}</option>
+                    ))}
+                  </select>
+
+                  <button className="btn" onClick={resetCalibration} disabled={!calibOn || gridLocked}>
+                    Reset points
+                  </button>
+                </div>
+
+                <div className="small muted" style={{ marginTop: 6 }}>
+                  Click one hex center (green), then adjacent center in the chosen direction (red).
+                </div>
+              </div>
             </div>
 
             <div className="col">
-              <div className="small muted">Zoom</div>
-              <div className="small" style={{ marginTop: 6 }}>{Math.round(zoom * 100)}%</div>
-              <div className="row" style={{ gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
-                <button className="btn" onClick={() => zoomAtScreenPoint({ x: 512, y: 320 }, 1.1)}>+</button>
-                <button className="btn" onClick={() => zoomAtScreenPoint({ x: 512, y: 320 }, 0.9)}>-</button>
+              <div className="h2" style={{ fontSize: 16 }}>Grid parameters</div>
+              <div className="kv">
+                <label className="small muted">Hex size</label>
+                <input
+                  className="input"
+                  type="number"
+                  min={2}
+                  max={120}
+                  step={0.5}
+                  value={map.hexSize}
+                  disabled={gridLocked}
+                  onChange={(e) => {
+                    const raw = parseFloat(e.target.value || '28');
+                    const safe = Number.isFinite(raw) ? raw : 28;
+                    setMap({ hexSize: clamp(safe, 2, 120) });
+                  }}
+                />
+
+                <label className="small muted">Origin X</label>
+                <input
+                  className="input"
+                  type="number"
+                  value={map.origin.x}
+                  disabled={gridLocked}
+                  onChange={(e) => setMap({ origin: { ...map.origin, x: parseFloat(e.target.value || '0') } })}
+                />
+
+                <label className="small muted">Origin Y</label>
+                <input
+                  className="input"
+                  type="number"
+                  value={map.origin.y}
+                  disabled={gridLocked}
+                  onChange={(e) => setMap({ origin: { ...map.origin, y: parseFloat(e.target.value || '0') } })}
+                />
+              </div>
+
+              <div style={{ marginTop: 12 }}>
+                <label className="small muted">Nudge step (px)</label>
+                <input
+                  className="input"
+                  type="number"
+                  min={0.5}
+                  max={50}
+                  step={0.5}
+                  value={nudgeStep}
+                  disabled={gridLocked}
+                  onChange={(e) => setNudgeStep(clamp(parseFloat(e.target.value || '2'), 0.5, 50))}
+                />
+                <div className="small muted" style={{ marginTop: 6 }}>
+                  Unlocked: drag moves grid. Arrow keys move origin. (+/−) changes hex size.
+                </div>
               </div>
             </div>
           </div>
+        </>
+      )}
 
-          <div className="small muted" style={{ marginTop: 10 }}>
-            Tip: click selects hex (even when locked). Drag pans only after moving ~{CLICK_THRESHOLD_PX}px.
-          </div>
-        </div>
-      </div>
-
+      {/* MAP CANVAS (always visible) */}
       <div style={{ marginTop: 12, overscrollBehavior: 'contain' as any }}>
         <canvas
           ref={canvasRef}
@@ -776,6 +767,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
         />
       </div>
 
+      {/* BELOW CANVAS (always visible) */}
       <hr />
 
       <div className="row">
@@ -797,7 +789,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
             </select>
 
             <div className="row" style={{ marginTop: 8, alignItems: 'center', gap: 10 }}>
-              <div className="small muted">Dot color for this category</div>
+              <div className="small muted">Dot color</div>
               <input
                 type="color"
                 value={catColors[selectedCategory] ?? '#ffffff'}
@@ -809,7 +801,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
         </div>
 
         <div className="col">
-          <label className="small muted">Note for selected hex</label>
+          <label className="small muted">Note</label>
           <textarea
             className="input"
             style={{ minHeight: 110 }}
