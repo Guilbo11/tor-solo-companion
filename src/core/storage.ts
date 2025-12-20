@@ -112,7 +112,7 @@ export function loadState(): StoredState {
   if (!raw) return defaultState();
   try {
     const parsed = JSON.parse(raw) as StoredState;
-    if (parsed?.version !== 1) return defaultState();
+    if (parsed?.version !== 3) return defaultState();
 
     // Ensure defaults exist even if older saved state is missing new fields
     return ensureDefaults(parsed);
@@ -165,7 +165,7 @@ export function exportState(state: StoredState): string {
 
 export function importState(json: string): StoredState {
   const parsed = JSON.parse(json) as StoredState;
-  if (!parsed || parsed.version !== 1) throw new Error('Unsupported file format.');
+  if (!parsed || parsed.version !== 3) throw new Error('Unsupported file format.');
   return ensureDefaults(parsed);
 }
 
