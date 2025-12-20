@@ -28,26 +28,28 @@ jobs:
           node-version: 20
           cache: npm
 
-      - name: Show versions
+      - name: Debug npm config
         run: |
           node -v
           npm -v
+          npm config get omit || true
+          npm config get production || true
 
-      # Force npm to include devDependencies even if something sets production mode
+      # IMPORTANT: use npm install (not npm ci) to avoid a "prod-only" lockfile issue
       - name: Install dependencies (force devDependencies)
-        run: npm ci
+        run: npm install --include=dev
         env:
           NODE_ENV: development
           NPM_CONFIG_PRODUCTION: "false"
           NPM_CONFIG_OMIT: ""
 
-      - name: Debug - verify Vite exists
+      - name: Debug - confirm Vite installed
         run: |
-          ls -la node_modules/.bin || true
-          npx vite --version
+          ls -la node_modules/vite || true
+          node -e "console.log('vite:', require('./node_modules/vite/package.json').version)"
 
       - name: Build site
-        run: npx vite build
+        run: npm run build
         env:
           NODE_ENV: development
 
