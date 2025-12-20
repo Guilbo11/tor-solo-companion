@@ -6,6 +6,7 @@ import MapPanel from './MapPanel';
 import OraclesPanel from './OraclesPanel';
 import SettingsPanel from './SettingsPanel';
 import HeroesPanel from './HeroesPanel';
+import FellowshipPanel from './FellowshipPanel';
 
 type Tab = 'Heroes'|'Fellowship'|'Dice'|'Oracles'|'Map'|'Journal'|'Settings';
 
@@ -13,11 +14,14 @@ export default function App() {
   const [state, setState] = useState<StoredState>(() => loadState());
   const [tab, setTab] = useState<Tab>('Heroes');
 
-  const tabs: Tab[] = ['Heroes','Dice','Oracles','Map','Journal','Settings'];
+  const tabs: Tab[] = ['Heroes','Fellowship','Dice','Oracles','Map','Journal','Settings'];
 
-  const set = (next: StoredState) => {
-    setState(next);
-    saveState(next);
+  const set: React.Dispatch<React.SetStateAction<StoredState>> = (next) => {
+    setState((prev) => {
+      const nextState = typeof next === 'function' ? (next as (s: StoredState) => StoredState)(prev) : next;
+      saveState(nextState);
+      return nextState;
+    });
   };
 
   const header = useMemo(() => {
@@ -64,13 +68,13 @@ export default function App() {
         ))}
       </div>
 
-      {tab === 'Heroes' && <HeroesPanel state={state} setState={setState} />}
-      {tab === 'Fellowship' && <FellowshipPanel state={state} setState={setState} />}
+      {tab === 'Heroes' && <HeroesPanel state={state} setState={set} />}
+      {tab === 'Fellowship' && <FellowshipPanel state={state} setState={set} />}
       {tab === 'Dice' && <DicePanel />}
-      {tab === 'Oracles' && <OraclesPanel state={state} setState={setState} />}
-      {tab === 'Map' && <MapPanel state={state} setState={setState} />}
-      {tab === 'Journal' && <JournalPanel state={state} setState={setState} />}
-      {tab === 'Settings' && <SettingsPanel state={state} setState={setState} />}
+      {tab === 'Oracles' && <OraclesPanel state={state} setState={set} />}
+      {tab === 'Map' && <MapPanel state={state} setState={set} />}
+      {tab === 'Journal' && <JournalPanel state={state} setState={set} />}
+      {tab === 'Settings' && <SettingsPanel state={state} setState={set} />}
     </div>
   );
 }
