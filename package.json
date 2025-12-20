@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "node node_modules/vite/bin/vite.js",
+    "prebuild": "node ./scripts/fix-esbuild-permissions.js",
     "build": "node node_modules/vite/bin/vite.js build",
     "preview": "node node_modules/vite/bin/vite.js preview",
     "postinstall": "node ./scripts/fix-esbuild-permissions.js"
