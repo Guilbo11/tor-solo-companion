@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { axialKey, axialToPixel, hexCorners, pixelToAxial } from '../core/hex';
-import { StoredState } from '../core/storage';
+import { CalibDir, StoredState } from '../core/storage';
 
 type CategoryName =
   | 'None'
@@ -33,6 +33,14 @@ function clamp(n: number, min: number, max: number) {
   return Math.max(min, Math.min(max, n));
 }
 
+function screenToWorld(p: { x: number; y: number }, zoom: number, pan: { x: number; y: number }) {
+  return { x: (p.x - pan.x) / zoom, y: (p.y - pan.y) / zoom };
+}
+
+function worldToScreen(p: { x: number; y: number }, zoom: number, pan: { x: number; y: number }) {
+  return { x: p.x * zoom + pan.x, y: p.y * zoom + pan.y };
+}
+
 /**
  * Note format (backwards-compatible):
  * - If note starts with "@cat:Something\n", we parse it.
@@ -58,7 +66,7 @@ function buildNote(category: CategoryName, text: string): string {
   return '@cat:' + category + '\n' + t;
 }
 
-function pointFromMouse(ev: React.MouseEvent, canvas: HTMLCanvasElement) {
+function pointFromMouseLike(ev: { clientX: number; clientY: number }, canvas: HTMLCanvasElement) {
   const rect = canvas.getBoundingClientRect();
   const x = (ev.clientX - rect.left) * (canvas.width / rect.width);
   const y = (ev.clientY - rect.top) * (canvas.height / rect.height);
@@ -75,8 +83,6 @@ function pointFromMouse(ev: React.MouseEvent, canvas: HTMLCanvasElement) {
  * SW:        (-sqrt(3)/2, 3/2)
  * SE:        (sqrt(3)/2, 3/2)
  */
-type CalibDir = 'E' | 'NE' | 'NW' | 'W' | 'SW' | 'SE';
-
 const CALIB_DIRS: { id: CalibDir; label: string; unit: { x: number; y: number } }[] = [
   { id: 'E', label: 'East / West (horizontal)', unit: { x: Math.sqrt(3), y: 0 } },
   { id: 'NE', label: 'North-East', unit: { x: Math.sqrt(3) / 2, y: -1.5 } },
@@ -90,10 +96,7 @@ const CALIB_DIRS: { id: CalibDir; label: string; unit: { x: number; y: number } 
  * Read an image file and compress it to a JPEG data URL.
  * This prevents localStorage quota errors and ensures map + notes persist.
  */
-function fileToCompressedDataUrl(
-  file: File,
-  opts?: { maxWidth?: number; quality?: number }
-): Promise<string> {
+function fileToCompressedDataUrl(file: File, opts?: { maxWidth?: number; quality?: number }): Promise<string> {
   const maxWidth = opts?.maxWidth ?? 1600;
   const quality = opts?.quality ?? 0.82;
 
@@ -130,18 +133,13 @@ function fileToCompressedDataUrl(
   });
 }
 
+type PointerInfo = { x: number; y: number };
+
 export default function MapPanel({ state, setState }: { state: StoredState; setState: (s: StoredState) => void }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  // Selection (UI-only)
   const [selected, setSelected] = useState<string>('');
-
-  const map = state.map;
-
-  // ✅ persisted lock comes from stored state
-  const gridLocked = map.gridLocked ?? false;
-
-  const setGridLocked = (locked: boolean) => {
-    setState({ ...state, map: { ...map, gridLocked: locked } });
-  };
 
   // Category color settings (stored separately in localStorage)
   const [catColors, setCatColors] = useState<CatColors>(() => {
@@ -163,22 +161,61 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
     }
   }, [catColors]);
 
-  // Nudge controls
-  const [nudgeStep, setNudgeStep] = useState<number>(2);
-  const dragRef = useRef<{ dragging: boolean; lastX: number; lastY: number }>({ dragging: false, lastX: 0, lastY: 0 });
+  const map = state.map;
 
-  // Calibration mode (UI-only, not persisted)
+  // ✅ persisted prefs
+  const gridLocked = map.gridLocked ?? false;
+  const nudgeStep = map.nudgeStep ?? 2;
+  const calibDir = (map.calibDir ?? 'E') as CalibDir;
+
+  const zoom = map.zoom ?? 1;
+  const pan = map.pan ?? { x: 0, y: 0 };
+
+  const setMap = (patch: Partial<typeof map>) => setState({ ...state, map: { ...map, ...patch } });
+
+  const setGridLocked = (locked: boolean) => setMap({ gridLocked: locked });
+  const setNudgeStep = (v: number) => setMap({ nudgeStep: v });
+  const setCalibDir = (d: CalibDir) => setMap({ calibDir: d });
+
+  const setZoomPan = (nextZoom: number, nextPan: { x: number; y: number }) =>
+    setMap({ zoom: nextZoom, pan: nextPan });
+
+  const resetView = () => setZoomPan(1, { x: 0, y: 0 });
+
+  // Calibration mode (UI-only)
   const [calibOn, setCalibOn] = useState(false);
-  const [calibDir, setCalibDir] = useState<CalibDir>('E');
-  const [calibP1, setCalibP1] = useState<{ x: number; y: number } | null>(null);
-  const [calibP2, setCalibP2] = useState<{ x: number; y: number } | null>(null);
+  const [calibP1, setCalibP1] = useState<{ x: number; y: number } | null>(null); // world coords
+  const [calibP2, setCalibP2] = useState<{ x: number; y: number } | null>(null); // world coords
 
+  const resetCalibration = () => {
+    setCalibP1(null);
+    setCalibP2(null);
+  };
+
+  // Background image
   const bgImg = useMemo(() => {
     if (!map.backgroundDataUrl) return null;
     const img = new Image();
     img.src = map.backgroundDataUrl;
     return img;
   }, [map.backgroundDataUrl]);
+
+  // Pointer handling (supports mouse + touch + pen)
+  const pointersRef = useRef<Map<number, PointerInfo>>(new Map());
+  const dragRef = useRef<{
+    mode: 'none' | 'pan' | 'origin';
+    last: { x: number; y: number } | null; // screen coords
+  }>({ mode: 'none', last: null });
+
+  const pinchRef = useRef<{
+    active: boolean;
+    initialDist: number;
+    initialZoom: number;
+    worldAnchor: { x: number; y: number }; // world point under pinch center at start
+  }>({ active: false, initialDist: 0, initialZoom: 1, worldAnchor: { x: 0, y: 0 } });
+
+  const distance = (a: PointerInfo, b: PointerInfo) => Math.hypot(a.x - b.x, a.y - b.y);
+  const center = (a: PointerInfo, b: PointerInfo) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
 
   // --- Drawing loop ---
   useEffect(() => {
@@ -188,49 +225,69 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
     if (!ctx) return;
 
     let raf = 0;
+
     const draw = () => {
-      const w = c.width, h = c.height;
-      ctx.clearRect(0, 0, w, h);
+      const W = c.width;
+      const H = c.height;
+
+      ctx.clearRect(0, 0, W, H);
+
+      // Apply camera transform: world -> screen
+      ctx.save();
+      ctx.setTransform(zoom, 0, 0, zoom, pan.x, pan.y);
+
+      // Visible world bounds (for culling)
+      const left = -pan.x / zoom;
+      const top = -pan.y / zoom;
+      const right = (W - pan.x) / zoom;
+      const bottom = (H - pan.y) / zoom;
 
       // Background
       if (bgImg && bgImg.complete) {
-        const scale = Math.min(w / bgImg.width, h / bgImg.height);
+        // Fit to "world canvas" (0..W,0..H) at zoom=1. Camera handles zoom/pan.
+        const scale = Math.min(W / bgImg.width, H / bgImg.height);
         const dw = bgImg.width * scale;
         const dh = bgImg.height * scale;
-        const dx = (w - dw) / 2;
-        const dy = (h - dh) / 2;
+        const dx = (W - dw) / 2;
+        const dy = (H - dh) / 2;
         ctx.drawImage(bgImg, dx, dy, dw, dh);
       } else {
         ctx.fillStyle = '#0b0f14';
-        ctx.fillRect(0, 0, w, h);
+        ctx.fillRect(0, 0, W, H);
       }
 
-      // Hex overlay
+      // Grid
       const size = map.hexSize;
       const origin = map.origin;
       const cols = 40;
       const rows = 30;
 
-      ctx.save();
-
-      // Grid lines
       ctx.globalAlpha = 0.35;
       ctx.strokeStyle = '#b6c8ff';
-      ctx.lineWidth = 1;
+      ctx.lineWidth = 1 / zoom; // keep line visually stable when zooming
 
       for (let r = -rows; r <= rows; r++) {
         for (let q = -cols; q <= cols; q++) {
-          const center = axialToPixel({ q, r }, size, origin);
-          if (center.x < -size || center.x > w + size || center.y < -size || center.y > h + size) continue;
+          const centerW = axialToPixel({ q, r }, size, origin);
 
-          const corners = hexCorners(center, size);
+          // Cull using visible world bounds
+          if (
+            centerW.x < left - size ||
+            centerW.x > right + size ||
+            centerW.y < top - size ||
+            centerW.y > bottom + size
+          ) {
+            continue;
+          }
+
+          const corners = hexCorners(centerW, size);
           ctx.beginPath();
           ctx.moveTo(corners[0]!.x, corners[0]!.y);
           for (let i = 1; i < corners.length; i++) ctx.lineTo(corners[i]!.x, corners[i]!.y);
           ctx.closePath();
           ctx.stroke();
 
-          // Event dot (colored by category)
+          // Dot for notes
           const key = axialKey({ q, r });
           const rawNote = map.notes[key];
           if (rawNote) {
@@ -240,27 +297,27 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
             ctx.fillStyle = col;
             ctx.globalAlpha = 0.75;
             ctx.beginPath();
-            ctx.arc(center.x, center.y, 3, 0, Math.PI * 2);
+            ctx.arc(centerW.x, centerW.y, 3 / zoom, 0, Math.PI * 2);
             ctx.fill();
 
-            // restore for grid
             ctx.globalAlpha = 0.35;
             ctx.fillStyle = '#b6c8ff';
           }
         }
       }
 
-      // Highlight selection
+      // Selection highlight
       if (selected) {
         const a = selected.match(/q:(-?\d+),r:(-?\d+)/);
         if (a) {
-          const q = parseInt(a[1], 10), r = parseInt(a[2], 10);
-          const center = axialToPixel({ q, r }, size, origin);
-          const corners = hexCorners(center, size);
+          const q = parseInt(a[1], 10);
+          const r = parseInt(a[2], 10);
+          const centerW = axialToPixel({ q, r }, size, origin);
+          const corners = hexCorners(centerW, size);
 
           ctx.globalAlpha = 0.9;
           ctx.strokeStyle = '#ffd98a';
-          ctx.lineWidth = 2;
+          ctx.lineWidth = 2 / zoom;
           ctx.beginPath();
           ctx.moveTo(corners[0]!.x, corners[0]!.y);
           for (let i = 1; i < corners.length; i++) ctx.lineTo(corners[i]!.x, corners[i]!.y);
@@ -269,27 +326,27 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
         }
       }
 
-      // Calibration markers
+      // Calibration markers (world coords)
       if (calibOn) {
         ctx.globalAlpha = 1.0;
 
         if (calibP1) {
           ctx.fillStyle = '#00ff88';
           ctx.beginPath();
-          ctx.arc(calibP1.x, calibP1.y, 5, 0, Math.PI * 2);
+          ctx.arc(calibP1.x, calibP1.y, 5 / zoom, 0, Math.PI * 2);
           ctx.fill();
         }
 
         if (calibP2) {
           ctx.fillStyle = '#ff4d4d';
           ctx.beginPath();
-          ctx.arc(calibP2.x, calibP2.y, 5, 0, Math.PI * 2);
+          ctx.arc(calibP2.x, calibP2.y, 5 / zoom, 0, Math.PI * 2);
           ctx.fill();
         }
 
         if (calibP1 && calibP2) {
           ctx.strokeStyle = 'rgba(255,255,255,0.7)';
-          ctx.lineWidth = 2;
+          ctx.lineWidth = 2 / zoom;
           ctx.beginPath();
           ctx.moveTo(calibP1.x, calibP1.y);
           ctx.lineTo(calibP2.x, calibP2.y);
@@ -304,30 +361,29 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
 
     raf = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(raf);
-  }, [bgImg, map.hexSize, map.origin, map.notes, selected, catColors, calibOn, calibP1, calibP2]);
+  }, [bgImg, map.hexSize, map.origin, map.notes, selected, catColors, calibOn, calibP1, calibP2, zoom, pan.x, pan.y]);
 
   // --- Background image pick (compressed) ---
   const onPickBackground = async (file: File) => {
     const dataUrl = await fileToCompressedDataUrl(file, { maxWidth: 1600, quality: 0.82 });
-    setState({ ...state, map: { ...map, backgroundDataUrl: dataUrl } });
+    setMap({ backgroundDataUrl: dataUrl });
   };
 
-  // --- Click (select hex OR calibration) ---
-  const onCanvasClick = (ev: React.MouseEvent) => {
-    const c = canvasRef.current!;
-    const p = pointFromMouse(ev, c);
+  // --- Click selection / calibration using world coords ---
+  const handleCanvasClick = (screenP: { x: number; y: number }) => {
+    const worldP = screenToWorld(screenP, zoom, pan);
 
     if (calibOn) {
       if (!calibP1) {
-        setCalibP1(p);
+        setCalibP1(worldP);
         setCalibP2(null);
         return;
       }
       if (!calibP2) {
-        setCalibP2(p);
+        setCalibP2(worldP);
 
-        const dx = p.x - calibP1.x;
-        const dy = p.y - calibP1.y;
+        const dx = worldP.x - calibP1.x;
+        const dy = worldP.y - calibP1.y;
 
         const dir = CALIB_DIRS.find((d) => d.id === calibDir) ?? CALIB_DIRS[0]!;
         const ux = dir.unit.x;
@@ -335,98 +391,232 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
 
         const denom = ux * ux + uy * uy;
         const size = denom > 0 ? (dx * ux + dy * uy) / denom : map.hexSize;
-
         const safeSize = clamp(size, 2, 120);
+
         const origin = { x: calibP1.x, y: calibP1.y };
 
-        setState({ ...state, map: { ...map, hexSize: safeSize, origin } });
+        setMap({ hexSize: safeSize, origin });
 
-        // Auto-lock after calibration to prevent accidental changes
+        // Auto-lock after calibration
         setGridLocked(true);
         setCalibOn(false);
-        setCalibP1(null);
-        setCalibP2(null);
+        resetCalibration();
         return;
       }
 
       // restart calibration
-      setCalibP1(p);
+      setCalibP1(worldP);
       setCalibP2(null);
       return;
     }
 
-    // Normal selection
-    const axial = pixelToAxial({ x: p.x, y: p.y }, map.hexSize, map.origin);
+    const axial = pixelToAxial({ x: worldP.x, y: worldP.y }, map.hexSize, map.origin);
     setSelected(axialKey(axial));
   };
 
-  // --- Drag to move origin ---
-  const onMouseDown = (ev: React.MouseEvent) => {
-    if (calibOn || gridLocked) return;
-    dragRef.current.dragging = true;
-    dragRef.current.lastX = ev.clientX;
-    dragRef.current.lastY = ev.clientY;
+  // --- Zoom helper (keeps a world point under a screen point) ---
+  const zoomAtScreenPoint = (screenP: { x: number; y: number }, factor: number) => {
+    const beforeWorld = screenToWorld(screenP, zoom, pan);
+    const nextZoom = clamp(zoom * factor, 0.3, 5);
+
+    const nextPan = {
+      x: screenP.x - beforeWorld.x * nextZoom,
+      y: screenP.y - beforeWorld.y * nextZoom,
+    };
+
+    setZoomPan(nextZoom, nextPan);
   };
 
-  const onMouseUp = () => {
-    dragRef.current.dragging = false;
-  };
-
-  const onMouseMove = (ev: React.MouseEvent) => {
-    if (calibOn || gridLocked) return;
-    if (!dragRef.current.dragging) return;
-
-    const dxCss = ev.clientX - dragRef.current.lastX;
-    const dyCss = ev.clientY - dragRef.current.lastY;
-    dragRef.current.lastX = ev.clientX;
-    dragRef.current.lastY = ev.clientY;
-
-    const c = canvasRef.current!;
-    const rect = c.getBoundingClientRect();
-    const scaleX = c.width / rect.width;
-    const scaleY = c.height / rect.height;
-
-    const ox = map.origin.x + dxCss * scaleX;
-    const oy = map.origin.y + dyCss * scaleY;
-
-    setState({ ...state, map: { ...map, origin: { x: ox, y: oy } } });
-  };
-
-  // --- Wheel to adjust hex size ---
+  // --- Wheel zoom (mouse + trackpad pinch generates wheel too) ---
   const onWheel = (ev: React.WheelEvent) => {
-    if (calibOn || gridLocked) return;
     ev.preventDefault();
-    const delta = ev.deltaY;
-    const next = clamp(map.hexSize + (delta > 0 ? -0.5 : 0.5), 2, 120);
-    setState({ ...state, map: { ...map, hexSize: next } });
+    const c = canvasRef.current!;
+    const screenP = pointFromMouseLike(ev, c);
+
+    // Trackpads often use small deltas; CtrlKey often indicates pinch-zoom on some browsers.
+    const direction = ev.deltaY > 0 ? 0.92 : 1.08;
+    zoomAtScreenPoint(screenP, direction);
   };
 
-  // --- Keyboard nudges ---
+  // --- Pointer events for drag + pinch zoom ---
+  const onPointerDown = (ev: React.PointerEvent) => {
+    const c = canvasRef.current;
+    if (!c) return;
+
+    // Capture pointer so we keep getting moves even if leaving canvas
+    try {
+      c.setPointerCapture(ev.pointerId);
+    } catch {
+      // ignore
+    }
+
+    const p = pointFromMouseLike(ev, c);
+    pointersRef.current.set(ev.pointerId, p);
+
+    // If 2 pointers -> start pinch
+    if (pointersRef.current.size === 2) {
+      const pts = Array.from(pointersRef.current.values());
+      const a = pts[0]!;
+      const b = pts[1]!;
+      const cent = center(a, b);
+      const dist = Math.max(1, distance(a, b));
+
+      pinchRef.current.active = true;
+      pinchRef.current.initialDist = dist;
+      pinchRef.current.initialZoom = zoom;
+
+      // World anchor = world point under pinch center at start
+      pinchRef.current.worldAnchor = screenToWorld(cent, zoom, pan);
+
+      // Stop drag mode while pinching
+      dragRef.current.mode = 'none';
+      dragRef.current.last = null;
+      return;
+    }
+
+    // 1 pointer: choose drag mode
+    if (calibOn) {
+      // In calibration mode, we don't drag; click will be handled on pointer up
+      dragRef.current.mode = 'none';
+      dragRef.current.last = null;
+      return;
+    }
+
+    if (gridLocked) {
+      // Drag pans the view
+      dragRef.current.mode = 'pan';
+    } else {
+      // Drag moves the grid origin
+      dragRef.current.mode = 'origin';
+    }
+    dragRef.current.last = p;
+  };
+
+  const onPointerMove = (ev: React.PointerEvent) => {
+    const c = canvasRef.current;
+    if (!c) return;
+
+    if (!pointersRef.current.has(ev.pointerId)) return;
+    const p = pointFromMouseLike(ev, c);
+    pointersRef.current.set(ev.pointerId, p);
+
+    // Pinch zoom (2 pointers)
+    if (pinchRef.current.active && pointersRef.current.size >= 2) {
+      const pts = Array.from(pointersRef.current.values()).slice(0, 2);
+      const a = pts[0]!;
+      const b = pts[1]!;
+      const cent = center(a, b);
+      const dist = Math.max(1, distance(a, b));
+
+      const scale = dist / pinchRef.current.initialDist;
+      const nextZoom = clamp(pinchRef.current.initialZoom * scale, 0.3, 5);
+
+      const worldAnchor = pinchRef.current.worldAnchor;
+
+      // Pan so that worldAnchor remains under the current pinch center
+      const nextPan = {
+        x: cent.x - worldAnchor.x * nextZoom,
+        y: cent.y - worldAnchor.y * nextZoom,
+      };
+
+      setZoomPan(nextZoom, nextPan);
+      return;
+    }
+
+    // Drag (1 pointer)
+    if (dragRef.current.mode === 'none' || !dragRef.current.last) return;
+    const last = dragRef.current.last;
+
+    const dx = p.x - last.x;
+    const dy = p.y - last.y;
+
+    dragRef.current.last = p;
+
+    if (dragRef.current.mode === 'pan') {
+      // screen-space pan
+      setZoomPan(zoom, { x: pan.x + dx, y: pan.y + dy });
+      return;
+    }
+
+    if (dragRef.current.mode === 'origin') {
+      // Convert screen drag to world delta
+      const wdx = dx / zoom;
+      const wdy = dy / zoom;
+      setMap({ origin: { x: map.origin.x + wdx, y: map.origin.y + wdy } });
+      return;
+    }
+  };
+
+  const onPointerUp = (ev: React.PointerEvent) => {
+    const c = canvasRef.current;
+    if (!c) return;
+
+    const wasTracked = pointersRef.current.has(ev.pointerId);
+
+    pointersRef.current.delete(ev.pointerId);
+
+    // End pinch if fewer than 2 pointers
+    if (pointersRef.current.size < 2) {
+      pinchRef.current.active = false;
+    }
+
+    // End drag if no pointers left
+    if (pointersRef.current.size === 0) {
+      dragRef.current.mode = 'none';
+      dragRef.current.last = null;
+    }
+
+    // Treat as click if it was tracked and we weren't dragging/pinching
+    // (Simple heuristic: on pointer up, if we are not in drag mode and not pinching, accept as click)
+    if (wasTracked && !pinchRef.current.active && dragRef.current.mode === 'none') {
+      const screenP = pointFromMouseLike(ev, c);
+      handleCanvasClick(screenP);
+    }
+  };
+
+  const onPointerCancel = (ev: React.PointerEvent) => {
+    pointersRef.current.delete(ev.pointerId);
+    pinchRef.current.active = false;
+    if (pointersRef.current.size === 0) {
+      dragRef.current.mode = 'none';
+      dragRef.current.last = null;
+    }
+  };
+
+  // --- Keyboard nudges (persisted step). Only acts when NOT locked (to avoid fighting pan/zoom on laptop) ---
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if (gridLocked) return;
-
       const tag = (document.activeElement?.tagName ?? '').toLowerCase();
       if (tag === 'input' || tag === 'textarea' || (document.activeElement as any)?.isContentEditable) return;
 
+      if (e.key === '0' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        resetView();
+        return;
+      }
+
+      // When locked, we avoid origin nudges by default
+      if (gridLocked) return;
+
       if (e.key === 'ArrowLeft') {
-        setState({ ...state, map: { ...map, origin: { x: map.origin.x - nudgeStep, y: map.origin.y } } });
+        setMap({ origin: { x: map.origin.x - nudgeStep, y: map.origin.y } });
       } else if (e.key === 'ArrowRight') {
-        setState({ ...state, map: { ...map, origin: { x: map.origin.x + nudgeStep, y: map.origin.y } } });
+        setMap({ origin: { x: map.origin.x + nudgeStep, y: map.origin.y } });
       } else if (e.key === 'ArrowUp') {
-        setState({ ...state, map: { ...map, origin: { x: map.origin.x, y: map.origin.y - nudgeStep } } });
+        setMap({ origin: { x: map.origin.x, y: map.origin.y - nudgeStep } });
       } else if (e.key === 'ArrowDown') {
-        setState({ ...state, map: { ...map, origin: { x: map.origin.x, y: map.origin.y + nudgeStep } } });
+        setMap({ origin: { x: map.origin.x, y: map.origin.y + nudgeStep } });
       } else if (e.key === '+' || e.key === '=') {
-        setState({ ...state, map: { ...map, hexSize: clamp(map.hexSize + 0.5, 2, 120) } });
+        setMap({ hexSize: clamp(map.hexSize + 0.5, 2, 120) });
       } else if (e.key === '-' || e.key === '_') {
-        setState({ ...state, map: { ...map, hexSize: clamp(map.hexSize - 0.5, 2, 120) } });
+        setMap({ hexSize: clamp(map.hexSize - 0.5, 2, 120) });
       }
     };
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [state, setState, map, nudgeStep, gridLocked]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gridLocked, map.origin.x, map.origin.y, map.hexSize, nudgeStep, zoom, pan.x, pan.y]);
 
   // --- Selected note/category ---
   const selectedRaw = selected ? map.notes[selected] ?? '' : '';
@@ -440,27 +630,19 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
     const built = buildNote(category, text);
     if (!built.trim()) delete notes[selected];
     else notes[selected] = built;
-    setState({ ...state, map: { ...map, notes } });
-  };
-
-  const nudgeOrigin = (dx: number, dy: number) => {
-    if (gridLocked) return;
-    setState({ ...state, map: { ...map, origin: { x: map.origin.x + dx, y: map.origin.y + dy } } });
+    setMap({ notes });
   };
 
   const setCategoryColor = (cat: CategoryName, color: string) => {
     setCatColors((prev) => ({ ...prev, [cat]: color }));
   };
 
-  const resetCalibration = () => {
-    setCalibP1(null);
-    setCalibP2(null);
-  };
-
   return (
     <div className="card">
       <div className="h2">Eriador Map (hex overlay)</div>
-      <div className="muted small">Calibration: 2 clicks, then auto-lock grid to prevent accidental changes.</div>
+      <div className="muted small">
+        Zoom: mouse wheel / pinch. Pan: drag when locked. Move grid: drag when unlocked. Reset view: Ctrl/⌘ + 0.
+      </div>
 
       <div className="row" style={{ marginTop: 12 }}>
         <div className="col">
@@ -476,6 +658,29 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
           />
           <div className="small muted" style={{ marginTop: 6 }}>
             The image is auto-compressed to JPEG for reliable saving.
+          </div>
+
+          <div className="row" style={{ marginTop: 10, gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+            <button className="btn" onClick={resetView}>
+              Reset view (zoom/pan)
+            </button>
+
+            <label className="small muted" style={{ display: 'inline-flex', alignItems: 'center' }}>
+              <input
+                type="checkbox"
+                checked={gridLocked}
+                onChange={(e) => {
+                  const locked = e.target.checked;
+                  setGridLocked(locked);
+                  if (locked) {
+                    setCalibOn(false);
+                    resetCalibration();
+                  }
+                }}
+                style={{ marginRight: 8 }}
+              />
+              🔒 Lock grid (drag pans view, wheel zooms)
+            </label>
           </div>
 
           <div style={{ marginTop: 12 }}>
@@ -523,25 +728,6 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
                 <li>Click center of adjacent hex in that direction (red dot).</li>
               </ol>
             </div>
-
-            <div className="row" style={{ marginTop: 10, gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-              <label className="small muted">
-                <input
-                  type="checkbox"
-                  checked={gridLocked}
-                  onChange={(e) => {
-                    const locked = e.target.checked;
-                    setGridLocked(locked);
-                    if (locked) {
-                      setCalibOn(false);
-                      resetCalibration();
-                    }
-                  }}
-                  style={{ marginRight: 8 }}
-                />
-                🔒 Lock grid position/size (disable drag + wheel + keyboard nudges)
-              </label>
-            </div>
           </div>
         </div>
 
@@ -559,8 +745,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
               onChange={(e) => {
                 const raw = parseFloat(e.target.value || '28');
                 const safe = Number.isFinite(raw) ? raw : 28;
-                const clamped = clamp(safe, 2, 120);
-                setState({ ...state, map: { ...map, hexSize: clamped } });
+                setMap({ hexSize: clamp(safe, 2, 120) });
               }}
             />
 
@@ -571,10 +756,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
               value={map.origin.x}
               disabled={gridLocked}
               onChange={(e) =>
-                setState({
-                  ...state,
-                  map: { ...map, origin: { ...map.origin, x: parseFloat(e.target.value || '0') } },
-                })
+                setMap({ origin: { ...map.origin, x: parseFloat(e.target.value || '0') } })
               }
             />
 
@@ -585,10 +767,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
               value={map.origin.y}
               disabled={gridLocked}
               onChange={(e) =>
-                setState({
-                  ...state,
-                  map: { ...map, origin: { ...map.origin, y: parseFloat(e.target.value || '0') } },
-                })
+                setMap({ origin: { ...map.origin, y: parseFloat(e.target.value || '0') } })
               }
             />
           </div>
@@ -607,23 +786,24 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
                 onChange={(e) => setNudgeStep(clamp(parseFloat(e.target.value || '2'), 0.5, 50))}
               />
               <div className="small muted" style={{ marginTop: 6 }}>
-                Arrow keys move origin. + / − adjust hex size.
+                Arrow keys move origin (unlocked). + / − adjust hex size.
               </div>
             </div>
 
             <div className="col">
-              <div className="small muted">Nudge origin</div>
+              <div className="small muted">Zoom</div>
+              <div className="small" style={{ marginTop: 6 }}>
+                {Math.round((zoom ?? 1) * 100)}%
+              </div>
               <div className="row" style={{ gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
-                <button className="btn" onClick={() => nudgeOrigin(0, -nudgeStep)} disabled={gridLocked}>↑</button>
-                <button className="btn" onClick={() => nudgeOrigin(-nudgeStep, 0)} disabled={gridLocked}>←</button>
-                <button className="btn" onClick={() => nudgeOrigin(nudgeStep, 0)} disabled={gridLocked}>→</button>
-                <button className="btn" onClick={() => nudgeOrigin(0, nudgeStep)} disabled={gridLocked}>↓</button>
+                <button className="btn" onClick={() => zoomAtScreenPoint({ x: 512, y: 320 }, 1.1)}>+</button>
+                <button className="btn" onClick={() => zoomAtScreenPoint({ x: 512, y: 320 }, 0.9)}>-</button>
               </div>
             </div>
           </div>
 
           <div className="small muted" style={{ marginTop: 10 }}>
-            Tip: drag the canvas to move the grid; mouse wheel changes hex size (unless locked).
+            Tip: When locked, drag pans the view. Wheel/pinch zooms around your pointer.
           </div>
         </div>
       </div>
@@ -633,14 +813,14 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
           ref={canvasRef}
           width={1024}
           height={640}
-          onClick={onCanvasClick}
-          onMouseDown={onMouseDown}
-          onMouseUp={onMouseUp}
-          onMouseLeave={onMouseUp}
-          onMouseMove={onMouseMove}
           onWheel={onWheel}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerCancel}
           style={{
-            cursor: calibOn ? 'crosshair' : gridLocked ? 'default' : dragRef.current.dragging ? 'grabbing' : 'grab',
+            touchAction: 'none', // IMPORTANT: enables custom pinch/pan on mobile
+            cursor: calibOn ? 'crosshair' : gridLocked ? 'grab' : 'grab',
           }}
         />
       </div>
