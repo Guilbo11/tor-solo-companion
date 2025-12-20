@@ -34,7 +34,7 @@ function clamp(n: number, min: number, max: number) {
 }
 
 /**
- * Backwards-compatible encoding:
+ * Note format (backwards-compatible):
  * - If note starts with "@cat:Something\n", we parse it.
  * - Otherwise: category = "None", text = full note.
  */
@@ -54,23 +54,20 @@ function buildNote(category: CategoryName, text: string): string {
   if (!t.trim() && category === 'None') return '';
   if (category === 'None') return t;
 
-  // IMPORTANT: avoid template literals (backticks) to prevent build issues with “smart backticks”
+  // Avoid template literals to prevent “smart backtick” build issues.
   return '@cat:' + category + '\n' + t;
 }
 
-function fileToDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const r = new FileReader();
-    r.onload = () => resolve(String(r.result));
-    r.onerror = () => reject(new Error('Failed to read file'));
-    r.readAsDataURL(file);
-  });
+function pointFromMouse(ev: React.MouseEvent, canvas: HTMLCanvasElement) {
+  const rect = canvas.getBoundingClientRect();
+  const x = (ev.clientX - rect.left) * (canvas.width / rect.width);
+  const y = (ev.clientY - rect.top) * (canvas.height / rect.height);
+  return { x, y };
 }
 
 /**
- * Calibration assumptions:
- * pointy-top axial layout (RedBlob style)
- * Neighbor vectors (in pixels, multiplied by size):
+ * Calibration assumes pointy-top axial layout.
+ * Neighbor vectors in pixels, multiplied by "size" (hex radius):
  * East:      (sqrt(3), 0)
  * NE:        (sqrt(3)/2, -3/2)
  * NW:        (-sqrt(3)/2, -3/2)
@@ -89,18 +86,57 @@ const CALIB_DIRS: { id: CalibDir; label: string; unit: { x: number; y: number } 
   { id: 'SE', label: 'South-East', unit: { x: Math.sqrt(3) / 2, y: 1.5 } },
 ];
 
-function pointFromMouse(ev: React.MouseEvent, canvas: HTMLCanvasElement) {
-  const rect = canvas.getBoundingClientRect();
-  const x = (ev.clientX - rect.left) * (canvas.width / rect.width);
-  const y = (ev.clientY - rect.top) * (canvas.height / rect.height);
-  return { x, y };
+/**
+ * Read an image file and compress it to a JPEG data URL.
+ * This prevents localStorage quota errors and ensures map + notes persist.
+ */
+function fileToCompressedDataUrl(
+  file: File,
+  opts?: { maxWidth?: number; quality?: number }
+): Promise<string> {
+  const maxWidth = opts?.maxWidth ?? 1600; // adjust if you want
+  const quality = opts?.quality ?? 0.82;   // 0.7–0.85 good balance
+
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onerror = () => reject(new Error('Failed to read file'));
+    r.onload = () => {
+      const src = String(r.result);
+      const img = new Image();
+      img.onerror = () => reject(new Error('Failed to load image'));
+      img.onload = () => {
+        try {
+          const scale = img.width > maxWidth ? maxWidth / img.width : 1;
+          const w = Math.max(1, Math.round(img.width * scale));
+          const h = Math.max(1, Math.round(img.height * scale));
+
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+
+          const ctx = canvas.getContext('2d');
+          if (!ctx) throw new Error('No canvas context');
+          ctx.drawImage(img, 0, 0, w, h);
+
+          const out = canvas.toDataURL('image/jpeg', quality);
+          resolve(out);
+        } catch (e) {
+          reject(e instanceof Error ? e : new Error('Failed to compress image'));
+        }
+      };
+      img.src = src;
+    };
+    r.readAsDataURL(file);
+  });
 }
 
 export default function MapPanel({ state, setState }: { state: StoredState; setState: (s: StoredState) => void }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [selected, setSelected] = useState<string>('');
 
-  // Category color settings (localStorage so we don't need to change StoredState)
+  const map = state.map;
+
+  // Category color settings (stored separately in localStorage)
   const [catColors, setCatColors] = useState<CatColors>(() => {
     try {
       const raw = localStorage.getItem('tor_map_category_colors');
@@ -120,11 +156,11 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
     }
   }, [catColors]);
 
-  // Alignment helpers
-  const [nudgeStep, setNudgeStep] = useState<number>(2); // px
+  // Nudge controls
+  const [nudgeStep, setNudgeStep] = useState<number>(2);
   const dragRef = useRef<{ dragging: boolean; lastX: number; lastY: number }>({ dragging: false, lastX: 0, lastY: 0 });
 
-  // 🔒 Grid lock (prevents drag + wheel + keyboard nudges)
+  // 🔒 Grid lock (prevents accidental movements)
   const [gridLocked, setGridLocked] = useState<boolean>(false);
 
   // Calibration mode
@@ -132,8 +168,6 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
   const [calibDir, setCalibDir] = useState<CalibDir>('E');
   const [calibP1, setCalibP1] = useState<{ x: number; y: number } | null>(null);
   const [calibP2, setCalibP2] = useState<{ x: number; y: number } | null>(null);
-
-  const map = state.map;
 
   const bgImg = useMemo(() => {
     if (!map.backgroundDataUrl) return null;
@@ -154,7 +188,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
       const w = c.width, h = c.height;
       ctx.clearRect(0, 0, w, h);
 
-      // background
+      // Background
       if (bgImg && bgImg.complete) {
         const scale = Math.min(w / bgImg.width, h / bgImg.height);
         const dw = bgImg.width * scale;
@@ -167,13 +201,15 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
         ctx.fillRect(0, 0, w, h);
       }
 
-      // hex overlay
+      // Hex overlay
       const size = map.hexSize;
       const origin = map.origin;
       const cols = 40;
       const rows = 30;
 
       ctx.save();
+
+      // Grid lines
       ctx.globalAlpha = 0.35;
       ctx.strokeStyle = '#b6c8ff';
       ctx.lineWidth = 1;
@@ -190,7 +226,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
           ctx.closePath();
           ctx.stroke();
 
-          // event dot (colored by category)
+          // Event dot (colored by category)
           const key = axialKey({ q, r });
           const rawNote = map.notes[key];
           if (rawNote) {
@@ -203,13 +239,14 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
             ctx.arc(center.x, center.y, 3, 0, Math.PI * 2);
             ctx.fill();
 
+            // restore for grid
             ctx.globalAlpha = 0.35;
             ctx.fillStyle = '#b6c8ff';
           }
         }
       }
 
-      // highlight selection
+      // Highlight selection
       if (selected) {
         const a = selected.match(/q:(-?\d+),r:(-?\d+)/);
         if (a) {
@@ -228,21 +265,24 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
         }
       }
 
-      // calibration markers
+      // Calibration markers
       if (calibOn) {
         ctx.globalAlpha = 1.0;
+
         if (calibP1) {
           ctx.fillStyle = '#00ff88';
           ctx.beginPath();
           ctx.arc(calibP1.x, calibP1.y, 5, 0, Math.PI * 2);
           ctx.fill();
         }
+
         if (calibP2) {
           ctx.fillStyle = '#ff4d4d';
           ctx.beginPath();
           ctx.arc(calibP2.x, calibP2.y, 5, 0, Math.PI * 2);
           ctx.fill();
         }
+
         if (calibP1 && calibP2) {
           ctx.strokeStyle = 'rgba(255,255,255,0.7)';
           ctx.lineWidth = 2;
@@ -254,6 +294,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
       }
 
       ctx.restore();
+
       raf = requestAnimationFrame(draw);
     };
 
@@ -261,12 +302,13 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
     return () => cancelAnimationFrame(raf);
   }, [bgImg, map.hexSize, map.origin, map.notes, selected, catColors, calibOn, calibP1, calibP2]);
 
+  // --- Background image pick (compressed) ---
   const onPickBackground = async (file: File) => {
-    const dataUrl = await fileToDataUrl(file);
+    const dataUrl = await fileToCompressedDataUrl(file, { maxWidth: 1600, quality: 0.82 });
     setState({ ...state, map: { ...map, backgroundDataUrl: dataUrl } });
   };
 
-  // Canvas: click selects hex OR does calibration
+  // --- Click (select hex OR calibration) ---
   const onCanvasClick = (ev: React.MouseEvent) => {
     const c = canvasRef.current!;
     const p = pointFromMouse(ev, c);
@@ -295,7 +337,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
 
         setState({ ...state, map: { ...map, hexSize: safeSize, origin } });
 
-        // After calibration, lock the grid by default
+        // Auto-lock after calibration to prevent accidental changes
         setGridLocked(true);
         setCalibOn(false);
         setCalibP1(null);
@@ -303,6 +345,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
         return;
       }
 
+      // restart calibration
       setCalibP1(p);
       setCalibP2(null);
       return;
@@ -313,7 +356,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
     setSelected(axialKey(axial));
   };
 
-  // Canvas: drag to move origin (alignment helper)
+  // --- Drag to move origin ---
   const onMouseDown = (ev: React.MouseEvent) => {
     if (calibOn || gridLocked) return;
     dragRef.current.dragging = true;
@@ -345,7 +388,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
     setState({ ...state, map: { ...map, origin: { x: ox, y: oy } } });
   };
 
-  // Canvas: wheel to adjust hex size (alignment helper)
+  // --- Wheel to adjust hex size ---
   const onWheel = (ev: React.WheelEvent) => {
     if (calibOn || gridLocked) return;
     ev.preventDefault();
@@ -354,7 +397,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
     setState({ ...state, map: { ...map, hexSize: next } });
   };
 
-  // Keyboard nudges
+  // --- Keyboard nudges ---
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (gridLocked) return;
@@ -381,7 +424,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [state, setState, map, nudgeStep, gridLocked]);
 
-  // Selected hex note/category
+  // --- Selected note/category ---
   const selectedRaw = selected ? map.notes[selected] ?? '' : '';
   const parsedSelected = useMemo(() => parseNote(selectedRaw), [selectedRaw]);
   const selectedCategory = parsedSelected.category;
@@ -413,7 +456,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
   return (
     <div className="card">
       <div className="h2">Eriador Map (hex overlay)</div>
-      <div className="muted small">Calibration: 2 clicks. Then lock grid to avoid accidental moves.</div>
+      <div className="muted small">Calibration: 2 clicks, then auto-lock grid to prevent accidental changes.</div>
 
       <div className="row" style={{ marginTop: 12 }}>
         <div className="col">
@@ -427,11 +470,15 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
               if (f) onPickBackground(f);
             }}
           />
+          <div className="small muted" style={{ marginTop: 6 }}>
+            The image is auto-compressed to JPEG for reliable saving.
+          </div>
 
           <div style={{ marginTop: 12 }}>
             <div className="h2" style={{ fontSize: 16 }}>
               Calibration
             </div>
+
             <div className="row" style={{ gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
               <label className="small muted">
                 <input
@@ -471,11 +518,10 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
               Steps:
               <ol style={{ marginTop: 6 }}>
                 <li>Enable calibration.</li>
-                <li>Choose direction (usually “East/West”).</li>
+                <li>Pick direction (usually East/West).</li>
                 <li>Click center of one printed hex (green dot).</li>
                 <li>Click center of adjacent hex in that direction (red dot).</li>
               </ol>
-              After calibration, grid auto-locks (you can unlock below to fine tune).
             </div>
 
             <div className="row" style={{ marginTop: 10, gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -559,21 +605,32 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
                 disabled={gridLocked}
                 onChange={(e) => setNudgeStep(clamp(parseFloat(e.target.value || '2'), 0.5, 50))}
               />
+              <div className="small muted" style={{ marginTop: 6 }}>
+                Arrow keys move origin. + / − adjust hex size.
+              </div>
             </div>
 
             <div className="col">
               <div className="small muted">Nudge origin</div>
               <div className="row" style={{ gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
-                <button className="btn" onClick={() => nudgeOrigin(0, -nudgeStep)} disabled={gridLocked}>↑</button>
-                <button className="btn" onClick={() => nudgeOrigin(-nudgeStep, 0)} disabled={gridLocked}>←</button>
-                <button className="btn" onClick={() => nudgeOrigin(nudgeStep, 0)} disabled={gridLocked}>→</button>
-                <button className="btn" onClick={() => nudgeOrigin(0, nudgeStep)} disabled={gridLocked}>↓</button>
+                <button className="btn" onClick={() => nudgeOrigin(0, -nudgeStep)} disabled={gridLocked}>
+                  ↑
+                </button>
+                <button className="btn" onClick={() => nudgeOrigin(-nudgeStep, 0)} disabled={gridLocked}>
+                  ←
+                </button>
+                <button className="btn" onClick={() => nudgeOrigin(nudgeStep, 0)} disabled={gridLocked}>
+                  →
+                </button>
+                <button className="btn" onClick={() => nudgeOrigin(0, nudgeStep)} disabled={gridLocked}>
+                  ↓
+                </button>
               </div>
             </div>
           </div>
 
           <div className="small muted" style={{ marginTop: 10 }}>
-            If alignment drifts on the edges, your image may be stretched/low-res. Try a higher-res export.
+            Tip: drag the canvas to move the grid; mouse wheel changes hex size (unless locked).
           </div>
         </div>
       </div>
@@ -601,6 +658,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
         <div className="col">
           <div className="badge">Selected hex</div>
           <div style={{ marginTop: 8, fontWeight: 700 }}>{selected || '—'}</div>
+          <div className="small muted">Click a hex to select. Add a category + note/event.</div>
 
           <div style={{ marginTop: 12 }}>
             <label className="small muted">Category</label>
@@ -626,6 +684,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
                 disabled={!selected}
                 title="Pick dot color"
               />
+              <div className="small muted">Applies to all hexes with this category.</div>
             </div>
           </div>
 
@@ -660,3 +719,4 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
     </div>
   );
 }
+
