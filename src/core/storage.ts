@@ -21,18 +21,20 @@ export type MapState = {
   backgroundDataUrl?: string;
 
   // hex overlay settings
-  hexSize: number; // pixels radius (world coords)
-  origin: { x: number; y: number }; // where axial (0,0) sits in world coords
+  hexSize: number; // pixels radius
+  origin: { x: number; y: number }; // where axial (0,0) sits in canvas coords
   notes: Record<string, string>; // hexKey -> note
 
-  // ✅ persisted UI prefs
-  gridLocked?: boolean;
-  nudgeStep?: number;
-  calibDir?: CalibDir;
+  // UI/interaction state (persisted)
+  gridLocked?: boolean;                 // lock grid editing (drag pans view)
+  showGrid?: boolean;                   // show/hide hex overlay + dots
+  showSettings?: boolean;               // show/hide map settings UI
+  nudgeStep?: number;                   // arrow-key step when unlocked
+  calibDir?: CalibDir;                  // calibration direction
 
-  // ✅ zoom/pan (view camera)
-  zoom?: number; // 1 = 100%
-  pan?: { x: number; y: number }; // screen-space pixels
+  // view transform (persisted)
+  zoom?: number;
+  pan?: { x: number; y: number };
 };
 
 export type OracleTable = {
@@ -50,94 +52,38 @@ export type OracleState = {
 };
 
 const KEY = 'tor_solo_companion_state_v1';
-const MAP_BG_KEY = 'tor_solo_companion_map_bg_v1';
-
-function ensureMapDefaults(m: MapState): MapState {
-  const out: MapState = { ...m };
-
-  if (out.gridLocked === undefined) out.gridLocked = false;
-  if (out.nudgeStep === undefined) out.nudgeStep = 2;
-  if (out.calibDir === undefined) out.calibDir = 'E';
-
-  if (out.zoom === undefined) out.zoom = 1;
-  if (!out.pan) out.pan = { x: 0, y: 0 };
-
-  return out;
-}
 
 export function loadState(): StoredState {
-  let base: StoredState;
-
   const raw = localStorage.getItem(KEY);
-  if (!raw) {
-    base = defaultState();
-  } else {
-    try {
-      const parsed = JSON.parse(raw) as StoredState;
-      base = parsed?.version === 1 ? parsed : defaultState();
-    } catch {
-      base = defaultState();
-    }
-  }
-
-  // Merge background image stored separately (best-effort)
+  if (!raw) return defaultState();
   try {
-    const bg = localStorage.getItem(MAP_BG_KEY);
-    if (bg) {
-      base = { ...base, map: { ...base.map, backgroundDataUrl: bg } };
-    }
+    const parsed = JSON.parse(raw) as StoredState;
+    if (parsed?.version !== 1) return defaultState();
+
+    // Ensure defaults exist even if older saved state is missing new fields
+    return ensureDefaults(parsed);
   } catch {
-    // ignore
+    return defaultState();
   }
-
-  // Back-compat defaults
-  base = { ...base, map: ensureMapDefaults(base.map) };
-
-  return base;
 }
 
-/**
- * Robust save:
- * - Always save core state WITHOUT background image (so map grid + notes persist)
- * - Save background separately (best-effort)
- * - Never let background failure block saving the rest
- */
 export function saveState(state: StoredState) {
-  // 1) Save core state without bg
-  try {
-    const withoutBg: StoredState = {
-      ...state,
-      map: { ...ensureMapDefaults(state.map), backgroundDataUrl: undefined },
-    };
-    localStorage.setItem(KEY, JSON.stringify(withoutBg));
-  } catch (e) {
-    console.error('saveState(core) failed:', e);
-    return;
-  }
-
-  // 2) Save background separately (best-effort)
-  try {
-    const bg = state.map.backgroundDataUrl;
-    if (bg && bg.length > 0) localStorage.setItem(MAP_BG_KEY, bg);
-    else localStorage.removeItem(MAP_BG_KEY);
-  } catch (e) {
-    console.warn('saveState(background) failed (image likely too large). Core state is still saved.', e);
-  }
+  localStorage.setItem(KEY, JSON.stringify(state));
 }
 
 export function defaultState(): StoredState {
-  return {
+  return ensureDefaults({
     version: 1,
     journal: [],
     map: {
       hexSize: 28,
       origin: { x: 380, y: 260 },
       notes: {},
-
       gridLocked: false,
+      showGrid: true,
+      showSettings: true,
       nudgeStep: 2,
       calibDir: 'E',
-
       zoom: 1,
       pan: { x: 0, y: 0 },
     },
@@ -152,7 +98,7 @@ export function defaultState(): StoredState {
       },
       history: [],
     },
-  };
+  });
 }
 
 export function exportState(state: StoredState): string {
@@ -162,6 +108,60 @@ export function exportState(state: StoredState): string {
 export function importState(json: string): StoredState {
   const parsed = JSON.parse(json) as StoredState;
   if (!parsed || parsed.version !== 1) throw new Error('Unsupported file format.');
-  parsed.map = ensureMapDefaults(parsed.map);
-  return parsed;
+  return ensureDefaults(parsed);
+}
+
+function ensureDefaults(s: StoredState): StoredState {
+  const out: StoredState = {
+    version: 1,
+    journal: Array.isArray(s.journal) ? s.journal : [],
+    oracle: ensureOracleDefaults(s.oracle),
+    map: ensureMapDefaults(s.map),
+  };
+  return out;
+}
+
+function ensureOracleDefaults(o: any): OracleState {
+  const likelihoodDefaults: OracleState['likelihood'] = {
+    Certain: { yes: 95, maybe: 99 },
+    Likely: { yes: 70, maybe: 89 },
+    Possible: { yes: 50, maybe: 69 },
+    Unlikely: { yes: 30, maybe: 49 },
+    'Very Unlikely': { yes: 10, maybe: 29 },
+  };
+
+  const likelihood = o?.likelihood && typeof o.likelihood === 'object' ? o.likelihood : {};
+  const merged: any = { ...likelihoodDefaults, ...likelihood };
+
+  return {
+    tables: Array.isArray(o?.tables) ? o.tables : [],
+    likelihood: merged,
+    history: Array.isArray(o?.history) ? o.history : [],
+  };
+}
+
+function ensureMapDefaults(m: any): MapState {
+  const out: MapState = {
+    backgroundDataUrl: typeof m?.backgroundDataUrl === 'string' ? m.backgroundDataUrl : undefined,
+    hexSize: typeof m?.hexSize === 'number' ? m.hexSize : 28,
+    origin: {
+      x: typeof m?.origin?.x === 'number' ? m.origin.x : 380,
+      y: typeof m?.origin?.y === 'number' ? m.origin.y : 260,
+    },
+    notes: (m?.notes && typeof m.notes === 'object') ? m.notes : {},
+
+    gridLocked: typeof m?.gridLocked === 'boolean' ? m.gridLocked : false,
+    showGrid: typeof m?.showGrid === 'boolean' ? m.showGrid : true,
+    showSettings: typeof m?.showSettings === 'boolean' ? m.showSettings : true,
+    nudgeStep: typeof m?.nudgeStep === 'number' ? m.nudgeStep : 2,
+    calibDir: (m?.calibDir ?? 'E') as CalibDir,
+
+    zoom: typeof m?.zoom === 'number' ? m.zoom : 1,
+    pan: {
+      x: typeof m?.pan?.x === 'number' ? m.pan.x : 0,
+      y: typeof m?.pan?.y === 'number' ? m.pan.y : 0,
+    },
+  };
+
+  return out;
 }
