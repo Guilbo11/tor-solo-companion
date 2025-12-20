@@ -15,15 +15,22 @@ export type JournalEntry = {
 };
 
 export type MapState = {
-  backgroundDataUrl?: string; // may be large
-  hexSize: number;
-  origin: { x: number; y: number };
-  notes: Record<string, string>;
+  // background image as data URL (user-provided file -> stored locally)
+  backgroundDataUrl?: string;
+
+  // hex overlay settings
+  hexSize: number; // pixels radius
+  origin: { x: number; y: number }; // where axial (0,0) sits in canvas coords
+  notes: Record<string, string>; // hexKey -> note
+
+  // ✅ persist "lock grid"
+  gridLocked?: boolean;
 };
 
 export type OracleTable = {
   id: string;
   name: string;
+  // A table is a list of entries; you can also model ranges later if needed.
   entries: { text: string; weight?: number }[];
 };
 
@@ -31,6 +38,8 @@ export type Likelihood = 'Certain' | 'Likely' | 'Possible' | 'Unlikely' | 'Very 
 
 export type OracleState = {
   tables: OracleTable[];
+  // Custom likelihood thresholds for your PDFs (edit in-app).
+  // This is intentionally configurable so you can match Strider Mode precisely.
   likelihood: Record<Likelihood, { yes: number; maybe: number }>;
   history: { at: string; kind: 'Ask' | 'Table'; prompt: string; result: string }[];
 };
@@ -63,6 +72,11 @@ export function loadState(): StoredState {
     // ignore
   }
 
+  // Ensure map.gridLocked has a default
+  if (base.map.gridLocked === undefined) {
+    base = { ...base, map: { ...base.map, gridLocked: false } };
+  }
+
   return base;
 }
 
@@ -91,7 +105,6 @@ export function saveState(state: StoredState) {
     if (bg && bg.length > 0) localStorage.setItem(MAP_BG_KEY, bg);
     else localStorage.removeItem(MAP_BG_KEY);
   } catch (e) {
-    // Common: QuotaExceededError if bg too big.
     console.warn('saveState(background) failed (image likely too large). Core state is still saved.', e);
   }
 }
@@ -104,6 +117,7 @@ export function defaultState(): StoredState {
       hexSize: 28,
       origin: { x: 380, y: 260 },
       notes: {},
+      gridLocked: false, // ✅ default
     },
     oracle: {
       tables: [],
@@ -126,5 +140,9 @@ export function exportState(state: StoredState): string {
 export function importState(json: string): StoredState {
   const parsed = JSON.parse(json) as StoredState;
   if (!parsed || parsed.version !== 1) throw new Error('Unsupported file format.');
+
+  // Back-compat: ensure gridLocked exists
+  if (parsed.map.gridLocked === undefined) parsed.map.gridLocked = false;
+
   return parsed;
 }
