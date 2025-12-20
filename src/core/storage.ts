@@ -1,90 +1,12 @@
-
-export type GameMode = 'normal'|'strider';
-
-export type StoredStateV1 = {
-  version: 1;
-  journal: JournalEntry[];
-  map: MapState;
-  oracle: OracleState;
-};
-
 export type StoredState = {
-  version: 2;
-  mode: GameMode;
-  heroes: Hero[];
-  activeHeroId: string|null;
-
-  // Journeys (structured)
+  version: 3;
+  journal: JournalEntry[];
   journeys: Journey[];
-
-  // legacy notes journal (from v1)
-  notes: JournalEntry[];
-
   fellowship: FellowshipState;
-
   map: MapState;
   oracle: OracleState;
-};
-
-export type FellowshipState = {
-  mode: GameMode;
-  safeHaven: string;
-  patronId: string|null;
-  fellowshipRating: number; // normal mode
-  fellowshipFocusHeroId: string|null; // normal mode
-  notes: string;
-};
-
-export type Hero = {
-  id: string;
-  name: string;
-  cultureId: string|null;
-  callingId: string|null;
-
-  // Attributes
-  strength: number;
-  heart: number;
-  wits: number;
-
-  // Derived / resources
-  enduranceMax: number;
-  hopeMax: number;
-  parry: number;
-  shadow: number;
-  load: number;
-
-  // Skills (by id, e.g. "awe") rating + favoured flag
-  skills: Record<string, { rating: number; favoured: boolean }>;
-
-  // Combat proficiencies (freeform for now)
-  combatProficiencies: Record<string, number>;
-
-  // Features
-  features: string[]; // feature ids
-
-  // Inventory (names or compendium ids later)
-  inventory: { id: string; name: string; kind: 'equipment'|'treasure'|'other'; notes?: string; load?: number }[];
-
-  // UI
-  ui: { expanded: boolean };
-  updatedAt: string;
-};
-
-export type JourneyRole = 'Guide'|'Scout'|'Look-out'|'Hunter';
-
-export type Journey = {
-  id: string;
-  title: string;
-  mode: GameMode;
-  createdAt: string;
-  updatedAt: string;
-
-  origin: string;
-  destination: string;
-
-  roles: Partial<Record<JourneyRole, string>>; // heroId
-  events: { id: string; title: string; body: string; day?: number }[];
-  notes: string;
+  heroes: Hero[];
+  ui?: UIState;
 };
 
 export type JournalEntry = {
@@ -96,224 +18,263 @@ export type JournalEntry = {
   linkedHex?: string; // e.g. "q:12,r:-4"
 };
 
-// --- Oracle state (unchanged from base)
-export type OracleState = {
-  lastResults: { id: string; name: string; result: string; createdAt: string }[];
-};
-
-// --- Map state (copied from base, lightly trimmed)
-export type CalibDir = 'E'|'W'|'N'|'S';
-export type MapState = {
-  bgDataUrl: string|null;
-
-  // grid
-  hexSize: number;
-  origin: { x: number; y: number };
-  showGrid: boolean;
-  showSettings: boolean;
-  nudgeStep: number;
-  calibDir: CalibDir;
-
-  // view
-  zoom: number;
-  pan: { x: number; y: number };
-
-  // pins
-  pins: { id: string; x: number; y: number; color: string; label?: string }[];
-
-  // selection
-  selectedHex?: string|null;
-
-  // notes bound to hexes
-  hexNotes: { id: string; hex: string; title: string; body: string }[];
-};
-
-const STORAGE_KEY = 'tor-solo-companion.state';
-
-export function defaultState(): StoredState {
-  const now = new Date().toISOString();
-  return {
-    version: 2,
-    mode: 'strider',
-    heroes: [],
-    activeHeroId: null,
-    journeys: [],
-    notes: [],
-    fellowship: {
-      mode: 'strider',
-      safeHaven: '',
-      patronId: null,
-      fellowshipRating: 0,
-      fellowshipFocusHeroId: null,
-      notes: '',
-    },
-    map: defaultMap(),
-    oracle: { lastResults: [] },
+export type Journey = {
+  id: string;
+  createdAt: string; // ISO
+  title: string;
+  from?: string;
+  to?: string;
+  mode: 'company' | 'strider';
+  roles?: {
+    guide?: string;
+    scout?: string;
+    hunter?: string;
+    lookout?: string;
   };
-}
+  events: { id: string; title: string; body?: string }[];
+};
+
+export type FellowshipState = {
+  mode: 'company' | 'strider';
+  companyName?: string;
+  patronId?: string;
+  safeHaven?: string;
+  focusHeroId?: string; // Strider mode
+};
+
+export type UIState = {
+  activeHeroId?: string;
+  heroesExpandedId?: string | null;
+};
+
+export type Hero = {
+  id: string;
+  name: string;
+  createdAt: string; // ISO
+  updatedAt: string; // ISO
+
+  tnDefault?: number;
+  cultureId?: string;
+  callingId?: string;
+  featureIds?: string[];
+  virtueIds?: string[];
+  rewardIds?: string[];
+
+  skillRatings?: Record<string, number>;   // 0-6
+  skillFavoured?: Record<string, boolean>;
+
+  inventory?: { name: string; qty: number; ref?: { pack: string; id: string } }[];
+  notes?: string;
+};
+
+
+export type CalibDir = 'E' | 'NE' | 'NW' | 'W' | 'SW' | 'SE';
+
+export type MapState = {
+  // background image as data URL (user-provided file -> stored locally)
+  backgroundDataUrl?: string;
+
+  // hex overlay settings
+  hexSize: number; // pixels radius
+  origin: { x: number; y: number }; // where axial (0,0) sits in canvas coords
+  notes: Record<string, string>; // hexKey -> note
+
+  // UI/interaction state (persisted)
+  gridLocked?: boolean;                 // lock grid editing (drag pans view)
+  showGrid?: boolean;                   // show/hide hex overlay + dots
+  showSettings?: boolean;               // show/hide map settings UI
+  nudgeStep?: number;                   // arrow-key step when unlocked
+  calibDir?: CalibDir;                  // calibration direction
+
+  // view transform (persisted)
+  zoom?: number;
+  pan?: { x: number; y: number };
+};
+
+export type OracleTable = {
+  id: string;
+  name: string;
+  entries: { text: string; weight?: number }[];
+};
+
+export type Likelihood = 'Certain' | 'Likely' | 'Possible' | 'Unlikely' | 'Very Unlikely';
+
+export type OracleState = {
+  tables: OracleTable[];
+  likelihood: Record<Likelihood, { yes: number; maybe: number }>;
+  history: { at: string; kind: 'Ask' | 'Table'; prompt: string; result: string }[];
+};
+
+const KEY = 'tor_solo_companion_state_v1';
 
 export function loadState(): StoredState {
+  const raw = localStorage.getItem(KEY);
+  if (!raw) return defaultState();
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return defaultState();
-    const parsed = JSON.parse(raw);
+    const parsed = JSON.parse(raw) as StoredState;
+    if (parsed?.version !== 1) return defaultState();
 
-    if (parsed?.version === 2) {
-      return sanitizeV2(parsed);
-    }
-    if (parsed?.version === 1) {
-      const v1 = parsed as StoredStateV1;
-      const s = defaultState();
-      s.notes = Array.isArray(v1.journal) ? v1.journal : [];
-      s.map = sanitizeMap(v1.map);
-      s.oracle = sanitizeOracle(v1.oracle);
-      return s;
-    }
-    return defaultState();
+    // Ensure defaults exist even if older saved state is missing new fields
+    return ensureDefaults(parsed);
   } catch {
     return defaultState();
   }
 }
 
 export function saveState(state: StoredState) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  localStorage.setItem(KEY, JSON.stringify(state));
 }
 
-// --- sanitizers
-function sanitizeOracle(o: any): OracleState {
-  const lastResults = Array.isArray(o?.lastResults) ? o.lastResults : [];
-  return { lastResults: lastResults.slice(-50).map((x: any) => ({
-    id: String(x?.id ?? crypto.randomUUID()),
-    name: String(x?.name ?? ''),
-    result: String(x?.result ?? ''),
-    createdAt: String(x?.createdAt ?? new Date().toISOString()),
-  })) };
+export function defaultState(): StoredState {
+  return ensureDefaults({
+    version: 3,
+    journal: [],
+    journeys: [],
+    fellowship: { mode: 'company', companyName: '' },
+    heroes: [],
+    ui: {},
+    map: {
+      hexSize: 28,
+      origin: { x: 380, y: 260 },
+      notes: {},
+      gridLocked: false,
+      showGrid: true,
+      showSettings: true,
+      nudgeStep: 2,
+      calibDir: 'E',
+      zoom: 1,
+      pan: { x: 0, y: 0 },
+    },
+    oracle: {
+      tables: [],
+      likelihood: {
+        Certain: { yes: 95, maybe: 99 },
+        Likely: { yes: 70, maybe: 89 },
+        Possible: { yes: 50, maybe: 69 },
+        Unlikely: { yes: 30, maybe: 49 },
+        'Very Unlikely': { yes: 10, maybe: 29 },
+      },
+      history: [],
+    },
+  });
 }
 
-function sanitizeV2(s: any): StoredState {
-  const out = defaultState();
-  out.mode = s?.mode === 'normal' ? 'normal' : 'strider';
-  out.heroes = Array.isArray(s?.heroes) ? s.heroes.map(sanitizeHero) : [];
-  out.activeHeroId = typeof s?.activeHeroId === 'string' ? s.activeHeroId : null;
-  out.journeys = Array.isArray(s?.journeys) ? s.journeys.map(sanitizeJourney) : [];
-  out.notes = Array.isArray(s?.notes) ? s.notes : [];
-  out.fellowship = sanitizeFellowship(s?.fellowship, out.mode);
-  out.map = sanitizeMap(s?.map);
-  out.oracle = sanitizeOracle(s?.oracle);
-  return out;
+export function exportState(state: StoredState): string {
+  return JSON.stringify(state, null, 2);
 }
 
-function sanitizeFellowship(f: any, mode: GameMode): FellowshipState {
-  return {
-    mode: f?.mode === 'normal' ? 'normal' : mode,
-    safeHaven: String(f?.safeHaven ?? ''),
-    patronId: typeof f?.patronId === 'string' ? f.patronId : null,
-    fellowshipRating: typeof f?.fellowshipRating === 'number' ? f.fellowshipRating : 0,
-    fellowshipFocusHeroId: typeof f?.fellowshipFocusHeroId === 'string' ? f.fellowshipFocusHeroId : null,
-    notes: String(f?.notes ?? ''),
-  };
+export function importState(json: string): StoredState {
+  const parsed = JSON.parse(json) as StoredState;
+  if (!parsed || parsed.version !== 1) throw new Error('Unsupported file format.');
+  return ensureDefaults(parsed);
 }
 
-function sanitizeHero(h: any): Hero {
-  const now = new Date().toISOString();
-  const skills = typeof h?.skills === 'object' && h.skills ? h.skills : {};
-  const out: Hero = {
-    id: String(h?.id ?? crypto.randomUUID()),
-    name: String(h?.name ?? 'Unnamed hero'),
-    cultureId: typeof h?.cultureId === 'string' ? h.cultureId : null,
-    callingId: typeof h?.callingId === 'string' ? h.callingId : null,
-    strength: n(h?.strength, 2),
-    heart: n(h?.heart, 2),
-    wits: n(h?.wits, 2),
-    enduranceMax: n(h?.enduranceMax, 20),
-    hopeMax: n(h?.hopeMax, 10),
-    parry: n(h?.parry, 0),
-    shadow: n(h?.shadow, 0),
-    load: n(h?.load, 0),
-    skills: Object.fromEntries(Object.entries(skills).map(([k,v]: any)=>[
-      String(k),
-      { rating: n(v?.rating, 0), favoured: !!v?.favoured }
-    ])),
-    combatProficiencies: typeof h?.combatProficiencies === 'object' && h.combatProficiencies ? h.combatProficiencies : {},
-    features: Array.isArray(h?.features) ? h.features.map(String) : [],
-    inventory: Array.isArray(h?.inventory) ? h.inventory.map((it:any)=>({
-      id: String(it?.id ?? crypto.randomUUID()),
-      name: String(it?.name ?? ''),
-      kind: (it?.kind === 'treasure' || it?.kind === 'other') ? it.kind : 'equipment',
-      notes: typeof it?.notes === 'string' ? it.notes : '',
-      load: typeof it?.load === 'number' ? it.load : undefined,
-    })) : [],
-    ui: { expanded: !!h?.ui?.expanded },
-    updatedAt: typeof h?.updatedAt === 'string' ? h.updatedAt : now,
+function ensureDefaults(s: StoredState): StoredState {
+  const out: StoredState = {
+    version: 3,
+    journal: Array.isArray((s as any).journal) ? (s as any).journal : [],
+    journeys: Array.isArray((s as any).journeys) ? (s as any).journeys.map(ensureJourneyDefaults) : [],
+    fellowship: ensureFellowshipDefaults((s as any).fellowship),
+    oracle: ensureOracleDefaults((s as any).oracle),
+    map: ensureMapDefaults((s as any).map),
+    heroes: Array.isArray((s as any).heroes) ? (s as any).heroes.map(ensureHeroDefaults) : [],
+    ui: (s as any).ui && typeof (s as any).ui === 'object' ? (s as any).ui : {},
   };
   return out;
 }
 
-function sanitizeJourney(j: any): Journey {
-  const now = new Date().toISOString();
+function ensureJourneyDefaults(j: any): Journey {
   return {
     id: String(j?.id ?? crypto.randomUUID()),
+    createdAt: String(j?.createdAt ?? new Date().toISOString()),
     title: String(j?.title ?? 'Journey'),
-    mode: j?.mode === 'normal' ? 'normal' : 'strider',
-    createdAt: typeof j?.createdAt === 'string' ? j.createdAt : now,
-    updatedAt: typeof j?.updatedAt === 'string' ? j.updatedAt : now,
-    origin: String(j?.origin ?? ''),
-    destination: String(j?.destination ?? ''),
-    roles: typeof j?.roles === 'object' && j.roles ? j.roles : {},
+    from: j?.from ? String(j.from) : undefined,
+    to: j?.to ? String(j.to) : undefined,
+    mode: (j?.mode === 'strider' ? 'strider' : 'company'),
+    roles: j?.roles && typeof j.roles === 'object' ? j.roles : {},
     events: Array.isArray(j?.events) ? j.events.map((e:any)=>({
       id: String(e?.id ?? crypto.randomUUID()),
-      title: String(e?.title ?? ''),
-      body: String(e?.body ?? ''),
-      day: typeof e?.day === 'number' ? e.day : undefined,
+      title: String(e?.title ?? 'Event'),
+      body: typeof e?.body === 'string' ? e.body : '',
     })) : [],
-    notes: String(j?.notes ?? ''),
   };
 }
 
-function n(x:any, d:number){ return typeof x === 'number' && isFinite(x) ? x : d; }
-
-function defaultMap(): MapState {
+function ensureFellowshipDefaults(f: any): FellowshipState {
   return {
-    bgDataUrl: null,
-    hexSize: 40,
-    origin: { x: 200, y: 200 },
-    showGrid: true,
-    showSettings: true,
-    nudgeStep: 2,
-    calibDir: 'E',
-    zoom: 1,
-    pan: { x: 0, y: 0 },
-    pins: [],
-    selectedHex: null,
-    hexNotes: [],
+    mode: (f?.mode === 'strider' ? 'strider' : 'company'),
+    companyName: typeof f?.companyName === 'string' ? f.companyName : '',
+    patronId: typeof f?.patronId === 'string' ? f.patronId : undefined,
+    safeHaven: typeof f?.safeHaven === 'string' ? f.safeHaven : '',
+    focusHeroId: typeof f?.focusHeroId === 'string' ? f.focusHeroId : undefined,
   };
 }
 
-function sanitizeMap(m: any): MapState {
-  const d = defaultMap();
-  return {
-    bgDataUrl: typeof m?.bgDataUrl === 'string' ? m.bgDataUrl : null,
-    hexSize: n(m?.hexSize, d.hexSize),
-    origin: { x: n(m?.origin?.x, d.origin.x), y: n(m?.origin?.y, d.origin.y) },
-    showGrid: typeof m?.showGrid === 'boolean' ? m.showGrid : d.showGrid,
-    showSettings: typeof m?.showSettings === 'boolean' ? m.showSettings : d.showSettings,
-    nudgeStep: n(m?.nudgeStep, d.nudgeStep),
-    calibDir: (m?.calibDir ?? d.calibDir) as any,
-    zoom: n(m?.zoom, d.zoom),
-    pan: { x: n(m?.pan?.x, d.pan.x), y: n(m?.pan?.y, d.pan.y) },
-    pins: Array.isArray(m?.pins) ? m.pins.map((p:any)=>({
-      id: String(p?.id ?? crypto.randomUUID()),
-      x: n(p?.x, 0),
-      y: n(p?.y, 0),
-      color: String(p?.color ?? '#ffffff'),
-      label: typeof p?.label === 'string' ? p.label : undefined,
+function ensureHeroDefaults(h: any): Hero {
+  const out: Hero = {
+    id: String(h?.id ?? crypto.randomUUID()),
+    name: String(h?.name ?? 'Unnamed'),
+    createdAt: String(h?.createdAt ?? new Date().toISOString()),
+    updatedAt: String(h?.updatedAt ?? new Date().toISOString()),
+    tnDefault: typeof h?.tnDefault === 'number' ? h.tnDefault : 20,
+    cultureId: h?.cultureId ? String(h.cultureId) : undefined,
+    callingId: h?.callingId ? String(h.callingId) : undefined,
+    featureIds: Array.isArray(h?.featureIds) ? h.featureIds.map(String) : [],
+    virtueIds: Array.isArray(h?.virtueIds) ? h.virtueIds.map(String) : [],
+    rewardIds: Array.isArray(h?.rewardIds) ? h.rewardIds.map(String) : [],
+    skillRatings: h?.skillRatings && typeof h.skillRatings === 'object' ? h.skillRatings : {},
+    skillFavoured: h?.skillFavoured && typeof h.skillFavoured === 'object' ? h.skillFavoured : {},
+    inventory: Array.isArray(h?.inventory) ? h.inventory.map((it:any)=>({
+      name: String(it?.name ?? ''),
+      qty: typeof it?.qty === 'number' ? it.qty : 1,
+      ref: it?.ref && typeof it.ref === 'object' ? { pack: String(it.ref.pack ?? ''), id: String(it.ref.id ?? '') } : undefined
     })) : [],
-    selectedHex: typeof m?.selectedHex === 'string' ? m.selectedHex : null,
-    hexNotes: Array.isArray(m?.hexNotes) ? m.hexNotes.map((hn:any)=>({
-      id: String(hn?.id ?? crypto.randomUUID()),
-      hex: String(hn?.hex ?? ''),
-      title: String(hn?.title ?? ''),
-      body: String(hn?.body ?? ''),
-    })) : [],
+    notes: typeof h?.notes === 'string' ? h.notes : '',
   };
+  return out;
+}
+
+function ensureOracleDefaults(o: any): OracleState {
+  const likelihoodDefaults: OracleState['likelihood'] = {
+    Certain: { yes: 95, maybe: 99 },
+    Likely: { yes: 70, maybe: 89 },
+    Possible: { yes: 50, maybe: 69 },
+    Unlikely: { yes: 30, maybe: 49 },
+    'Very Unlikely': { yes: 10, maybe: 29 },
+  };
+
+  const likelihood = o?.likelihood && typeof o.likelihood === 'object' ? o.likelihood : {};
+  const merged: any = { ...likelihoodDefaults, ...likelihood };
+
+  return {
+    tables: Array.isArray(o?.tables) ? o.tables : [],
+    likelihood: merged,
+    history: Array.isArray(o?.history) ? o.history : [],
+  };
+}
+
+function ensureMapDefaults(m: any): MapState {
+  const out: MapState = {
+    backgroundDataUrl: typeof m?.backgroundDataUrl === 'string' ? m.backgroundDataUrl : undefined,
+    hexSize: typeof m?.hexSize === 'number' ? m.hexSize : 28,
+    origin: {
+      x: typeof m?.origin?.x === 'number' ? m.origin.x : 380,
+      y: typeof m?.origin?.y === 'number' ? m.origin.y : 260,
+    },
+    notes: (m?.notes && typeof m.notes === 'object') ? m.notes : {},
+
+    gridLocked: typeof m?.gridLocked === 'boolean' ? m.gridLocked : false,
+    showGrid: typeof m?.showGrid === 'boolean' ? m.showGrid : true,
+    showSettings: typeof m?.showSettings === 'boolean' ? m.showSettings : true,
+    nudgeStep: typeof m?.nudgeStep === 'number' ? m.nudgeStep : 2,
+    calibDir: (m?.calibDir ?? 'E') as CalibDir,
+
+    zoom: typeof m?.zoom === 'number' ? m.zoom : 1,
+    pan: {
+      x: typeof m?.pan?.x === 'number' ? m.pan.x : 0,
+      y: typeof m?.pan?.y === 'number' ? m.pan.y : 0,
+    },
+  };
+
+  return out;
 }

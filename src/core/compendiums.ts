@@ -1,78 +1,42 @@
-
-export type CompendiumPack<T> = { pack: string; type: string; version: number; entries: T[] };
-
-export type SkillGroup = 'Personality'|'Movement'|'Perception'|'Survival'|'Custom'|'Vocation';
-export type AttributeName = 'Strength'|'Heart'|'Wits';
-
-export type SkillEntry = {
+export type CompendiumEntry = {
   id: string;
   name: string;
-  group: SkillGroup;
-  attribute: AttributeName;
+  group?: string;
   description?: string;
   flavor?: string;
+  [k: string]: any;
 };
 
-export type FeatureEntry = {
-  id: string;
-  name: string;
-  group: 'Distinctive Features';
-  description?: string;
-  flavor?: string;
+export type Compendium<T extends string = string> = {
+  pack: T;
+  type: string;
+  version: number;
+  entries: CompendiumEntry[];
 };
 
-export type CallingEntry = {
-  id: string;
-  name: string;
-  group: 'Callings';
-  description?: string;
-  flavor?: string;
-  favouredSkills?: string[];
-  additionalFeature?: string|null;
-  shadowPath?: string|null;
+import skillsJson from '../compendiums/tor2e-skills.json';
+import featuresJson from '../compendiums/tor2e-features.json';
+import culturesJson from '../compendiums/tor2e-cultures.json';
+import callingsJson from '../compendiums/tor2e-callings.json';
+import virtuesJson from '../compendiums/tor2e-virtues.json';
+import rewardsJson from '../compendiums/tor2e-rewards.json';
+import equipmentJson from '../compendiums/tor2e-equipment.json';
+
+export const compendiums = {
+  skills: skillsJson as unknown as Compendium<'tor2e-skills'>,
+  features: featuresJson as unknown as Compendium<'tor2e-features'>,
+  cultures: culturesJson as unknown as Compendium<'tor2e-cultures'>,
+  callings: callingsJson as unknown as Compendium<'tor2e-callings'>,
+  virtues: virtuesJson as unknown as Compendium<'tor2e-virtues'>,
+  rewards: rewardsJson as unknown as Compendium<'tor2e-rewards'>,
+  equipment: equipmentJson as unknown as Compendium<'tor2e-equipment'>,
 };
 
-export type CultureEntry = {
-  id: string;
-  name: string;
-  group: 'Cultures';
-  description?: string;
-  flavor?: string;
-  culturalBlessing?: string|null;
-  standardOfLiving?: string|null;
-  attributeSets?: { strength:number; heart:number; wits:number; label?:string }[];
-  derived?: { enduranceBase?: number|null; hopeBase?: number|null; parryBase?: number|null } | null;
-  startingSkills?: Record<string, number>;
-  favouredSkillChoices?: string[]; // skill names (UPPERCASE) that are candidates
-  combatProficienciesText?: string;
-  suggestedFeatures?: string[];
-  languages?: string[];
-  typicalNames?: { male?: string[]; female?: string[]; family?: string[] } | null;
-};
-
-export type PatronEntry = {
-  id: string;
-  name: string;
-  group: 'Patrons';
-  description?: string;
-};
-
-import skillsPack from '../compendiums/tor2e-skills.json';
-import featuresPack from '../compendiums/tor2e-features.json';
-import culturesPack from '../compendiums/tor2e-cultures.json';
-import callingsPack from '../compendiums/tor2e-callings.json';
-import patronsPack from '../compendiums/tor2e-patrons.json';
-
-export const Skills = skillsPack as CompendiumPack<SkillEntry>;
-export const Features = featuresPack as CompendiumPack<FeatureEntry>;
-export const Cultures = culturesPack as CompendiumPack<CultureEntry>;
-export const Callings = callingsPack as CompendiumPack<CallingEntry>;
-export const Patrons = patronsPack as CompendiumPack<PatronEntry>;
-
-export function findById<T extends {id:string}>(pack: CompendiumPack<T>, id: string): T | undefined {
-  return pack.entries.find(e => e.id === id);
+export function findEntryById(list: CompendiumEntry[], id?: string) {
+  if (!id) return undefined;
+  return list.find(e => e.id === id);
 }
 
-export function sortByName<T extends {name:string}>(arr: T[]): T[] {
-  return [...arr].sort((a,b)=>a.name.localeCompare(b.name));
+export function sortByName<T extends CompendiumEntry>(entries: T[]): T[] {
+  return [...entries].sort((a,b) => a.name.localeCompare(b.name));
 }

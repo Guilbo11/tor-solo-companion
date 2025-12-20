@@ -1,349 +1,346 @@
-
 import React, { useMemo, useState } from 'react';
-import { BottomSheet } from './BottomSheet';
-import { Callings, Cultures, Features, Skills, findById, sortByName } from '../core/compendiums';
-import type { Hero, StoredState, GameMode } from '../core/storage';
+import { StoredState, saveState } from '../core/storage';
+import { compendiums, findEntryById, sortByName } from '../core/compendiums';
+import BottomSheet from './BottomSheet';
 
-function skillKeyFromNameUpper(nameUpper: string): string | null {
-  const m = Skills.entries.find(s => s.name === nameUpper);
-  return m ? m.id : null;
+type Props = {
+  state: StoredState;
+  setState: React.Dispatch<React.SetStateAction<StoredState>>;
+};
+
+function uid(prefix: string) {
+  return prefix + '-' + Math.random().toString(36).slice(2, 10);
 }
 
-function applyCultureToHero(hero: Hero): Hero {
-  if (!hero.cultureId) return hero;
-  const c = findById(Cultures, hero.cultureId);
-  if (!c) return hero;
+export default function HeroesPanel({ state, setState }: Props) {
+  const [expandedId, setExpandedId] = useState<string | null>(state.ui?.heroesExpandedId ?? null);
+  const [activeId, setActiveId] = useState<string | null>(state.ui?.activeHeroId ?? null);
 
-  const next: Hero = { ...hero };
-  // Default derived from culture if present
-  if (c.attributeSets && c.attributeSets.length > 0) {
-    // keep hero values if already edited, otherwise use first set
-    if (hero.strength === 2 && hero.heart === 2 && hero.wits === 2) {
-      next.strength = c.attributeSets[0].strength;
-      next.heart = c.attributeSets[0].heart;
-      next.wits = c.attributeSets[0].wits;
-    }
-  }
-  if (c.derived) {
-    const endBase = c.derived.enduranceBase ?? null;
-    const hopeBase = c.derived.hopeBase ?? null;
-    const parryBase = c.derived.parryBase ?? null;
-    if (endBase != null) next.enduranceMax = next.strength + endBase;
-    if (hopeBase != null) next.hopeMax = next.heart + hopeBase;
-    if (parryBase != null) next.parry = next.wits + parryBase;
-  }
-
-  // Starting skills
-  if (c.startingSkills) {
-    const skills: Hero['skills'] = { ...next.skills };
-    for (const [nameLower, rating] of Object.entries(c.startingSkills)) {
-      const nameUpper = nameLower.toUpperCase();
-      const key = skillKeyFromNameUpper(nameUpper);
-      if (!key) continue;
-      if (!skills[key]) skills[key] = { rating, favoured: false };
-      else skills[key] = { ...skills[key], rating };
-    }
-    next.skills = skills;
-  }
-
-  // Default favoured candidates (mark none; UI will choose)
-  // Combat proficiencies: keep freeform, but could parse later from c.combatProficienciesText
-
-  next.updatedAt = new Date().toISOString();
-  return next;
-}
-
-export function HeroesPanel(props: { state: StoredState; setState: (s: StoredState) => void }) {
-  const { state, setState } = props;
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [sheetTitle, setSheetTitle] = useState<string>('');
-  const [sheetBody, setSheetBody] = useState<React.ReactNode>(null);
+  const [sheetTitle, setSheetTitle] = useState('');
+  const [sheetBody, setSheetBody] = useState<{ description?: string; flavor?: string } | null>(null);
 
-  const sortedHeroes = useMemo(() => [...state.heroes].sort((a,b)=>a.name.localeCompare(b.name)), [state.heroes]);
+  const heroes = state.heroes ?? [];
 
-  const activeHero = useMemo(() => state.activeHeroId ? state.heroes.find(h=>h.id===state.activeHeroId) ?? null : null,
-    [state.activeHeroId, state.heroes]);
+  const skillsByGroup = useMemo(() => {
+    const groups: Record<string, any[]> = { Personality: [], Movement: [], Perception: [], Survival: [], Custom: [], Vocation: [] };
+    const entries = compendiums.skills.entries ?? [];
+    for (const e of entries) groups[e.group || 'Custom'].push(e);
+    for (const k of Object.keys(groups)) groups[k] = sortByName(groups[k]);
+    return groups;
+  }, []);
 
-  function openSeeMore(title: string, body: React.ReactNode) {
-    setSheetTitle(title);
-    setSheetBody(body);
-    setSheetOpen(true);
+  function getCultureEntry(cultureId?: string) {
+    return findEntryById(compendiums.cultures.entries ?? [], cultureId);
+  }
+
+  function applyCultureAutofill(hero: any) {
+    const c: any = getCultureEntry(hero.cultureId);
+    if (!c) return;
+    const nextRatings = { ...(hero.skillRatings ?? {}) };
+    if (c.startingSkills) {
+      for (const [sid, val] of Object.entries(c.startingSkills)) {
+        nextRatings[sid] = val as any;
+      }
+    }
+    updateHero(hero.id, { skillRatings: nextRatings });
+  }
+
+  function autoFillWarGear(hero: any) {
+    const c: any = getCultureEntry(hero.cultureId);
+    const sol: string = (c?.standardOfLiving ?? hero.standardOfLiving ?? 'Common') as any;
+    // Simple default kit by Standard of Living (editable afterwards)
+    const kitBySol: Record<string, string[]> = {
+      'Frugal': ['short-sword','leather-shirt','buckler'],
+      'Common': ['sword','leather-shirt','shield'],
+      'Prosperous': ['sword','leather-corslet','shield'],
+      'Rich': ['long-sword','coat-of-mail','shield','helm'],
+      'Very Rich': ['long-sword','coat-of-mail','great-shield','helm'],
+    };
+    const ids = kitBySol[sol] ?? kitBySol['Common'];
+    const added = ids
+      .map(id => findEntryById(compendiums.equipment.entries ?? [], id))
+      .filter(Boolean)
+      .map((e:any) => ({ name: e.name, qty: 1, ref: { pack: 'tor2e-equipment', id: e.id } }));
+    const cur = hero.inventory ?? [];
+    // Remove existing war-gear items that we are about to add (by ref id)
+    const filtered = cur.filter((it:any) => !(it.ref?.pack === 'tor2e-equipment' && ids.includes(it.ref?.id)));
+    updateHero(hero.id, { inventory: [...added, ...filtered] });
+  }
+
+  function roll1d6() {
+    return 1 + Math.floor(Math.random() * 6);
+  }
+
+  function addVirtueRoll(hero: any) {
+    const entries = sortByName(compendiums.virtues.entries ?? []);
+    if (entries.length === 0) return;
+    const idx = roll1d6() - 1;
+    const picked = entries[Math.min(idx, entries.length - 1)];
+    const cur: string[] = hero.virtueIds ?? [];
+    if (cur.includes(picked.id)) return;
+    updateHero(hero.id, { virtueIds: [picked.id, ...cur] });
+  }
+
+  function addRewardRoll(hero: any) {
+    const entries = sortByName(compendiums.rewards.entries ?? []);
+    if (entries.length === 0) return;
+    const idx = roll1d6() - 1;
+    const picked = entries[Math.min(idx, entries.length - 1)];
+    const cur: string[] = hero.rewardIds ?? [];
+    if (cur.includes(picked.id)) return;
+    updateHero(hero.id, { rewardIds: [picked.id, ...cur] });
+  }
+
+  function persistUI(nextExpanded: string | null, nextActive: string | null, nextState?: StoredState) {
+    const s = nextState ?? state;
+    const updated: StoredState = {
+      ...s,
+      ui: { ...(s.ui ?? {}), heroesExpandedId: nextExpanded, activeHeroId: nextActive },
+    };
+    setState(updated);
+    saveState(updated);
   }
 
   function addHero() {
     const now = new Date().toISOString();
-    const h: Hero = {
-      id: crypto.randomUUID(),
-      name: 'New hero',
-      cultureId: null,
-      callingId: null,
-      strength: 2, heart: 2, wits: 2,
-      enduranceMax: 20, hopeMax: 10, parry: 0, shadow: 0, load: 0,
-      skills: {},
-      combatProficiencies: {},
-      features: [],
-      inventory: [],
-      ui: { expanded: true },
+    const newHero = {
+      id: uid('hero'),
+      name: 'New Hero',
+      createdAt: now,
       updatedAt: now,
+      tnDefault: 20,
+      cultureId: '',
+      callingId: '',
+      featureIds: [],
+      skillRatings: Object.fromEntries((compendiums.skills.entries ?? []).map((s: any) => [s.id, 0])),
+      skillFavoured: {},
+      virtueIds: [],
+      rewardIds: [],
+      inventory: [],
+      notes: '',
     };
-    const next = { ...state, heroes: [...state.heroes, h], activeHeroId: h.id };
+    const next: StoredState = { ...state, heroes: [newHero, ...heroes] };
     setState(next);
+    saveState(next);
+    setExpandedId(newHero.id);
+    setActiveId(newHero.id);
+    persistUI(newHero.id, newHero.id, next);
   }
 
-  function updateHero(id: string, patch: Partial<Hero>) {
-    const heroes = state.heroes.map(h => h.id === id ? { ...h, ...patch, updatedAt: new Date().toISOString() } : h);
-    setState({ ...state, heroes });
+  function updateHero(id: string, patch: any) {
+    const nextHeroes = heroes.map(h => h.id === id ? { ...h, ...patch, updatedAt: new Date().toISOString() } : h);
+    const next: StoredState = { ...state, heroes: nextHeroes };
+    setState(next);
+    saveState(next);
   }
 
-  function removeHero(id: string) {
-    const heroes = state.heroes.filter(h => h.id !== id);
-    const activeHeroId = state.activeHeroId === id ? (heroes[0]?.id ?? null) : state.activeHeroId;
-    setState({ ...state, heroes, activeHeroId });
+  function openEntry(pack: 'skills'|'features'|'cultures'|'callings'|'virtues'|'rewards'|'equipment', id: string) {
+    const entry = findEntryById((compendiums as any)[pack].entries ?? [], id);
+    if (!entry) return;
+    setSheetTitle(entry.name);
+    setSheetBody({ description: entry.description, flavor: entry.flavor });
+    setSheetOpen(true);
   }
 
-  function setMode(mode: GameMode) {
-    setState({
-      ...state,
-      mode,
-      fellowship: { ...state.fellowship, mode },
-    });
-  }
+  const cultureOptions = sortByName(compendiums.cultures.entries ?? []);
+  const callingOptions = sortByName(compendiums.callings.entries ?? []);
+  const featureOptions = sortByName(compendiums.features.entries ?? []);
 
   return (
     <div className="panel">
       <div className="panelHeader">
         <div className="panelTitle">Heroes</div>
-        <div className="row">
-          <select className="select" value={state.mode} onChange={(e)=>setMode(e.target.value as any)}>
-            <option value="normal">Normal mode</option>
-            <option value="strider">Strider mode</option>
-          </select>
-          <button className="btn primary" onClick={addHero}>+ Add</button>
-        </div>
+        <button className="btn" onClick={addHero}>+ Add</button>
       </div>
 
-      {sortedHeroes.length === 0 && (
-        <div className="muted">No heroes yet. Click “+ Add”.</div>
+      <div className="hint">
+        Tap a skill or feature name to open <b>See more</b> (bottom sheet).
+      </div>
+
+      {heroes.length === 0 && (
+        <div className="empty">No heroes yet. Click <b>+ Add</b> to create one.</div>
       )}
 
       <div className="cards">
-        {sortedHeroes.map(hero => {
-          const culture = hero.cultureId ? findById(Cultures, hero.cultureId) : undefined;
-          const calling = hero.callingId ? findById(Callings, hero.callingId) : undefined;
-          const expanded = hero.ui.expanded || state.activeHeroId === hero.id;
+        {heroes.map(hero => {
+          const isExpanded = expandedId === hero.id;
+          const isActive = activeId === hero.id;
+
+          const culture = findEntryById(compendiums.cultures.entries ?? [], hero.cultureId)?.name || (hero.cultureId ? hero.cultureId : '—');
+          const calling = findEntryById(compendiums.callings.entries ?? [], hero.callingId)?.name || (hero.callingId ? hero.callingId : '—');
+
           return (
-            <div key={hero.id} className={"card " + (state.activeHeroId===hero.id ? "active" : "")}>
+            <div key={hero.id} className={"card " + (isActive ? "active" : "")}>
               <div className="cardTop">
-                <input
-                  className="input title"
-                  value={hero.name}
-                  onChange={(e)=>updateHero(hero.id,{ name: e.target.value })}
-                  onFocus={()=>setState({ ...state, activeHeroId: hero.id })}
-                />
-                <div className="row">
-                  <button className="btn" onClick={()=>updateHero(hero.id,{ ui: { expanded: !expanded } })}>
-                    {expanded ? 'Collapse' : 'Expand'}
-                  </button>
-                  <button className="btn danger" onClick={()=>removeHero(hero.id)}>✕</button>
+                <div className="cardTopLeft" onClick={() => {
+                  const next = isExpanded ? null : hero.id;
+                  setExpandedId(next);
+                  setActiveId(hero.id);
+                  persistUI(next, hero.id);
+                }}>
+                  <div className="heroName">{hero.name}</div>
+                  <div className="sub">{culture} • {calling}</div>
+                </div>
+
+                <div className="cardTopRight">
+                  <button className={"btn btn-ghost"} onClick={() => {
+                    const next = isExpanded ? null : hero.id;
+                    setExpandedId(next);
+                    setActiveId(hero.id);
+                    persistUI(next, hero.id);
+                  }}>{isExpanded ? 'Hide' : 'Show'}</button>
                 </div>
               </div>
 
-              {expanded && (
-                <>
-                  <div className="grid2">
-                    <label className="field">
-                      <span>Culture</span>
-                      <select
-                        className="select"
-                        value={hero.cultureId ?? ''}
-                        onChange={(e)=>{
-                          const cultureId = e.target.value || null;
-                          const updated = applyCultureToHero({ ...hero, cultureId });
-                          updateHero(hero.id, updated);
-                        }}
-                      >
-                        <option value="">—</option>
-                        {sortByName(Cultures.entries).map(c=>(
-                          <option key={c.id} value={c.id}>{c.name}</option>
-                        ))}
-                      </select>
-                    </label>
-
-                    <label className="field">
-                      <span>Calling</span>
-                      <select
-                        className="select"
-                        value={hero.callingId ?? ''}
-                        onChange={(e)=>updateHero(hero.id,{ callingId: e.target.value || null })}
-                      >
-                        <option value="">—</option>
-                        {sortByName(Callings.entries).map(c=>(
-                          <option key={c.id} value={c.id}>{c.name}</option>
-                        ))}
-                      </select>
-                    </label>
-                  </div>
-
-                  <div className="row gap">
-                    {culture && (
-                      <button className="btn" onClick={()=>openSeeMore(culture.name, (
-                        <div>
-                          {culture.culturalBlessing && <p><b>Cultural Blessing:</b> {culture.culturalBlessing}</p>}
-                          {culture.standardOfLiving && <p><b>Standard of Living:</b> {culture.standardOfLiving}</p>}
-                          {culture.description && <p className="muted">{culture.description}</p>}
-                          {culture.languages?.length ? <p><b>Languages:</b> {culture.languages.join(', ')}</p> : null}
-                          {culture.suggestedFeatures?.length ? <p><b>Suggested Features:</b> {culture.suggestedFeatures.join(', ')}</p> : null}
-                        </div>
-                      ))}>
-                        See more
-                      </button>
-                    )}
-                    {calling && (
-                      <button className="btn" onClick={()=>openSeeMore(calling.name, (
-                        <div>
-                          {calling.description && <p className="muted">{calling.description}</p>}
-                          {!!calling.favouredSkills?.length && <p><b>Favoured Skills:</b> {calling.favouredSkills.join(', ')}</p>}
-                          {calling.shadowPath && <p><b>Shadow Path:</b> {calling.shadowPath}</p>}
-                        </div>
-                      ))}>
-                        See more
-                      </button>
-                    )}
-                  </div>
-
-                  <details className="details" open>
-                    <summary>Attributes & Derived</summary>
-                    <div className="grid3">
-                      <label className="field">
-                        <span>Strength</span>
-                        <input className="input" type="number" value={hero.strength} onChange={(e)=>updateHero(hero.id,{ strength: Number(e.target.value) })} />
-                      </label>
-                      <label className="field">
-                        <span>Heart</span>
-                        <input className="input" type="number" value={hero.heart} onChange={(e)=>updateHero(hero.id,{ heart: Number(e.target.value) })} />
-                      </label>
-                      <label className="field">
-                        <span>Wits</span>
-                        <input className="input" type="number" value={hero.wits} onChange={(e)=>updateHero(hero.id,{ wits: Number(e.target.value) })} />
-                      </label>
-                      <label className="field">
-                        <span>Endurance max</span>
-                        <input className="input" type="number" value={hero.enduranceMax} onChange={(e)=>updateHero(hero.id,{ enduranceMax: Number(e.target.value) })} />
-                      </label>
-                      <label className="field">
-                        <span>Hope max</span>
-                        <input className="input" type="number" value={hero.hopeMax} onChange={(e)=>updateHero(hero.id,{ hopeMax: Number(e.target.value) })} />
-                      </label>
-                      <label className="field">
-                        <span>Parry</span>
-                        <input className="input" type="number" value={hero.parry} onChange={(e)=>updateHero(hero.id,{ parry: Number(e.target.value) })} />
-                      </label>
+              {isExpanded && (
+                <div className="cardBody">
+                  <div className="row">
+                    <div className="field">
+                      <div className="label">Name</div>
+                      <input className="input" value={hero.name} onChange={(e)=>updateHero(hero.id,{name:e.target.value})}/>
                     </div>
-                  </details>
+                    <div className="field">
+                      <div className="label">Default TN</div>
+                      <input className="input" type="number" min={10} max={30} value={hero.tnDefault ?? 20}
+                        onChange={(e)=>updateHero(hero.id,{tnDefault: Number(e.target.value)})}/>
+                      <div className="small">Typical: 20 (Group), 18 (Strider)</div>
+                    </div>
+                  </div>
 
-                  <details className="details">
-                    <summary>Skills</summary>
-                    <div className="skillsGrid">
-                      {Skills.entries.map(s=>{
-                        const val = hero.skills[s.id]?.rating ?? 0;
-                        const fav = hero.skills[s.id]?.favoured ?? false;
+                  <div className="row">
+                    <div className="field">
+                      <div className="label">Culture</div>
+                      <select className="input" value={hero.cultureId ?? ''} onChange={(e)=>updateHero(hero.id,{cultureId:e.target.value})}>
+                        <option value="">(none)</option>
+                        {cultureOptions.map((c:any)=> <option key={c.id} value={c.id}>{c.name}</option>)}
+                      </select>
+                      {hero.cultureId && <button className="btn btn-ghost" onClick={()=>openEntry('cultures', hero.cultureId)}>See more</button>}
+                      {hero.cultureId && (
+                        <div className="row" style={{marginTop: 6, gap: 8, flexWrap: 'wrap'}}>
+                          <button className="btn btn-ghost" onClick={()=>applyCultureAutofill(hero)}>Auto-fill Skills</button>
+                          <button className="btn btn-ghost" onClick={()=>autoFillWarGear(hero)}>Auto-fill War Gear</button>
+                          {(() => {
+                            const c:any = getCultureEntry(hero.cultureId);
+                            return c?.standardOfLiving ? <span className="small">Standard of Living: {c.standardOfLiving}</span> : null;
+                          })()}
+                        </div>
+                      )}
+
+                      {cultureOptions.length === 0 && <div className="small">Culture compendium is empty (OK for now).</div>}
+                    </div>
+
+                    <div className="field">
+                      <div className="label">Calling</div>
+                      <select className="input" value={hero.callingId ?? ''} onChange={(e)=>updateHero(hero.id,{callingId:e.target.value})}>
+                        <option value="">(none)</option>
+                        {callingOptions.map((c:any)=> <option key={c.id} value={c.id}>{c.name}</option>)}
+                      </select>
+                      {hero.callingId && <button className="btn btn-ghost" onClick={()=>openEntry('callings', hero.callingId)}>See more</button>}
+                      {callingOptions.length === 0 && <div className="small">Calling compendium is empty (OK for now).</div>}
+                    </div>
+                  </div>
+
+                  <div className="section">
+                    <div className="sectionTitle">Distinctive Features</div>
+                    <div className="small">Select up to 2 (editable later).</div>
+                    <div className="pillGrid">
+                      {featureOptions.map((f:any)=>{
+                        const selected = (hero.featureIds ?? []).includes(f.id);
                         return (
-                          <div key={s.id} className="skillRow">
-                            <div className="skillName">
-                              <span>{s.name}</span>
-                              <span className="pill">{s.group}</span>
-                            </div>
-                            <div className="row">
-                              <input className="input small" type="number" value={val} onChange={(e)=>{
-                                const rating = Number(e.target.value);
-                                const skills = { ...hero.skills, [s.id]: { rating, favoured: fav } };
-                                updateHero(hero.id,{ skills });
-                              }} />
-                              <label className="row tiny">
-                                <input type="checkbox" checked={fav} onChange={(e)=>{
-                                  const skills = { ...hero.skills, [s.id]: { rating: val, favoured: e.target.checked } };
-                                  updateHero(hero.id,{ skills });
-                                }} />
-                                <span>Fav</span>
-                              </label>
-                              <button className="btn" onClick={()=>openSeeMore(s.name, (
-                                <div>
-                                  <p><b>Group:</b> {s.group}</p>
-                                  <p><b>Attribute:</b> {s.attribute}</p>
-                                  {s.description ? <p className="muted">{s.description}</p> : <p className="muted">No description yet.</p>}
-                                </div>
-                              ))}>See more</button>
-                            </div>
+                          <div key={f.id} className={"pill " + (selected ? "on" : "")}
+                               onClick={()=> {
+                                 const cur = hero.featureIds ?? [];
+                                 const next = selected ? cur.filter((x:string)=>x!==f.id) : [...cur, f.id].slice(0,2);
+                                 updateHero(hero.id,{featureIds: next});
+                               }}>
+                            <span onClick={(e)=>{ e.stopPropagation(); openEntry('features', f.id); }} className="pillName">{f.name}</span>
                           </div>
                         );
                       })}
                     </div>
-                  </details>
+                  </div>
 
-                  <details className="details">
-                    <summary>Distinctive Features</summary>
-                    <div className="row gap wrap">
-                      {hero.features.map(fid=>{
-                        const f = findById(Features, fid);
-                        return (
-                          <span key={fid} className="chip">
-                            {f?.name ?? fid}
-                            <button className="chipX" onClick={()=>{
-                              updateHero(hero.id,{ features: hero.features.filter(x=>x!==fid) });
-                            }}>×</button>
-                          </span>
-                        );
-                      })}
+<div className="section">
+                    <div className="sectionTitle">Virtues & Rewards</div>
+                    <div className="row" style={{gap: 8, flexWrap:'wrap'}}>
+                      <button className="btn btn-ghost" onClick={()=>addVirtueRoll(hero)}>Roll Virtue (1d6)</button>
+                      <button className="btn btn-ghost" onClick={()=>addRewardRoll(hero)}>Roll Reward (1d6)</button>
                     </div>
-                    <div className="row gap">
-                      <select className="select" defaultValue="" onChange={(e)=>{
-                        const fid = e.target.value;
-                        if (!fid) return;
-                        if (hero.features.includes(fid)) return;
-                        updateHero(hero.id,{ features: [...hero.features, fid] });
-                        e.currentTarget.value = '';
-                      }}>
-                        <option value="">+ Add feature…</option>
-                        {sortByName(Features.entries).map(f=>(
-                          <option key={f.id} value={f.id}>{f.name}</option>
-                        ))}
-                      </select>
-                      <button className="btn" onClick={()=>openSeeMore("Distinctive Features", (
-                        <div className="muted">
-                          Features list is loaded from the TOR tables you provided. Select two (or more) as needed.
+
+                    <div className="row" style={{marginTop: 8, gap: 12, flexWrap:'wrap'}}>
+                      <div style={{flex:1, minWidth: 240}}>
+                        <div className="label">Virtues</div>
+                        {(hero.virtueIds ?? []).length === 0 ? <div className="small muted">None yet.</div> : null}
+                        {(hero.virtueIds ?? []).map((vid:string)=> {
+                          const v:any = findEntryById(compendiums.virtues.entries ?? [], vid);
+                          return (
+                            <div key={vid} className="pillRow">
+                              <button className="btn btn-ghost" onClick={()=>openEntry('virtues', vid)}>{v?.name ?? vid}</button>
+                              <button className="btn btn-ghost" onClick={()=>{
+                                const cur = hero.virtueIds ?? [];
+                                updateHero(hero.id, { virtueIds: cur.filter((x:string)=>x!==vid) });
+                              }}>Remove</button>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      <div style={{flex:1, minWidth: 240}}>
+                        <div className="label">Rewards</div>
+                        {(hero.rewardIds ?? []).length === 0 ? <div className="small muted">None yet.</div> : null}
+                        {(hero.rewardIds ?? []).map((rid:string)=> {
+                          const r:any = findEntryById(compendiums.rewards.entries ?? [], rid);
+                          return (
+                            <div key={rid} className="pillRow">
+                              <button className="btn btn-ghost" onClick={()=>openEntry('rewards', rid)}>{r?.name ?? rid}</button>
+                              <button className="btn btn-ghost" onClick={()=>{
+                                const cur = hero.rewardIds ?? [];
+                                updateHero(hero.id, { rewardIds: cur.filter((x:string)=>x!==rid) });
+                              }}>Remove</button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="section">
+                    <div className="sectionTitle">Skills</div>
+                    {Object.keys(skillsByGroup).map(group => (
+                      <details key={group} className="details" open={group==='Personality'}>
+                        <summary>{group}</summary>
+                        <div className="skillsList">
+                          {skillsByGroup[group].map((s:any)=>{
+                            const rating = hero.skillRatings?.[s.id] ?? 0;
+                            const fav = hero.skillFavoured?.[s.id] ?? false;
+                            return (
+                              <div key={s.id} className="skillRow">
+                                <div className="skillName" onClick={()=>openEntry('skills', s.id)}>{s.name}</div>
+                                <div className="skillMeta">{s.attribute}</div>
+                                <button className={"btn btn-ghost " + (fav ? "on" : "")} onClick={()=>updateHero(hero.id,{skillFavoured:{...(hero.skillFavoured??{}),[s.id]:!fav}})}>
+                                  Fav
+                                </button>
+                                <input className="skillNum" type="number" min={0} max={6} value={rating}
+                                  onChange={(e)=>updateHero(hero.id,{skillRatings:{...(hero.skillRatings??{}),[s.id]:Math.max(0,Math.min(6,Number(e.target.value)))}})} />
+                              </div>
+                            );
+                          })}
                         </div>
-                      ))}>See more</button>
-                    </div>
-                  </details>
+                      </details>
+                    ))}
+                  </div>
 
-                  <details className="details">
-                    <summary>Inventory</summary>
-                    <div className="row gap">
-                      <input className="input" placeholder="Item name" id={"inv-"+hero.id} />
-                      <button className="btn" onClick={()=>{
-                        const el = document.getElementById("inv-"+hero.id) as HTMLInputElement|null;
-                        const name = (el?.value ?? '').trim();
-                        if (!name) return;
-                        const inventory = [...hero.inventory, { id: crypto.randomUUID(), name, kind: 'other' as const }];
-                        updateHero(hero.id,{ inventory });
-                        if (el) el.value = '';
-                      }}>Add</button>
-                    </div>
-                    <ul className="list">
-                      {hero.inventory.map(it=>(
-                        <li key={it.id} className="listRow">
-                          <span>{it.name}</span>
-                          <button className="btn danger" onClick={()=>{
-                            updateHero(hero.id,{ inventory: hero.inventory.filter(x=>x.id!==it.id) });
-                          }}>Remove</button>
-                        </li>
-                      ))}
-                    </ul>
-                    <div className="muted">
-                      Next step: connect this to the provided Equipment compendium for searchable picks + automatic Load.
-                    </div>
-                  </details>
-                </>
+                  <div className="section">
+                    <div className="sectionTitle">Inventory</div>
+                    <InventoryEditor hero={hero} updateHero={(patch)=>updateHero(hero.id, patch)} onSeeMore={openEntry} />
+                  </div>
+
+                  <div className="section">
+                    <div className="sectionTitle">Notes</div>
+                    <textarea className="textarea" rows={4} value={hero.notes ?? ''} onChange={(e)=>updateHero(hero.id,{notes:e.target.value})}/>
+                  </div>
+                </div>
               )}
             </div>
           );
@@ -351,8 +348,77 @@ export function HeroesPanel(props: { state: StoredState; setState: (s: StoredSta
       </div>
 
       <BottomSheet open={sheetOpen} title={sheetTitle} onClose={()=>setSheetOpen(false)}>
-        {sheetBody}
+        {sheetBody?.description ? <p style={{whiteSpace:'pre-wrap'}}>{sheetBody.description}</p> : <p className="muted">No description yet.</p>}
+        {sheetBody?.flavor ? <p className="flavor">{sheetBody.flavor}</p> : null}
       </BottomSheet>
     </div>
   );
 }
+
+function InventoryEditor({ hero, updateHero, onSeeMore }: { hero: any; updateHero: (patch:any)=>void; onSeeMore: (pack: any, id: string)=>void }) {
+  const [name, setName] = useState('');
+  const [qty, setQty] = useState(1);
+  const [equipId, setEquipId] = useState<string>('');
+
+  const equipOptions = useMemo(() => sortByName(compendiums.equipment.entries ?? []), []);
+
+  function addCustom(itemName: string, itemQty: number) {
+    const cur = hero.inventory ?? [];
+    updateHero({ inventory: [{ name: itemName, qty: itemQty }, ...cur] });
+    setName(''); setQty(1);
+  }
+
+  function addFromCompendium(id: string) {
+    const entry = findEntryById(compendiums.equipment.entries ?? [], id);
+    if (!entry) return;
+    const cur = hero.inventory ?? [];
+    updateHero({ inventory: [{ name: entry.name, qty: 1, ref: { pack: 'tor2e-equipment', id: entry.id } }, ...cur] });
+    setEquipId('');
+  }
+
+  function updateItem(idx: number, patch: any) {
+    const cur = hero.inventory ?? [];
+    const next = cur.map((it:any, i:number) => i === idx ? { ...it, ...patch } : it);
+    updateHero({ inventory: next });
+  }
+
+  return (
+    <div>
+      <div className="row" style={{gap: 8, flexWrap: 'wrap'}}>
+        <select className="input" value={equipId} onChange={(e)=>setEquipId(e.target.value)} style={{minWidth: 220}}>
+          <option value="">Add from Equipment…</option>
+          {equipOptions.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+        </select>
+        <button className="btn" disabled={!equipId} onClick={()=>addFromCompendium(equipId)}>Add</button>
+      </div>
+
+      <div className="row" style={{marginTop: 8, gap: 8}}>
+        <input className="input" placeholder="Custom item name" value={name} onChange={(e)=>setName(e.target.value)} />
+        <input className="input" style={{maxWidth:120}} type="number" min={1} value={qty} onChange={(e)=>setQty(Number(e.target.value))} />
+        <button className="btn" onClick={()=>{ if (!name.trim()) return; addCustom(name.trim(), qty); }}>Add</button>
+      </div>
+
+      <div className="list" style={{marginTop: 10}}>
+        {(hero.inventory ?? []).map((it:any, idx:number)=>(
+          <div key={idx} className="invRow" style={{alignItems:'center'}}>
+            <button className="btn btn-ghost" style={{textAlign:'left'}} onClick={()=>{
+              if (it.ref?.pack === 'tor2e-equipment' && it.ref?.id) onSeeMore('equipment', it.ref.id);
+            }}>
+              <div className="invName">{it.name}</div>
+              {it.ref?.pack === 'tor2e-equipment' ? <div className="muted" style={{fontSize: 12}}>See more</div> : null}
+            </button>
+
+            <input className="input" style={{maxWidth: 90}} type="number" min={1} value={it.qty ?? 1}
+              onChange={(e)=>updateItem(idx,{qty: Number(e.target.value)})} />
+
+            <button className="btn btn-ghost" onClick={()=>{
+              const cur = hero.inventory ?? [];
+              updateHero({ inventory: cur.filter((_:any, i:number)=>i!==idx) });
+            }}>Remove</button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+

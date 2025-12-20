@@ -1,146 +1,201 @@
-
 import React, { useMemo, useState } from 'react';
-import type { Journey, StoredState, JourneyRole } from '../core/storage';
+import { Journey, JournalEntry, StoredState } from '../core/storage';
+import { makeId } from '../core/oracles';
 
-function roleLabel(r: JourneyRole) {
-  return r;
-}
+export default function JournalPanel({ state, setState }: { state: StoredState; setState: (s: StoredState) => void }) {
+  const [view, setView] = useState<'notes'|'journeys'>('notes');
 
-export function JournalPanel(props: { state: StoredState; setState: (s: StoredState) => void }) {
-  const { state, setState } = props;
-  const [view, setView] = useState<'journeys'|'notes'>('journeys');
+  // Notes form
+  const [title, setTitle] = useState('');
+  const [body, setBody] = useState('');
+  const [tags, setTags] = useState('');
+  const [linkedHex, setLinkedHex] = useState('');
 
-  const journeys = useMemo(() => [...state.journeys].sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt)), [state.journeys]);
+  // Journey form
+  const [jTitle, setJTitle] = useState('');
+  const [jFrom, setJFrom] = useState('');
+  const [jTo, setJTo] = useState('');
 
-  function addJourney() {
-    const now = new Date().toISOString();
-    const j: Journey = {
-      id: crypto.randomUUID(),
-      title: 'New Journey',
-      mode: state.mode,
-      createdAt: now,
-      updatedAt: now,
-      origin: '',
-      destination: '',
-      roles: {},
-      events: [],
-      notes: '',
+  const entries = useMemo(() => [...state.journal].sort((a,b)=>b.createdAt.localeCompare(a.createdAt)), [state.journal]);
+  const journeys = useMemo(() => [...(state.journeys ?? [])].sort((a,b)=>b.createdAt.localeCompare(a.createdAt)), [state.journeys]);
+
+  function addNote() {
+    if (!title.trim() && !body.trim()) return;
+    const e: JournalEntry = {
+      id: makeId(),
+      createdAt: new Date().toISOString(),
+      title: title.trim() || 'Note',
+      body: body.trim(),
+      tags: tags.split(',').map(t=>t.trim()).filter(Boolean),
+      linkedHex: linkedHex.trim() || undefined,
     };
-    setState({ ...state, journeys: [j, ...state.journeys] });
+    setState({ ...state, journal: [e, ...state.journal] });
+    setTitle(''); setBody(''); setTags(''); setLinkedHex('');
   }
 
-  function updateJourney(id: string, patch: Partial<Journey>) {
-    const journeys = state.journeys.map(j => j.id===id ? { ...j, ...patch, updatedAt: new Date().toISOString() } : j);
-    setState({ ...state, journeys });
+  function removeNote(id: string) {
+    setState({ ...state, journal: state.journal.filter(e=>e.id!==id) });
+  }
+
+  function addJourney() {
+    if (!jTitle.trim()) return;
+    const mode = (state.fellowship?.mode ?? 'company') as any;
+    const j: Journey = {
+      id: makeId(),
+      createdAt: new Date().toISOString(),
+      title: jTitle.trim(),
+      from: jFrom.trim() || undefined,
+      to: jTo.trim() || undefined,
+      mode,
+      roles: {},
+      events: [],
+    };
+    setState({ ...state, journeys: [j, ...(state.journeys ?? [])] });
+    setJTitle(''); setJFrom(''); setJTo('');
+  }
+
+  function patchJourney(id: string, patch: Partial<Journey>) {
+    setState({
+      ...state,
+      journeys: (state.journeys ?? []).map(j => j.id === id ? { ...j, ...patch } : j),
+    });
   }
 
   function removeJourney(id: string) {
-    setState({ ...state, journeys: state.journeys.filter(j=>j.id!==id) });
+    setState({ ...state, journeys: (state.journeys ?? []).filter(j=>j.id!==id) });
   }
 
   return (
     <div className="panel">
-      <div className="panelHeader">
-        <div className="panelTitle">Journal</div>
-        <div className="row gap">
-          <button className={"btn " + (view==='journeys' ? "primary" : "")} onClick={()=>setView('journeys')}>Journeys</button>
-          <button className={"btn " + (view==='notes' ? "primary" : "")} onClick={()=>setView('notes')}>Notes</button>
-          {view==='journeys' && <button className="btn primary" onClick={addJourney}>+ Add</button>}
+      <h2>Journal</h2>
+
+      <div className="row" style={{gap: 8, flexWrap:'wrap'}}>
+        <button className={view==='notes' ? 'btn' : 'btn btn-ghost'} onClick={()=>setView('notes')}>Notes</button>
+        <button className={view==='journeys' ? 'btn' : 'btn btn-ghost'} onClick={()=>setView('journeys')}>Journeys</button>
+      </div>
+
+      {view === 'notes' ? (
+        <>
+          <div className="section">
+            <div className="row" style={{ gap: 8, flexWrap:'wrap' }}>
+              <input className="input" placeholder="Title" value={title} onChange={(e)=>setTitle(e.target.value)} />
+              <input className="input" placeholder="Tags (comma-separated)" value={tags} onChange={(e)=>setTags(e.target.value)} />
+              <input className="input" placeholder="Linked hex (optional)" value={linkedHex} onChange={(e)=>setLinkedHex(e.target.value)} />
+              <button className="btn" onClick={addNote}>Add</button>
+            </div>
+            <textarea className="input" style={{ marginTop: 8, minHeight: 100 }} placeholder="Body" value={body} onChange={(e)=>setBody(e.target.value)} />
+          </div>
+
+          {entries.length === 0 ? <div className="muted">No notes yet.</div> : (
+            <div className="list">
+              {entries.map(e=>(
+                <div key={e.id} className="card">
+                  <div className="row" style={{justifyContent:'space-between', gap: 8, flexWrap:'wrap'}}>
+                    <div>
+                      <div className="cardTitle">{e.title}</div>
+                      <div className="muted small">{new Date(e.createdAt).toLocaleString()}</div>
+                    </div>
+                    <button className="btn btn-ghost" onClick={()=>removeNote(e.id)}>Delete</button>
+                  </div>
+                  <div className="row" style={{ marginTop: 8, gap: 6, flexWrap:'wrap' }}>
+                    {e.tags.map(t => <span key={t} className="badge">{t}</span>)}
+                    {e.linkedHex && <span className="badge">Hex: {e.linkedHex}</span>}
+                  </div>
+                  {e.body && <pre style={{ marginTop: 10, whiteSpace:'pre-wrap' }}>{e.body}</pre>}
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      ) : (
+        <>
+          <div className="section">
+            <div className="row" style={{ gap: 8, flexWrap:'wrap' }}>
+              <input className="input" placeholder="Journey name" value={jTitle} onChange={(e)=>setJTitle(e.target.value)} />
+              <input className="input" placeholder="From" value={jFrom} onChange={(e)=>setJFrom(e.target.value)} />
+              <input className="input" placeholder="To" value={jTo} onChange={(e)=>setJTo(e.target.value)} />
+              <button className="btn" onClick={addJourney}>Add</button>
+            </div>
+            <div className="small muted" style={{marginTop: 6}}>
+              Mode comes from Fellowship (Company / Strider Mode). Full journey procedure support will be added later.
+            </div>
+          </div>
+
+          {journeys.length === 0 ? <div className="muted">No journeys yet.</div> : (
+            <div className="list">
+              {journeys.map(j=>(
+                <JourneyCard key={j.id} j={j} patch={(p)=>patchJourney(j.id,p)} remove={()=>removeJourney(j.id)} />
+              ))}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+function JourneyCard({ j, patch, remove }: { j: any; patch: (p:any)=>void; remove: ()=>void }) {
+  const [open, setOpen] = useState(false);
+
+  const addEvent = () => {
+    const ev = { id: makeId(), title: 'Event', body: '' };
+    patch({ events: [ev, ...(j.events ?? [])] });
+  };
+
+  const patchEvent = (eid: string, p: any) => {
+    patch({ events: (j.events ?? []).map((e:any)=> e.id===eid ? { ...e, ...p } : e) });
+  };
+
+  const removeEvent = (eid: string) => {
+    patch({ events: (j.events ?? []).filter((e:any)=>e.id!==eid) });
+  };
+
+  return (
+    <div className="card">
+      <div className="row" style={{justifyContent:'space-between', gap: 8, flexWrap:'wrap'}}>
+        <div>
+          <div className="cardTitle">{j.title}</div>
+          <div className="muted small">{j.from ? j.from : '(unknown)'} → {j.to ? j.to : '(unknown)'} • {j.mode === 'strider' ? 'Strider Mode' : 'Company'}</div>
+        </div>
+        <div className="row" style={{gap: 8}}>
+          <button className="btn btn-ghost" onClick={()=>setOpen(!open)}>{open ? 'Collapse' : 'Expand'}</button>
+          <button className="btn btn-ghost" onClick={remove}>Delete</button>
         </div>
       </div>
 
-      {view === 'journeys' ? (
-        <div className="cards">
-          {journeys.length===0 && <div className="muted">No journeys yet.</div>}
-          {journeys.map(j => (
-            <div key={j.id} className="card">
-              <div className="cardTop">
-                <input className="input title" value={j.title} onChange={(e)=>updateJourney(j.id,{ title: e.target.value })} />
-                <div className="row">
-                  <span className="pill">{j.mode === 'strider' ? 'Strider' : 'Normal'}</span>
-                  <button className="btn danger" onClick={()=>removeJourney(j.id)}>✕</button>
-                </div>
-              </div>
-
-              <div className="grid2">
-                <label className="field">
-                  <span>Origin</span>
-                  <input className="input" value={j.origin} onChange={(e)=>updateJourney(j.id,{ origin: e.target.value })} />
-                </label>
-                <label className="field">
-                  <span>Destination</span>
-                  <input className="input" value={j.destination} onChange={(e)=>updateJourney(j.id,{ destination: e.target.value })} />
-                </label>
-              </div>
-
-              <details className="details">
-                <summary>Roles</summary>
-                <div className="grid2">
-                  {(['Guide','Scout','Look-out','Hunter'] as JourneyRole[]).map(r=>(
-                    <label key={r} className="field">
-                      <span>{roleLabel(r)}</span>
-                      <select className="select" value={j.roles[r] ?? ''} onChange={(e)=>{
-                        const roles = { ...j.roles, [r]: e.target.value || undefined };
-                        updateJourney(j.id,{ roles });
-                      }}>
-                        <option value="">—</option>
-                        {state.heroes.map(h=>(
-                          <option key={h.id} value={h.id}>{h.name}</option>
-                        ))}
-                      </select>
-                    </label>
-                  ))}
-                </div>
-                <div className="muted">
-                  Strider Mode: you can leave roles blank and treat the hero as covering them as needed.
-                </div>
-              </details>
-
-              <details className="details" open>
-                <summary>Events</summary>
-                <button className="btn" onClick={()=>{
-                  const events = [{ id: crypto.randomUUID(), title: 'Event', body: '', day: undefined }, ...j.events];
-                  updateJourney(j.id,{ events });
-                }}>+ Add event</button>
-
-                <div className="events">
-                  {j.events.map(ev=>(
-                    <div key={ev.id} className="eventCard">
-                      <div className="row gap">
-                        <input className="input" value={ev.title} onChange={(e)=>{
-                          const events = j.events.map(x=>x.id===ev.id ? { ...x, title: e.target.value } : x);
-                          updateJourney(j.id,{ events });
-                        }} />
-                        <input className="input small" placeholder="Day" type="number" value={ev.day ?? ''} onChange={(e)=>{
-                          const v = e.target.value === '' ? undefined : Number(e.target.value);
-                          const events = j.events.map(x=>x.id===ev.id ? { ...x, day: v } : x);
-                          updateJourney(j.id,{ events });
-                        }} />
-                        <button className="btn danger" onClick={()=>{
-                          updateJourney(j.id,{ events: j.events.filter(x=>x.id!==ev.id) });
-                        }}>Remove</button>
-                      </div>
-                      <textarea className="textarea" value={ev.body} onChange={(e)=>{
-                        const events = j.events.map(x=>x.id===ev.id ? { ...x, body: e.target.value } : x);
-                        updateJourney(j.id,{ events });
-                      }} />
-                    </div>
-                  ))}
-                </div>
-              </details>
-
-              <label className="field">
-                <span>Notes</span>
-                <textarea className="textarea" value={j.notes} onChange={(e)=>updateJourney(j.id,{ notes: e.target.value })} />
-              </label>
+      {open ? (
+        <div style={{marginTop: 10}}>
+          <div className="row" style={{gap: 8, flexWrap:'wrap'}}>
+            <div className="field" style={{minWidth: 220}}>
+              <div className="label">From</div>
+              <input className="input" value={j.from ?? ''} onChange={(e)=>patch({from: e.target.value})} />
             </div>
-          ))}
+            <div className="field" style={{minWidth: 220}}>
+              <div className="label">To</div>
+              <input className="input" value={j.to ?? ''} onChange={(e)=>patch({to: e.target.value})} />
+            </div>
+          </div>
+
+          <div className="row" style={{justifyContent:'space-between', marginTop: 10}}>
+            <div className="label">Events</div>
+            <button className="btn btn-ghost" onClick={addEvent}>+ Add event</button>
+          </div>
+
+          {(j.events ?? []).length === 0 ? <div className="small muted">No events yet.</div> : (
+            <div className="list">
+              {(j.events ?? []).map((e:any)=>(
+                <div key={e.id} className="card" style={{marginTop: 8}}>
+                  <div className="row" style={{justifyContent:'space-between', gap: 8, flexWrap:'wrap'}}>
+                    <input className="input" value={e.title ?? ''} onChange={(ev)=>patchEvent(e.id,{title: ev.target.value})} />
+                    <button className="btn btn-ghost" onClick={()=>removeEvent(e.id)}>Remove</button>
+                  </div>
+                  <textarea className="input" style={{ marginTop: 8, minHeight: 70 }} value={e.body ?? ''} onChange={(ev)=>patchEvent(e.id,{body: ev.target.value})} />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-      ) : (
-        <div className="muted">
-          Notes view is kept for backward compatibility (v1 journal). We can later merge notes into Journeys or link notes to map hexes.
-        </div>
-      )}
+      ) : null}
     </div>
   );
 }

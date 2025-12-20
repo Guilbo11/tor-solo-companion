@@ -1,93 +1,57 @@
+import React from 'react';
+import { compendiums } from '../core/compendiums';
 
-import React, { useMemo, useState } from 'react';
-import { BottomSheet } from './BottomSheet';
-import { Patrons, findById, sortByName } from '../core/compendiums';
-import type { StoredState, GameMode } from '../core/storage';
+export default function FellowshipPanel({ state, setState }: { state: any; setState: (updater: any)=>void }) {
+  const f = state.fellowship ?? { mode: 'company', companyName: '' };
+  const heroes = state.heroes ?? [];
 
-export function FellowshipPanel(props: { state: StoredState; setState: (s: StoredState) => void }) {
-  const { state, setState } = props;
-  const f = state.fellowship;
-
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const [sheetTitle, setSheetTitle] = useState('');
-  const [sheetBody, setSheetBody] = useState<React.ReactNode>(null);
-
-  const patron = f.patronId ? findById(Patrons, f.patronId) : null;
-
-  function setMode(mode: GameMode) {
-    setState({
-      ...state,
-      mode,
-      fellowship: { ...state.fellowship, mode, fellowshipFocusHeroId: mode==='strider' ? null : state.fellowship.fellowshipFocusHeroId },
-    });
+  function patch(p: any) {
+    setState((s:any)=> ({ ...s, fellowship: { ...(s.fellowship ?? { mode: 'company', companyName: '' }), ...p } }));
   }
 
   return (
     <div className="panel">
-      <div className="panelHeader">
-        <div className="panelTitle">Fellowship</div>
-        <select className="select" value={state.mode} onChange={(e)=>setMode(e.target.value as any)}>
-          <option value="normal">Normal mode</option>
-          <option value="strider">Strider mode</option>
-        </select>
-      </div>
+      <h2>Fellowship</h2>
 
-      <div className="grid2">
-        <label className="field">
-          <span>Safe Haven</span>
-          <input className="input" value={f.safeHaven} onChange={(e)=>setState({ ...state, fellowship: { ...f, safeHaven: e.target.value } })} />
-        </label>
-
-        <label className="field">
-          <span>Patron</span>
-          <select className="select" value={f.patronId ?? ''} onChange={(e)=>setState({ ...state, fellowship: { ...f, patronId: e.target.value || null } })}>
-            <option value="">—</option>
-            {sortByName(Patrons.entries).map(p=>(
-              <option key={p.id} value={p.id}>{p.name}</option>
-            ))}
-          </select>
-        </label>
-      </div>
-
-      <div className="row gap">
-        <button className="btn" disabled={!patron} onClick={()=>{
-          if (!patron) return;
-          setSheetTitle(patron.name);
-          setSheetBody(<div className="muted">{patron.description ?? 'No details yet (table-driven patron details can be added later).'}</div>);
-          setSheetOpen(true);
-        }}>See more</button>
-      </div>
-
-      {state.mode === 'normal' ? (
-        <div className="grid2">
-          <label className="field">
-            <span>Fellowship Rating</span>
-            <input className="input" type="number" value={f.fellowshipRating} onChange={(e)=>setState({ ...state, fellowship: { ...f, fellowshipRating: Number(e.target.value) } })} />
-          </label>
-          <label className="field">
-            <span>Fellowship Focus</span>
-            <select className="select" value={f.fellowshipFocusHeroId ?? ''} onChange={(e)=>setState({ ...state, fellowship: { ...f, fellowshipFocusHeroId: e.target.value || null } })}>
-              <option value="">—</option>
-              {state.heroes.map(h=>(
-                <option key={h.id} value={h.id}>{h.name}</option>
-              ))}
+      <div className="section">
+        <div className="row" style={{gap: 12, flexWrap:'wrap'}}>
+          <div className="field" style={{minWidth: 220}}>
+            <div className="label">Mode</div>
+            <select className="input" value={f.mode ?? 'company'} onChange={(e)=>patch({ mode: e.target.value })}>
+              <option value="company">Company (Group play)</option>
+              <option value="strider">Strider Mode (Solo)</option>
             </select>
-          </label>
-        </div>
-      ) : (
-        <div className="muted">
-          Strider Mode: Fellowship Focus is not used. Keep Safe Haven and Patron updated for solo play.
-        </div>
-      )}
+          </div>
 
-      <label className="field">
-        <span>Notes</span>
-        <textarea className="textarea" value={f.notes} onChange={(e)=>setState({ ...state, fellowship: { ...f, notes: e.target.value } })} />
-      </label>
+          {f.mode === 'company' ? (
+            <div className="field" style={{minWidth: 260, flex:1}}>
+              <div className="label">Company name</div>
+              <input className="input" value={f.companyName ?? ''} onChange={(e)=>patch({ companyName: e.target.value })} />
+            </div>
+          ) : (
+            <div className="field" style={{minWidth: 260, flex:1}}>
+              <div className="label">Focus hero</div>
+              <select className="input" value={f.focusHeroId ?? ''} onChange={(e)=>patch({ focusHeroId: e.target.value || undefined })}>
+                <option value="">(none)</option>
+                {heroes.map((h:any)=> <option key={h.id} value={h.id}>{h.name}</option>)}
+              </select>
+              <div className="small">Used by Strider Mode for journey/solo tools later.</div>
+            </div>
+          )}
+        </div>
 
-      <BottomSheet open={sheetOpen} title={sheetTitle} onClose={()=>setSheetOpen(false)}>
-        {sheetBody}
-      </BottomSheet>
+        <div className="row" style={{gap:12, flexWrap:'wrap', marginTop: 10}}>
+          <div className="field" style={{minWidth: 260, flex:1}}>
+            <div className="label">Safe haven</div>
+            <input className="input" value={f.safeHaven ?? ''} onChange={(e)=>patch({ safeHaven: e.target.value })} placeholder="e.g. Bree" />
+          </div>
+          <div className="field" style={{minWidth: 260, flex:1}}>
+            <div className="label">Patron</div>
+            <input className="input" value={f.patronId ?? ''} onChange={(e)=>patch({ patronId: e.target.value || undefined })} placeholder="(coming soon)" />
+            <div className="small muted">Patrons compendium can be linked here later.</div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

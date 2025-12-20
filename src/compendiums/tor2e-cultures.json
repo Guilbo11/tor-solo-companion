@@ -1,845 +1,145 @@
 {
   "pack": "tor2e-cultures",
   "type": "culture",
-  "version": 1,
+  "version": 2,
   "entries": [
     {
       "id": "bardings",
-      "name": "BARDINGS",
+      "name": "Bardings",
       "group": "Cultures",
-      "description": "CULTURAL BLESSING \u2014 STOUT-HEARTED\nStories tell that the Bardings lived under the shadow of a\ngreat Dragon for decades.\nYour VALOUR rolls are Favoured.",
-      "flavor": "",
-      "culturalBlessing": "STOUT-HEARTED",
+      "description": "",
+      "culturalBlessing": "Stout-Hearted",
       "standardOfLiving": "Prosperous",
-      "attributeSets": [
+      "startingSkills": {},
+      "favouredSkillCandidates": [],
+      "combatProficiencies": [
         {
-          "strength": 5,
-          "heart": 7,
-          "wits": 2
-        },
-        {
-          "strength": 4,
-          "heart": 7,
-          "wits": 3
-        },
-        {
-          "strength": 5,
-          "heart": 6,
-          "wits": 3
-        },
-        {
-          "strength": 4,
-          "heart": 6,
-          "wits": 4
-        },
-        {
-          "strength": 5,
-          "heart": 5,
-          "wits": 4
-        },
-        {
-          "strength": 6,
-          "heart": 6,
-          "wits": 2
+          "or": [
+            "Bows",
+            "Swords"
+          ],
+          "rating": 2
         }
       ],
-      "derived": null,
-      "startingSkills": {
-        "awe": 1,
-        "enhearten": 2,
-        "persuade": 3,
-        "athletics": 1,
-        "travel": 1,
-        "stealth": 0,
-        "awareness": 0,
-        "insight": 2,
-        "scan": 1,
-        "hunting": 2,
-        "healing": 0,
-        "explore": 1,
-        "song": 1,
-        "courtesy": 2,
-        "riddle": 0,
-        "craft": 1,
-        "battle": 2,
-        "lore": 1
-      },
-      "favouredSkillChoices": [],
-      "combatProficienciesText": "Copy the following Combat Proficiency ranks onto the character\nsheet, selecting a preferred Proficiency when offered\na choice.\nBows OR Swords 2\nChoose one Combat Proficiency 1",
       "suggestedFeatures": [
         "Bold",
         ""
-      ],
-      "languages": [],
-      "typicalNames": {
-        "male": [
-          "Aegir",
-          "Arn",
-          "Brandulf",
-          "Domarr",
-          "Egil",
-          "Erland",
-          "Farald",
-          "Finn",
-          "Gautarr",
-          "Hafgrim",
-          "Hjalmar",
-          "Ingolf",
-          "Jofur",
-          "Kolbeinn",
-          "Leiknir",
-          "Lomund",
-          "Munan",
-          "Nari",
-          "Nefstan",
-          "Ottarr",
-          "Ragnarr",
-          "Reinald",
-          "Sigmarr",
-          "Steinarr",
-          "Thorald",
-          "Torwald",
-          "Ulfarr",
-          "Unnarr",
-          "Vandil",
-          "Varinn"
-        ],
-        "female": [
-          "Aldis",
-          "Asfrid",
-          "Bera",
-          "Bergdis",
-          "Dagmar",
-          "Eilif",
-          "Erna",
-          "Frida",
-          "Geira",
-          "Gudrun",
-          "Halla",
-          "Hild",
-          "Ingirun",
-          "Ingrith",
-          "Lif",
-          "Linhild",
-          "Kelda",
-          "Runa",
-          "Saldis",
-          "Sigga",
-          "Sigrun",
-          "Thora",
-          "Thordis",
-          "Thorhild",
-          "Ulfhild",
-          "Ulfrun",
-          "Una",
-          "Valdis",
-          "Vigdis",
-          "Walda"
-        ],
-        "family": []
-      }
+      ]
     },
     {
       "id": "dwarves-of-durin-s-folk",
-      "name": "Dwarves Of Durin\u2019S Folk",
+      "name": "Dwarves of Durin's Folk",
       "group": "Cultures",
-      "description": "CULTURAL BLESSING \u2014 REDOUBTABLE\nDwarves make light of burdens, especially when it comes to\nwearing armour.\nYou halve the Load rating of any armour you\u2019re wearing\n(rounding fractions up), including helms (but not\nshields).\nGimli the dwarf alone wore openly a short shirt of steel-rings,\nfor\ndwarves make light of burdens\u2026",
-      "flavor": "",
-      "culturalBlessing": "REDOUBTABLE",
+      "description": "",
+      "culturalBlessing": "Redoubtable",
       "standardOfLiving": "Prosperous",
-      "attributeSets": [
+      "startingSkills": {},
+      "favouredSkillCandidates": [],
+      "combatProficiencies": [
         {
-          "strength": 7,
-          "heart": 2,
-          "wits": 5
-        },
-        {
-          "strength": 7,
-          "heart": 3,
-          "wits": 4
-        },
-        {
-          "strength": 6,
-          "heart": 3,
-          "wits": 5
-        },
-        {
-          "strength": 6,
-          "heart": 4,
-          "wits": 4
-        },
-        {
-          "strength": 5,
-          "heart": 4,
-          "wits": 5
-        },
-        {
-          "strength": 6,
-          "heart": 2,
-          "wits": 6
+          "or": [
+            "Axes",
+            "Swords"
+          ],
+          "rating": 2
         }
       ],
-      "derived": null,
-      "startingSkills": {
-        "awe": 2,
-        "enhearten": 0,
-        "persuade": 0,
-        "athletics": 1,
-        "travel": 3,
-        "stealth": 0,
-        "awareness": 0,
-        "insight": 0,
-        "scan": 3,
-        "hunting": 0,
-        "healing": 0,
-        "explore": 2,
-        "song": 1,
-        "courtesy": 1,
-        "riddle": 2,
-        "craft": 2,
-        "battle": 1,
-        "lore": 1
-      },
-      "favouredSkillChoices": [],
-      "combatProficienciesText": "Copy the following Combat Proficiency ranks onto the character\nsheet, selecting a preferred Proficiency when offered\na choice.\nAxes OR Swords 2\nChoose one Combat Proficiency 1",
       "suggestedFeatures": [
         "Cunning",
         ""
-      ],
-      "languages": [],
-      "typicalNames": {
-        "male": [
-          "Ai",
-          "Anar",
-          "Beli",
-          "Bl\u00e1in",
-          "Borin",
-          "Burin",
-          "Bruni",
-          "Farin",
-          "Fl\u00f3i",
-          "Fr\u00e1r",
-          "Frerin",
-          "Fr\u00f3r",
-          "Ginar",
-          "Gr\u00f3in",
-          "Gr\u00f3r",
-          "Hanar",
-          "Hepti",
-          "Iari",
-          "L\u00f3far",
-          "L\u00f3ni",
-          "N\u00e1li",
-          "N\u00e1r",
-          "Niping",
-          "N\u00f3i",
-          "N\u00far",
-          "N\u00fdr\u00e1d",
-          "\u00d3nar",
-          "P\u00f3ri",
-          "Regin",
-          "Svior",
-          "Veig",
-          "Vidar"
-        ],
-        "female": [
-          "Ad\u00eds",
-          "Afrid",
-          "Agda",
-          "Bersa",
-          "Birna",
-          "Dagr\u00fan",
-          "D\u00eds",
-          "Dr\u00edfa",
-          "Edda",
-          "Elin",
-          "Fenja",
-          "Frida",
-          "Geira",
-          "G\u00edsla",
-          "Hadda",
-          "H\u00f3n",
-          "Ida",
-          "Ilmr",
-          "J\u00f3ra",
-          "K\u00e1ra",
-          "K\u00f3na",
-          "L\u00edf",
-          "L\u00ednhild",
-          "M\u00e1r",
-          "Mist",
-          "N\u00e1l",
-          "Oda",
-          "\u00d3sk",
-          "R\u00e1n",
-          "Rinda",
-          "Sefa",
-          "Syn",
-          "T\u00f3ra",
-          "Trana",
-          "\u00dalfr\u00fan",
-          "V\u00edr\u00fan",
-          "Yrr"
-        ],
-        "family": []
-      }
+      ]
     },
     {
       "id": "elves-of-lindon",
-      "name": "Elves Of Lindon",
+      "name": "Elves of Lindon",
       "group": "Cultures",
-      "description": "CULTURAL BLESSING \u2014 ELVEN-SKILL\nBy virtue of their birthright, Elves are capable of reaching\nlevels of finesse unattainable by mortals.\nIf you are not Miserable, you can spend 1 point of\nHope to achieve a Magical success on a roll when using\na Skill in which you possess at least one rank.\n\u201cKeen are the eyes of the Elves,\u201d he said. \u201cNay! The riders are little\nmore than five leagues distant,\u201d said Legolas.",
-      "flavor": "",
-      "culturalBlessing": "ELVEN-SKILL",
+      "description": "",
+      "culturalBlessing": "Elven-Skill",
       "standardOfLiving": "Frugal",
-      "attributeSets": [
+      "startingSkills": {},
+      "favouredSkillCandidates": [],
+      "combatProficiencies": [
         {
-          "strength": 5,
-          "heart": 2,
-          "wits": 7
-        },
-        {
-          "strength": 4,
-          "heart": 3,
-          "wits": 7
-        },
-        {
-          "strength": 5,
-          "heart": 3,
-          "wits": 6
-        },
-        {
-          "strength": 4,
-          "heart": 4,
-          "wits": 6
-        },
-        {
-          "strength": 5,
-          "heart": 4,
-          "wits": 5
-        },
-        {
-          "strength": 6,
-          "heart": 2,
-          "wits": 6
+          "or": [
+            "Bows",
+            "Spears"
+          ],
+          "rating": 2
         }
       ],
-      "derived": null,
-      "startingSkills": {
-        "awe": 2,
-        "enhearten": 1,
-        "persuade": 0,
-        "athletics": 2,
-        "travel": 0,
-        "stealth": 3,
-        "awareness": 2,
-        "insight": 0,
-        "scan": 0,
-        "hunting": 0,
-        "healing": 1,
-        "explore": 0,
-        "song": 2,
-        "courtesy": 0,
-        "riddle": 0,
-        "craft": 2,
-        "battle": 0,
-        "lore": 3
-      },
-      "favouredSkillChoices": [],
-      "combatProficienciesText": "Copy the following Combat Proficiency ranks onto the character\nsheet, selecting a preferred Proficiency when offered\na choice.\nBows OR Spears 2\nChoose one Combat Proficiency 1",
       "suggestedFeatures": [
         "Fair",
         ""
-      ],
-      "languages": [],
-      "typicalNames": {
-        "male": [
-          "Amras",
-          "Aredhel",
-          "Beleganor",
-          "Belegon",
-          "Calanhir",
-          "Carmagor",
-          "Dagorhir",
-          "Durandir",
-          "Edrahil",
-          "Ellahir",
-          "Fincalan",
-          "Fuindor",
-          "Galdagor",
-          "Galdor",
-          "Hallas",
-          "Hirimlad",
-          "Ithildir",
-          "Lascalan",
-          "Linaith",
-          "Mablin",
-          "Malanor",
-          "Nauros",
-          "Orgalad",
-          "Pelegorn",
-          "Sargon"
-        ],
-        "female": [
-          "An\u00f3rel",
-          "Aranel",
-          "Arbereth",
-          "Baraniel",
-          "Calanril",
-          "Celebrindal",
-          "Celenneth",
-          "Elanor",
-          "Elwing",
-          "Eraniel",
-          "Fimbrethil",
-          "Gloredhel",
-          "Idril",
-          "Irilde",
-          "Laurelin",
-          "L\u00f4rwend",
-          "Lothi\u0301riel",
-          "Meneloth",
-          "Moriel",
-          "Narieth",
-          "Narniel",
-          "Nimloth",
-          "Nimrodel",
-          "N\u00edniel",
-          "Tarandi\u0302s"
-        ],
-        "family": []
-      }
+      ]
     },
     {
       "id": "hobbits-of-the-shire",
-      "name": "Hobbits Of The Shire",
+      "name": "Hobbits of the Shire",
       "group": "Cultures",
-      "description": "CULTURAL BLESSING \u2014 HOBBIT-SENSE\nHobbits have learned their place in the world a long time ago,\nand they display a robust capacity for insight that many folks\nmistake for lack of courage. No visions or wild fantasies can\ntempt them, as they do not seek power or control over others.\nYour WISDOM rolls are Favoured, and you gain (1d) on\nall Shadow Tests made to resist the effects of Greed.\n\u2026 they have a fund of wisdom and wise sayings that men have mostly\nnever heard or have forgotten long ago.",
-      "flavor": "",
-      "culturalBlessing": "HOBBIT-SENSE",
+      "description": "",
+      "culturalBlessing": "Hobbit-Sense",
       "standardOfLiving": "Common",
-      "attributeSets": [
+      "startingSkills": {},
+      "favouredSkillCandidates": [],
+      "combatProficiencies": [
         {
-          "strength": 3,
-          "heart": 6,
-          "wits": 5
-        },
-        {
-          "strength": 3,
-          "heart": 7,
-          "wits": 4
-        },
-        {
-          "strength": 2,
-          "heart": 7,
-          "wits": 5
-        },
-        {
-          "strength": 4,
-          "heart": 6,
-          "wits": 4
-        },
-        {
-          "strength": 4,
-          "heart": 5,
-          "wits": 5
-        },
-        {
-          "strength": 2,
-          "heart": 6,
-          "wits": 6
+          "or": [
+            "Bows",
+            "Swords"
+          ],
+          "rating": 2
         }
       ],
-      "derived": null,
-      "startingSkills": {
-        "awe": 0,
-        "enhearten": 0,
-        "persuade": 2,
-        "athletics": 0,
-        "travel": 0,
-        "stealth": 3,
-        "awareness": 2,
-        "insight": 2,
-        "scan": 0,
-        "hunting": 0,
-        "healing": 1,
-        "explore": 0,
-        "song": 2,
-        "courtesy": 2,
-        "riddle": 3,
-        "craft": 1,
-        "battle": 0,
-        "lore": 0
-      },
-      "favouredSkillChoices": [],
-      "combatProficienciesText": "Copy the following Combat Proficiency ranks onto the character\nsheet, selecting a preferred Proficiency when offered a choice.\nBows OR Swords 2\nChoose one Combat Proficiency 1",
       "suggestedFeatures": [
         "Eager",
         ""
-      ],
-      "languages": [],
-      "typicalNames": {
-        "male": [
-          "Andwise",
-          "Berilac",
-          "Bungo",
-          "Cottar",
-          "Doderic",
-          "Dudo",
-          "Erling",
-          "Fastred",
-          "Ferumbras",
-          "Folco",
-          "Gorhendad",
-          "Griffo",
-          "Halfred",
-          "Hamson",
-          "Ilberic",
-          "Isembold",
-          "Isengar",
-          "Longo",
-          "Marmadas",
-          "Marroc",
-          "Mungo",
-          "Odo",
-          "Orgulas",
-          "Otho",
-          "Posco",
-          "Reginard",
-          "Robin",
-          "Rudigar",
-          "Sadoc",
-          "Saradas",
-          "Tobold",
-          "Tolman"
-        ],
-        "female": [
-          "Adaldrida",
-          "Amaranth",
-          "Asphodel",
-          "Belba",
-          "Bell",
-          "Berylla",
-          "Camellia",
-          "Daisy",
-          "Eglantine",
-          "Estella",
-          "Gilly",
-          "Hanna",
-          "Lily",
-          "Malva",
-          "Marigold",
-          "May",
-          "Melilot",
-          "Menegilda",
-          "Mentha",
-          "Mirabella",
-          "Myrtle",
-          "Pearl",
-          "Peony",
-          "Pervinca",
-          "Pimpernel",
-          "Primrose",
-          "Primula",
-          "Prisca",
-          "Rosamunda",
-          "Ruby",
-          "Salvia"
-        ],
-        "family": [
-          "Baggins",
-          "Boffin",
-          "Bolger",
-          "Bracegirdle",
-          "Brandybuck",
-          "Brown",
-          "Brownlock",
-          "Bunce",
-          "Burrows",
-          "Cotton",
-          "Gamgee",
-          "Gardner",
-          "Goldworthy",
-          "Goodbody",
-          "Goodchild",
-          "Grubb",
-          "Headstrong",
-          "Hornblower",
-          "Maggot",
-          "Noakes",
-          "North-tooks",
-          "Proudfoot",
-          "Puddifoot",
-          "Roper",
-          "Rumble",
-          "Sackville",
-          "Smallburrow",
-          "Took",
-          "Twofoot",
-          "Whitfoot"
-        ]
-      }
+      ]
     },
     {
       "id": "men-of-bree",
-      "name": "Men Of Bree",
+      "name": "Men of Bree",
       "group": "Cultures",
-      "description": "CULTURAL BLESSING \u2014 BREE-BLOOD\nDue to the position of their homeland, the Men of Bree enjoy\nbetter relationships with Hobbits, Dwarves, Elves, and other\ninhabitants of the world about them than is considered usual.\nEach Man of Bree in the Company increases the\nFellowship\nRating by 1 point.\nThe Men of Bree were brown-haired,\nbroad, and rather short, cheerful\nand independent: they belonged to nobody but themselves\u2026",
-      "flavor": "",
-      "culturalBlessing": "BREE-BLOOD",
+      "description": "",
+      "culturalBlessing": "Bree-Blood",
       "standardOfLiving": "Common",
-      "attributeSets": [
+      "startingSkills": {},
+      "favouredSkillCandidates": [],
+      "combatProficiencies": [
         {
-          "strength": 2,
-          "heart": 5,
-          "wits": 7
-        },
-        {
-          "strength": 3,
-          "heart": 4,
-          "wits": 7
-        },
-        {
-          "strength": 3,
-          "heart": 5,
-          "wits": 6
-        },
-        {
-          "strength": 4,
-          "heart": 4,
-          "wits": 6
-        },
-        {
-          "strength": 4,
-          "heart": 5,
-          "wits": 5
-        },
-        {
-          "strength": 2,
-          "heart": 6,
-          "wits": 6
+          "or": [
+            "Axes",
+            "Spears"
+          ],
+          "rating": 2
         }
       ],
-      "derived": null,
-      "startingSkills": {
-        "awe": 0,
-        "enhearten": 2,
-        "persuade": 2,
-        "athletics": 1,
-        "travel": 1,
-        "stealth": 1,
-        "awareness": 1,
-        "insight": 2,
-        "scan": 1,
-        "hunting": 1,
-        "healing": 0,
-        "explore": 1,
-        "song": 1,
-        "courtesy": 3,
-        "riddle": 2,
-        "craft": 2,
-        "battle": 0,
-        "lore": 0
-      },
-      "favouredSkillChoices": [],
-      "combatProficienciesText": "Copy the following Combat Proficiency ranks onto the character\nsheet, selecting a preferred Proficiency when offered a choice.\nAxes OR Spears 2\nChoose one Combat Proficiency 1",
       "suggestedFeatures": [
         "Cunning",
         ""
-      ],
-      "languages": [],
-      "typicalNames": {
-        "male": [
-          "Alfred",
-          "Artie",
-          "Bill",
-          "Bob",
-          "Carl",
-          "Ed",
-          "Fred",
-          "Giles",
-          "Herb",
-          "Larry",
-          "Nob",
-          "Oswald",
-          "Percy",
-          "Perry",
-          "Sid",
-          "Tom",
-          "Harry"
-        ],
-        "female": [
-          "Daisy",
-          "Emma",
-          "Etta",
-          "Fay",
-          "Fern",
-          "Flora",
-          "Gert",
-          "Holly",
-          "Lily",
-          "Myrtle",
-          "Poppy",
-          "Rose",
-          "Sage",
-          "Tilly",
-          "Violet"
-        ],
-        "family": [
-          "Appledore",
-          "Asterfire",
-          "Bellsap",
-          "Briarcleave",
-          "Butterbur",
-          "Cherryborn",
-          "Chesterstout",
-          "Droverwind",
-          "Ferny",
-          "Foxglow",
-          "Goatleaf",
-          "Hardybough",
-          "Heathertoes",
-          "Hedgedon",
-          "Kettlegrass",
-          "Lilyhawk",
-          "Mossburn",
-          "Mugworts",
-          "Oakstout",
-          "Pickthorn",
-          "Pollenroad",
-          "Rushlight",
-          "Shrubrose",
-          "Sweetroot",
-          "Thistlewool",
-          "Wayward"
-        ]
-      }
+      ]
     },
     {
       "id": "rangers-of-the-north",
-      "name": "Rangers Of The North",
+      "name": "Rangers of the North",
       "group": "Cultures",
-      "description": "CULTURAL BLESSING \u2014 KINGS OF MEN\nSome say that the lordship of the folk of Arnor is a thing of\nthe past. Yet, the Rangers of the North have inherited the\nsinews of those Men who wrested the Ring from the burning\nhand of Sauron.\nAdd 1 point to one Attribute of your choice.\nThey were fair of face and tall, and the span of their lives was thrice\nthat of the Men of Middle-earth.",
-      "flavor": "",
-      "culturalBlessing": "KINGS OF MEN",
+      "description": "",
+      "culturalBlessing": "Kings Of Men",
       "standardOfLiving": "Frugal",
-      "attributeSets": [
+      "startingSkills": {},
+      "favouredSkillCandidates": [],
+      "combatProficiencies": [
         {
-          "strength": 7,
-          "heart": 5,
-          "wits": 2
-        },
-        {
-          "strength": 7,
-          "heart": 4,
-          "wits": 3
-        },
-        {
-          "strength": 6,
-          "heart": 5,
-          "wits": 3
-        },
-        {
-          "strength": 6,
-          "heart": 4,
-          "wits": 4
-        },
-        {
-          "strength": 5,
-          "heart": 5,
-          "wits": 4
-        },
-        {
-          "strength": 6,
-          "heart": 6,
-          "wits": 2
+          "or": [
+            "Spears",
+            "Swords"
+          ],
+          "rating": 2
         }
       ],
-      "derived": null,
-      "startingSkills": {
-        "awe": 1,
-        "enhearten": 0,
-        "persuade": 0,
-        "athletics": 2,
-        "travel": 2,
-        "stealth": 2,
-        "awareness": 2,
-        "insight": 0,
-        "scan": 1,
-        "hunting": 2,
-        "healing": 2,
-        "explore": 2,
-        "song": 0,
-        "courtesy": 0,
-        "riddle": 0,
-        "craft": 0,
-        "battle": 2,
-        "lore": 2
-      },
-      "favouredSkillChoices": [],
-      "combatProficienciesText": "Copy the following Combat Proficiency ranks onto the character\nsheet, selecting a preferred Proficiency when offered a choice.\nSpears OR Swords 2\nChoose one Combat Proficiency 1",
       "suggestedFeatures": [
         "Bold",
         ""
-      ],
-      "languages": [],
-      "typicalNames": {
-        "male": [
-          "Adrahil",
-          "Amlaith",
-          "Arvegil",
-          "Baranor",
-          "Belecthor",
-          "Bergil",
-          "Celepharn",
-          "Cirion",
-          "Damrod",
-          "D\u00edrhael",
-          "Duinhir",
-          "Egalmoth",
-          "Eradan",
-          "Findemir",
-          "Forlong",
-          "Golasdan",
-          "Hallas",
-          "Hirluin",
-          "Ingold",
-          "Iorlas",
-          "Malvegil",
-          "Ohtar",
-          "Orodreth",
-          "Tarannon",
-          "Targon"
-        ],
-        "female": [
-          "Anwen",
-          "Arbereth",
-          "Ber\u00fathiel",
-          "Baraniel",
-          "Calanril",
-          "Celenneth",
-          "Eln\u00eeth",
-          "Eraniel",
-          "Finduilas",
-          "Gilraen",
-          "Gilraeth",
-          "Gloredhel",
-          "Idril",
-          "Ioreth",
-          "Ivorwen",
-          "L\u00f4rwend",
-          "Loth\u00edriel",
-          "Luind\u00ees",
-          "Meneloth",
-          "Moriel",
-          "Morwen",
-          "Narieth",
-          "Narniel",
-          "Oroth\u00eal",
-          "Tarand\u00ees"
-        ],
-        "family": []
-      }
+      ]
     }
   ]
 }
