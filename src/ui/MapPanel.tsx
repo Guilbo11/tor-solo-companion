@@ -65,11 +65,44 @@ function fileToDataUrl(file: File): Promise<string> {
   });
 }
 
+/**
+ * Calibration assumptions:
+ * We assume a "pointy-top" axial layout (the typical RedBlobGames formula):
+ * pixel = origin + size * f(axial)
+ *
+ * Neighbor vectors (in pixels, multiplied by size):
+ * East:      (sqrt(3), 0)
+ * NE:        (sqrt(3)/2, -3/2)
+ * NW:        (-sqrt(3)/2, -3/2)
+ * West:      (-sqrt(3), 0)
+ * SW:        (-sqrt(3)/2, 3/2)
+ * SE:        (sqrt(3)/2, 3/2)
+ *
+ * If your hex math uses a different orientation, tell me and I’ll adapt the vectors.
+ */
+type CalibDir = 'E' | 'NE' | 'NW' | 'W' | 'SW' | 'SE';
+
+const CALIB_DIRS: { id: CalibDir; label: string; unit: { x: number; y: number } }[] = [
+  { id: 'E',  label: 'East / West (horizontal)', unit: { x: Math.sqrt(3), y: 0 } },
+  { id: 'NE', label: 'North-East',               unit: { x: Math.sqrt(3)/2, y: -1.5 } },
+  { id: 'NW', label: 'North-West',               unit: { x: -Math.sqrt(3)/2, y: -1.5 } },
+  { id: 'W',  label: 'West / East (horizontal)', unit: { x: -Math.sqrt(3), y: 0 } },
+  { id: 'SW', label: 'South-West',               unit: { x: -Math.sqrt(3)/2, y: 1.5 } },
+  { id: 'SE', label: 'South-East',               unit: { x: Math.sqrt(3)/2, y: 1.5 } },
+];
+
+function pointFromMouse(ev: React.MouseEvent, canvas: HTMLCanvasElement) {
+  const rect = canvas.getBoundingClientRect();
+  const x = (ev.clientX - rect.left) * (canvas.width / rect.width);
+  const y = (ev.clientY - rect.top) * (canvas.height / rect.height);
+  return { x, y };
+}
+
 export default function MapPanel({ state, setState }: { state: StoredState; setState: (s: StoredState) => void }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [selected, setSelected] = useState<string>('');
 
-  // Category color settings (kept in localStorage to avoid changing StoredState types)
+  // Category color settings (localStorage so we don't need to change StoredState)
   const [catColors, setCatColors] = useState<CatColors>(() => {
     try {
       const raw = localStorage.getItem('tor_map_category_colors');
@@ -90,8 +123,14 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
   }, [catColors]);
 
   // Alignment helpers
-  const [nudgeStep, setNudgeStep] = useState<number>(2); // pixels
+  const [nudgeStep, setNudgeStep] = useState<number>(2); // px
   const dragRef = useRef<{ dragging: boolean; lastX: number; lastY: number }>({ dragging: false, lastX: 0, lastY: 0 });
+
+  // Calibration mode
+  const [calibOn, setCalibOn] = useState(false);
+  const [calibDir, setCalibDir] = useState<CalibDir>('E');
+  const [calibP1, setCalibP1] = useState<{ x: number; y: number } | null>(null);
+  const [calibP2, setCalibP2] = useState<{ x: number; y: number } | null>(null);
 
   const map = state.map;
 
@@ -165,7 +204,6 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
             ctx.arc(center.x, center.y, 3, 0, Math.PI * 2);
             ctx.fill();
 
-            // restore grid alpha/style for next operations
             ctx.globalAlpha = 0.35;
             ctx.fillStyle = '#b6c8ff';
           }
@@ -191,32 +229,95 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
         }
       }
 
+      // calibration markers
+      if (calibOn) {
+        ctx.globalAlpha = 1.0;
+        if (calibP1) {
+          ctx.fillStyle = '#00ff88';
+          ctx.beginPath();
+          ctx.arc(calibP1.x, calibP1.y, 5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        if (calibP2) {
+          ctx.fillStyle = '#ff4d4d';
+          ctx.beginPath();
+          ctx.arc(calibP2.x, calibP2.y, 5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        if (calibP1 && calibP2) {
+          ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(calibP1.x, calibP1.y);
+          ctx.lineTo(calibP2.x, calibP2.y);
+          ctx.stroke();
+        }
+      }
+
       ctx.restore();
       raf = requestAnimationFrame(draw);
     };
 
     raf = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(raf);
-  }, [bgImg, map.hexSize, map.origin, map.notes, selected, catColors]);
+  }, [bgImg, map.hexSize, map.origin, map.notes, selected, catColors, calibOn, calibP1, calibP2]);
 
   const onPickBackground = async (file: File) => {
     const dataUrl = await fileToDataUrl(file);
     setState({ ...state, map: { ...map, backgroundDataUrl: dataUrl } });
   };
 
-  // Canvas: click selects hex
+  // Canvas: click selects hex OR does calibration
   const onCanvasClick = (ev: React.MouseEvent) => {
     const c = canvasRef.current!;
-    const rect = c.getBoundingClientRect();
-    const x = (ev.clientX - rect.left) * (c.width / rect.width);
-    const y = (ev.clientY - rect.top) * (c.height / rect.height);
-    const axial = pixelToAxial({ x, y }, map.hexSize, map.origin);
+    const p = pointFromMouse(ev, c);
+
+    if (calibOn) {
+      // Calibration stepper
+      if (!calibP1) {
+        setCalibP1(p);
+        setCalibP2(null);
+        return;
+      }
+      if (!calibP2) {
+        setCalibP2(p);
+
+        // compute size + origin from p1 -> p2
+        const dx = p.x - calibP1.x;
+        const dy = p.y - calibP1.y;
+
+        const dir = CALIB_DIRS.find(d => d.id === calibDir) ?? CALIB_DIRS[0]!;
+        const ux = dir.unit.x;
+        const uy = dir.unit.y;
+
+        // least-squares scale: size = dot(d, u) / dot(u, u)
+        const denom = (ux * ux + uy * uy);
+        const size = denom > 0 ? (dx * ux + dy * uy) / denom : map.hexSize;
+
+        const safeSize = clamp(size, 2, 120);
+
+        // origin = p1 (treat p1 as axial (0,0) center)
+        const origin = { x: calibP1.x, y: calibP1.y };
+
+        setState({ ...state, map: { ...map, hexSize: safeSize, origin } });
+
+        return;
+      }
+
+      // If both points already set, start over with a new first point
+      setCalibP1(p);
+      setCalibP2(null);
+      return;
+    }
+
+    // Normal selection
+    const axial = pixelToAxial({ x: p.x, y: p.y }, map.hexSize, map.origin);
     setSelected(axialKey(axial));
   };
 
   // Canvas: drag to move origin (alignment helper)
   const onMouseDown = (ev: React.MouseEvent) => {
-    // Left click drag = pan grid origin (does not prevent selection click; selection handled on click)
+    if (calibOn) return; // in calibration mode, avoid dragging confusion
     dragRef.current.dragging = true;
     dragRef.current.lastX = ev.clientX;
     dragRef.current.lastY = ev.clientY;
@@ -227,37 +328,37 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
   };
 
   const onMouseMove = (ev: React.MouseEvent) => {
+    if (calibOn) return;
     if (!dragRef.current.dragging) return;
-    const dx = ev.clientX - dragRef.current.lastX;
-    const dy = ev.clientY - dragRef.current.lastY;
+
+    const dxCss = ev.clientX - dragRef.current.lastX;
+    const dyCss = ev.clientY - dragRef.current.lastY;
     dragRef.current.lastX = ev.clientX;
     dragRef.current.lastY = ev.clientY;
 
-    // Move origin by dx/dy pixels (scaled to canvas)
     const c = canvasRef.current!;
     const rect = c.getBoundingClientRect();
     const scaleX = c.width / rect.width;
     const scaleY = c.height / rect.height;
 
-    const ox = map.origin.x + dx * scaleX;
-    const oy = map.origin.y + dy * scaleY;
+    const ox = map.origin.x + dxCss * scaleX;
+    const oy = map.origin.y + dyCss * scaleY;
 
     setState({ ...state, map: { ...map, origin: { x: ox, y: oy } } });
   };
 
   // Canvas: wheel to adjust hex size (alignment helper)
   const onWheel = (ev: React.WheelEvent) => {
+    if (calibOn) return;
     ev.preventDefault();
     const delta = ev.deltaY;
-    // smooth steps
     const next = clamp(map.hexSize + (delta > 0 ? -0.5 : 0.5), 2, 120);
     setState({ ...state, map: { ...map, hexSize: next } });
   };
 
-  // Keyboard nudges (alignment helper)
+  // Keyboard nudges
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      // ignore typing in inputs/textareas
       const tag = (document.activeElement?.tagName ?? '').toLowerCase();
       if (tag === 'input' || tag === 'textarea' || (document.activeElement as any)?.isContentEditable) return;
 
@@ -304,11 +405,16 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
     setCatColors((prev) => ({ ...prev, [cat]: color }));
   };
 
+  const resetCalibration = () => {
+    setCalibP1(null);
+    setCalibP2(null);
+  };
+
   return (
     <div className="card">
       <div className="h2">Eriador Map (hex overlay)</div>
       <div className="muted small">
-        Tips: drag on the canvas to move the grid (origin). Use the mouse wheel to change hex size. Arrow keys nudge origin; +/− adjusts size.
+        Alignment tips: Use Calibration (2 clicks) to auto-set size+origin. After that, drag/nudge for perfection.
       </div>
 
       <div className="row" style={{ marginTop: 12 }}>
@@ -325,6 +431,51 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
           />
           <div className="small muted" style={{ marginTop: 6 }}>
             Tip: export the Eriador map page as PNG/JPG. We store it locally as a data URL.
+          </div>
+
+          <div style={{ marginTop: 12 }}>
+            <div className="h2" style={{ fontSize: 16 }}>Calibration</div>
+            <div className="row" style={{ gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+              <label className="small muted">
+                <input
+                  type="checkbox"
+                  checked={calibOn}
+                  onChange={(e) => {
+                    setCalibOn(e.target.checked);
+                    resetCalibration();
+                  }}
+                  style={{ marginRight: 8 }}
+                />
+                Enable calibration mode
+              </label>
+
+              <select
+                className="input"
+                value={calibDir}
+                onChange={(e) => setCalibDir(e.target.value as CalibDir)}
+                disabled={!calibOn}
+                style={{ minWidth: 240 }}
+              >
+                {CALIB_DIRS.map(d => (
+                  <option key={d.id} value={d.id}>{d.label}</option>
+                ))}
+              </select>
+
+              <button className="btn" onClick={resetCalibration} disabled={!calibOn}>
+                Reset points
+              </button>
+            </div>
+
+            <div className="small muted" style={{ marginTop: 6 }}>
+              Steps:
+              <ol style={{ marginTop: 6 }}>
+                <li>Enable calibration.</li>
+                <li>Choose direction (usually “East/West”).</li>
+                <li>Click the center of one printed hex (green dot).</li>
+                <li>Click the center of the adjacent hex in that direction (red dot).</li>
+              </ol>
+              After calibration: disable it and fine tune with drag/nudge.
+            </div>
           </div>
         </div>
 
@@ -386,7 +537,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
                 onChange={(e) => setNudgeStep(clamp(parseFloat(e.target.value || '2'), 0.5, 50))}
               />
               <div className="small muted" style={{ marginTop: 6 }}>
-                Use arrows or buttons below for fine alignment.
+                Arrow keys move origin. + / − adjust hex size.
               </div>
             </div>
 
@@ -402,9 +553,92 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
           </div>
 
           <div className="small muted" style={{ marginTop: 10 }}>
-            Alignment workflow suggestion:
-            <ol style={{ marginTop: 6 }}>
-              <li>Set a rough hex size with mouse wheel until spacing looks close.</li>
-              <li>Drag the grid so one obvious printed hex corner/center matches.</li>
-              <li>Then nudge with step 0.5–2px for perfection.</li>
-              <li>If it matches in one area but drifts elsewhe
+            If it matches in one area but drifts elsewhere:
+            your background image might be low-res or slightly stretched.
+            Try a higher-res export.
+          </div>
+        </div>
+      </div>
+
+      <div style={{ marginTop: 12 }}>
+        <canvas
+          ref={canvasRef}
+          width={1024}
+          height={640}
+          onClick={onCanvasClick}
+          onMouseDown={onMouseDown}
+          onMouseUp={onMouseUp}
+          onMouseLeave={onMouseUp}
+          onMouseMove={onMouseMove}
+          onWheel={onWheel}
+          style={{ cursor: calibOn ? 'crosshair' : (dragRef.current.dragging ? 'grabbing' : 'grab') }}
+        />
+      </div>
+
+      <hr />
+
+      <div className="row">
+        <div className="col">
+          <div className="badge">Selected hex</div>
+          <div style={{ marginTop: 8, fontWeight: 700 }}>{selected || '—'}</div>
+          <div className="small muted">Click a hex to select. Add a category + note/event.</div>
+
+          <div style={{ marginTop: 12 }}>
+            <label className="small muted">Category</label>
+            <select
+              className="input"
+              value={selectedCategory}
+              onChange={(e) => saveNote(e.target.value as CategoryName, selectedText)}
+              disabled={!selected}
+            >
+              {CATEGORIES.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+
+            <div className="row" style={{ marginTop: 8, alignItems: 'center', gap: 10 }}>
+              <div className="small muted">Dot color for this category</div>
+              <input
+                type="color"
+                value={catColors[selectedCategory] ?? '#ffffff'}
+                onChange={(e) => setCategoryColor(selectedCategory, e.target.value)}
+                disabled={!selected}
+                title="Pick dot color"
+              />
+              <div className="small muted">
+                {selected ? `Used for all hexes tagged "${selectedCategory}".` : 'Select a hex first.'}
+              </div>
+            </div>
+          </div>
+
+          <div style={{ marginTop: 12 }}>
+            <div className="small muted">Legend</div>
+            <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginTop: 6 }}>
+              {CATEGORIES.filter(c => c !== 'None').map((c) => (
+                <div key={c} className="row" style={{ gap: 6, alignItems: 'center' }}>
+                  <span style={{ width: 10, height: 10, borderRadius: 999, background: catColors[c] }} />
+                  <span className="small">{c}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="col">
+          <label className="small muted">Note for selected hex</label>
+          <textarea
+            className="input"
+            style={{ minHeight: 110 }}
+            value={selected ? selectedText : ''}
+            onChange={(e) => saveNote(selectedCategory, e.target.value)}
+            placeholder="Rumour, hazard, NPC, camp..."
+            disabled={!selected}
+          />
+          <div className="small muted" style={{ marginTop: 6 }}>
+            Category is stored inside the note using a hidden prefix (<code>@cat:Category</code>) for compatibility.
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
