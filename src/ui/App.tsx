@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { defaultState, exportState, importState, loadState, saveState, StoredState } from '../core/storage';
 import DicePanel from './DicePanel';
 import JournalPanel from './JournalPanel';
