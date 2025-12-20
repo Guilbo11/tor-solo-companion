@@ -37,15 +37,6 @@ function screenToWorld(p: { x: number; y: number }, zoom: number, pan: { x: numb
   return { x: (p.x - pan.x) / zoom, y: (p.y - pan.y) / zoom };
 }
 
-function worldToScreen(p: { x: number; y: number }, zoom: number, pan: { x: number; y: number }) {
-  return { x: p.x * zoom + pan.x, y: p.y * zoom + pan.y };
-}
-
-/**
- * Note format (backwards-compatible):
- * - If note starts with "@cat:Something\n", we parse it.
- * - Otherwise: category = "None", text = full note.
- */
 function parseNote(raw: string | undefined | null): { category: CategoryName; text: string } {
   const s = (raw ?? '').toString();
   const m = s.match(/^@cat:([^\n\r]+)\s*[\n\r]+([\s\S]*)$/);
@@ -61,8 +52,6 @@ function buildNote(category: CategoryName, text: string): string {
   const t = text ?? '';
   if (!t.trim() && category === 'None') return '';
   if (category === 'None') return t;
-
-  // Avoid template literals to prevent “smart backtick” build issues.
   return '@cat:' + category + '\n' + t;
 }
 
@@ -73,16 +62,6 @@ function pointFromMouseLike(ev: { clientX: number; clientY: number }, canvas: HT
   return { x, y };
 }
 
-/**
- * Calibration assumes pointy-top axial layout.
- * Neighbor vectors in pixels, multiplied by "size" (hex radius):
- * East:      (sqrt(3), 0)
- * NE:        (sqrt(3)/2, -3/2)
- * NW:        (-sqrt(3)/2, -3/2)
- * West:      (-sqrt(3), 0)
- * SW:        (-sqrt(3)/2, 3/2)
- * SE:        (sqrt(3)/2, 3/2)
- */
 const CALIB_DIRS: { id: CalibDir; label: string; unit: { x: number; y: number } }[] = [
   { id: 'E', label: 'East / West (horizontal)', unit: { x: Math.sqrt(3), y: 0 } },
   { id: 'NE', label: 'North-East', unit: { x: Math.sqrt(3) / 2, y: -1.5 } },
@@ -92,10 +71,6 @@ const CALIB_DIRS: { id: CalibDir; label: string; unit: { x: number; y: number } 
   { id: 'SE', label: 'South-East', unit: { x: Math.sqrt(3) / 2, y: 1.5 } },
 ];
 
-/**
- * Read an image file and compress it to a JPEG data URL.
- * This prevents localStorage quota errors and ensures map + notes persist.
- */
 function fileToCompressedDataUrl(file: File, opts?: { maxWidth?: number; quality?: number }): Promise<string> {
   const maxWidth = opts?.maxWidth ?? 1600;
   const quality = opts?.quality ?? 0.82;
@@ -138,10 +113,8 @@ type PointerInfo = { x: number; y: number };
 export default function MapPanel({ state, setState }: { state: StoredState; setState: (s: StoredState) => void }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  // Selection (UI-only)
   const [selected, setSelected] = useState<string>('');
 
-  // Category color settings (stored separately in localStorage)
   const [catColors, setCatColors] = useState<CatColors>(() => {
     try {
       const raw = localStorage.getItem('tor_map_category_colors');
@@ -163,7 +136,6 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
 
   const map = state.map;
 
-  // ✅ persisted prefs
   const gridLocked = map.gridLocked ?? false;
   const nudgeStep = map.nudgeStep ?? 2;
   const calibDir = (map.calibDir ?? 'E') as CalibDir;
@@ -177,22 +149,20 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
   const setNudgeStep = (v: number) => setMap({ nudgeStep: v });
   const setCalibDir = (d: CalibDir) => setMap({ calibDir: d });
 
-  const setZoomPan = (nextZoom: number, nextPan: { x: number; y: number }) =>
-    setMap({ zoom: nextZoom, pan: nextPan });
+  const setZoomPan = (nextZoom: number, nextPan: { x: number; y: number }) => setMap({ zoom: nextZoom, pan: nextPan });
 
   const resetView = () => setZoomPan(1, { x: 0, y: 0 });
 
-  // Calibration mode (UI-only)
+  // Calibration (UI-only)
   const [calibOn, setCalibOn] = useState(false);
-  const [calibP1, setCalibP1] = useState<{ x: number; y: number } | null>(null); // world coords
-  const [calibP2, setCalibP2] = useState<{ x: number; y: number } | null>(null); // world coords
+  const [calibP1, setCalibP1] = useState<{ x: number; y: number } | null>(null);
+  const [calibP2, setCalibP2] = useState<{ x: number; y: number } | null>(null);
 
   const resetCalibration = () => {
     setCalibP1(null);
     setCalibP2(null);
   };
 
-  // Background image
   const bgImg = useMemo(() => {
     if (!map.backgroundDataUrl) return null;
     const img = new Image();
@@ -200,22 +170,54 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
     return img;
   }, [map.backgroundDataUrl]);
 
-  // Pointer handling (supports mouse + touch + pen)
   const pointersRef = useRef<Map<number, PointerInfo>>(new Map());
-  const dragRef = useRef<{
-    mode: 'none' | 'pan' | 'origin';
-    last: { x: number; y: number } | null; // screen coords
-  }>({ mode: 'none', last: null });
+  const dragRef = useRef<{ mode: 'none' | 'pan' | 'origin'; last: { x: number; y: number } | null }>({
+    mode: 'none',
+    last: null,
+  });
 
   const pinchRef = useRef<{
     active: boolean;
     initialDist: number;
     initialZoom: number;
-    worldAnchor: { x: number; y: number }; // world point under pinch center at start
+    worldAnchor: { x: number; y: number };
   }>({ active: false, initialDist: 0, initialZoom: 1, worldAnchor: { x: 0, y: 0 } });
 
   const distance = (a: PointerInfo, b: PointerInfo) => Math.hypot(a.x - b.x, a.y - b.y);
   const center = (a: PointerInfo, b: PointerInfo) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
+
+  // ✅ Zoom helper: keep world point under screen point
+  const zoomAtScreenPoint = (screenP: { x: number; y: number }, factor: number) => {
+    const beforeWorld = screenToWorld(screenP, zoom, pan);
+    const nextZoom = clamp(zoom * factor, 0.3, 5);
+    const nextPan = {
+      x: screenP.x - beforeWorld.x * nextZoom,
+      y: screenP.y - beforeWorld.y * nextZoom,
+    };
+    setZoomPan(nextZoom, nextPan);
+  };
+
+  // ✅ Center on selected hex
+  const centerOnSelected = () => {
+    const c = canvasRef.current;
+    if (!c || !selected) return;
+
+    const m = selected.match(/q:(-?\d+),r:(-?\d+)/);
+    if (!m) return;
+
+    const q = parseInt(m[1], 10);
+    const r = parseInt(m[2], 10);
+
+    const centerW = axialToPixel({ q, r }, map.hexSize, map.origin);
+    const targetScreen = { x: c.width / 2, y: c.height / 2 };
+
+    const nextPan = {
+      x: targetScreen.x - centerW.x * zoom,
+      y: targetScreen.y - centerW.y * zoom,
+    };
+
+    setZoomPan(zoom, nextPan);
+  };
 
   // --- Drawing loop ---
   useEffect(() => {
@@ -232,19 +234,17 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
 
       ctx.clearRect(0, 0, W, H);
 
-      // Apply camera transform: world -> screen
       ctx.save();
       ctx.setTransform(zoom, 0, 0, zoom, pan.x, pan.y);
 
-      // Visible world bounds (for culling)
+      // Visible world bounds for culling
       const left = -pan.x / zoom;
       const top = -pan.y / zoom;
       const right = (W - pan.x) / zoom;
       const bottom = (H - pan.y) / zoom;
 
-      // Background
+      // Background (fit in base world)
       if (bgImg && bgImg.complete) {
-        // Fit to "world canvas" (0..W,0..H) at zoom=1. Camera handles zoom/pan.
         const scale = Math.min(W / bgImg.width, H / bgImg.height);
         const dw = bgImg.width * scale;
         const dh = bgImg.height * scale;
@@ -264,19 +264,13 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
 
       ctx.globalAlpha = 0.35;
       ctx.strokeStyle = '#b6c8ff';
-      ctx.lineWidth = 1 / zoom; // keep line visually stable when zooming
+      ctx.lineWidth = 1 / zoom;
 
-      for (let r = -rows; r <= rows; r++) {
-        for (let q = -cols; q <= cols; q++) {
-          const centerW = axialToPixel({ q, r }, size, origin);
+      for (let rr = -rows; rr <= rows; rr++) {
+        for (let qq = -cols; qq <= cols; qq++) {
+          const centerW = axialToPixel({ q: qq, r: rr }, size, origin);
 
-          // Cull using visible world bounds
-          if (
-            centerW.x < left - size ||
-            centerW.x > right + size ||
-            centerW.y < top - size ||
-            centerW.y > bottom + size
-          ) {
+          if (centerW.x < left - size || centerW.x > right + size || centerW.y < top - size || centerW.y > bottom + size) {
             continue;
           }
 
@@ -287,8 +281,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
           ctx.closePath();
           ctx.stroke();
 
-          // Dot for notes
-          const key = axialKey({ q, r });
+          const key = axialKey({ q: qq, r: rr });
           const rawNote = map.notes[key];
           if (rawNote) {
             const parsed = parseNote(rawNote);
@@ -326,7 +319,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
         }
       }
 
-      // Calibration markers (world coords)
+      // Calibration markers
       if (calibOn) {
         ctx.globalAlpha = 1.0;
 
@@ -363,13 +356,11 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
     return () => cancelAnimationFrame(raf);
   }, [bgImg, map.hexSize, map.origin, map.notes, selected, catColors, calibOn, calibP1, calibP2, zoom, pan.x, pan.y]);
 
-  // --- Background image pick (compressed) ---
   const onPickBackground = async (file: File) => {
     const dataUrl = await fileToCompressedDataUrl(file, { maxWidth: 1600, quality: 0.82 });
     setMap({ backgroundDataUrl: dataUrl });
   };
 
-  // --- Click selection / calibration using world coords ---
   const handleCanvasClick = (screenP: { x: number; y: number }) => {
     const worldP = screenToWorld(screenP, zoom, pan);
 
@@ -391,20 +382,18 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
 
         const denom = ux * ux + uy * uy;
         const size = denom > 0 ? (dx * ux + dy * uy) / denom : map.hexSize;
-        const safeSize = clamp(size, 2, 120);
 
+        const safeSize = clamp(size, 2, 120);
         const origin = { x: calibP1.x, y: calibP1.y };
 
         setMap({ hexSize: safeSize, origin });
 
-        // Auto-lock after calibration
         setGridLocked(true);
         setCalibOn(false);
         resetCalibration();
         return;
       }
 
-      // restart calibration
       setCalibP1(worldP);
       setCalibP2(null);
       return;
@@ -414,36 +403,35 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
     setSelected(axialKey(axial));
   };
 
-  // --- Zoom helper (keeps a world point under a screen point) ---
-  const zoomAtScreenPoint = (screenP: { x: number; y: number }, factor: number) => {
-    const beforeWorld = screenToWorld(screenP, zoom, pan);
-    const nextZoom = clamp(zoom * factor, 0.3, 5);
+  // ✅ IMPORTANT: prevent page scrolling while pointer is over canvas.
+  // React's onWheel can be passive in some cases; native listener with {passive:false} is the reliable fix.
+  useEffect(() => {
+    const c = canvasRef.current;
+    if (!c) return;
 
-    const nextPan = {
-      x: screenP.x - beforeWorld.x * nextZoom,
-      y: screenP.y - beforeWorld.y * nextZoom,
+    const onWheelNative = (ev: WheelEvent) => {
+      // If the wheel happens on the canvas, we consume it for map zoom.
+      ev.preventDefault();
+
+      const screenP = pointFromMouseLike(ev, c);
+      const factor = ev.deltaY > 0 ? 0.92 : 1.08;
+      zoomAtScreenPoint(screenP, factor);
     };
 
-    setZoomPan(nextZoom, nextPan);
-  };
+    c.addEventListener('wheel', onWheelNative, { passive: false });
 
-  // --- Wheel zoom (mouse + trackpad pinch generates wheel too) ---
-  const onWheel = (ev: React.WheelEvent) => {
-    ev.preventDefault();
-    const c = canvasRef.current!;
-    const screenP = pointFromMouseLike(ev, c);
+    return () => {
+      c.removeEventListener('wheel', onWheelNative as any);
+    };
+    // We intentionally depend on zoom/pan via zoomAtScreenPoint closure
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [zoom, pan.x, pan.y]);
 
-    // Trackpads often use small deltas; CtrlKey often indicates pinch-zoom on some browsers.
-    const direction = ev.deltaY > 0 ? 0.92 : 1.08;
-    zoomAtScreenPoint(screenP, direction);
-  };
-
-  // --- Pointer events for drag + pinch zoom ---
+  // Pointer events (drag + pinch)
   const onPointerDown = (ev: React.PointerEvent) => {
     const c = canvasRef.current;
     if (!c) return;
 
-    // Capture pointer so we keep getting moves even if leaving canvas
     try {
       c.setPointerCapture(ev.pointerId);
     } catch {
@@ -453,42 +441,30 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
     const p = pointFromMouseLike(ev, c);
     pointersRef.current.set(ev.pointerId, p);
 
-    // If 2 pointers -> start pinch
     if (pointersRef.current.size === 2) {
       const pts = Array.from(pointersRef.current.values());
       const a = pts[0]!;
       const b = pts[1]!;
-      const cent = center(a, b);
-      const dist = Math.max(1, distance(a, b));
+      const cent = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+      const dist = Math.max(1, Math.hypot(a.x - b.x, a.y - b.y));
 
       pinchRef.current.active = true;
       pinchRef.current.initialDist = dist;
       pinchRef.current.initialZoom = zoom;
-
-      // World anchor = world point under pinch center at start
       pinchRef.current.worldAnchor = screenToWorld(cent, zoom, pan);
 
-      // Stop drag mode while pinching
       dragRef.current.mode = 'none';
       dragRef.current.last = null;
       return;
     }
 
-    // 1 pointer: choose drag mode
     if (calibOn) {
-      // In calibration mode, we don't drag; click will be handled on pointer up
       dragRef.current.mode = 'none';
       dragRef.current.last = null;
       return;
     }
 
-    if (gridLocked) {
-      // Drag pans the view
-      dragRef.current.mode = 'pan';
-    } else {
-      // Drag moves the grid origin
-      dragRef.current.mode = 'origin';
-    }
+    dragRef.current.mode = gridLocked ? 'pan' : 'origin';
     dragRef.current.last = p;
   };
 
@@ -500,7 +476,6 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
     const p = pointFromMouseLike(ev, c);
     pointersRef.current.set(ev.pointerId, p);
 
-    // Pinch zoom (2 pointers)
     if (pinchRef.current.active && pointersRef.current.size >= 2) {
       const pts = Array.from(pointersRef.current.values()).slice(0, 2);
       const a = pts[0]!;
@@ -511,35 +486,29 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
       const scale = dist / pinchRef.current.initialDist;
       const nextZoom = clamp(pinchRef.current.initialZoom * scale, 0.3, 5);
 
-      const worldAnchor = pinchRef.current.worldAnchor;
-
-      // Pan so that worldAnchor remains under the current pinch center
+      const anchor = pinchRef.current.worldAnchor;
       const nextPan = {
-        x: cent.x - worldAnchor.x * nextZoom,
-        y: cent.y - worldAnchor.y * nextZoom,
+        x: cent.x - anchor.x * nextZoom,
+        y: cent.y - anchor.y * nextZoom,
       };
 
       setZoomPan(nextZoom, nextPan);
       return;
     }
 
-    // Drag (1 pointer)
     if (dragRef.current.mode === 'none' || !dragRef.current.last) return;
-    const last = dragRef.current.last;
 
+    const last = dragRef.current.last;
     const dx = p.x - last.x;
     const dy = p.y - last.y;
-
     dragRef.current.last = p;
 
     if (dragRef.current.mode === 'pan') {
-      // screen-space pan
       setZoomPan(zoom, { x: pan.x + dx, y: pan.y + dy });
       return;
     }
 
     if (dragRef.current.mode === 'origin') {
-      // Convert screen drag to world delta
       const wdx = dx / zoom;
       const wdy = dy / zoom;
       setMap({ origin: { x: map.origin.x + wdx, y: map.origin.y + wdy } });
@@ -552,25 +521,22 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
     if (!c) return;
 
     const wasTracked = pointersRef.current.has(ev.pointerId);
-
     pointersRef.current.delete(ev.pointerId);
 
-    // End pinch if fewer than 2 pointers
     if (pointersRef.current.size < 2) {
       pinchRef.current.active = false;
     }
 
-    // End drag if no pointers left
     if (pointersRef.current.size === 0) {
+      const wasDragging = dragRef.current.mode !== 'none';
       dragRef.current.mode = 'none';
       dragRef.current.last = null;
-    }
 
-    // Treat as click if it was tracked and we weren't dragging/pinching
-    // (Simple heuristic: on pointer up, if we are not in drag mode and not pinching, accept as click)
-    if (wasTracked && !pinchRef.current.active && dragRef.current.mode === 'none') {
-      const screenP = pointFromMouseLike(ev, c);
-      handleCanvasClick(screenP);
+      // Only treat as click if we were not dragging (simple heuristic)
+      if (wasTracked && !wasDragging && !pinchRef.current.active) {
+        const screenP = pointFromMouseLike(ev, c);
+        handleCanvasClick(screenP);
+      }
     }
   };
 
@@ -583,7 +549,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
     }
   };
 
-  // --- Keyboard nudges (persisted step). Only acts when NOT locked (to avoid fighting pan/zoom on laptop) ---
+  // Keyboard nudges (unlocked only)
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       const tag = (document.activeElement?.tagName ?? '').toLowerCase();
@@ -595,7 +561,6 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
         return;
       }
 
-      // When locked, we avoid origin nudges by default
       if (gridLocked) return;
 
       if (e.key === 'ArrowLeft') {
@@ -618,7 +583,6 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gridLocked, map.origin.x, map.origin.y, map.hexSize, nudgeStep, zoom, pan.x, pan.y]);
 
-  // --- Selected note/category ---
   const selectedRaw = selected ? map.notes[selected] ?? '' : '';
   const parsedSelected = useMemo(() => parseNote(selectedRaw), [selectedRaw]);
   const selectedCategory = parsedSelected.category;
@@ -641,7 +605,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
     <div className="card">
       <div className="h2">Eriador Map (hex overlay)</div>
       <div className="muted small">
-        Zoom: mouse wheel / pinch. Pan: drag when locked. Move grid: drag when unlocked. Reset view: Ctrl/⌘ + 0.
+        Zoom: wheel / pinch. Pan: drag when locked. Move grid: drag when unlocked. Reset view: Ctrl/⌘ + 0.
       </div>
 
       <div className="row" style={{ marginTop: 12 }}>
@@ -665,6 +629,10 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
               Reset view (zoom/pan)
             </button>
 
+            <button className="btn" onClick={centerOnSelected} disabled={!selected}>
+              Center on selected
+            </button>
+
             <label className="small muted" style={{ display: 'inline-flex', alignItems: 'center' }}>
               <input
                 type="checkbox"
@@ -679,7 +647,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
                 }}
                 style={{ marginRight: 8 }}
               />
-              🔒 Lock grid (drag pans view, wheel zooms)
+              🔒 Lock grid (drag pans view, pinch/wheel zoom)
             </label>
           </div>
 
@@ -755,9 +723,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
               type="number"
               value={map.origin.x}
               disabled={gridLocked}
-              onChange={(e) =>
-                setMap({ origin: { ...map.origin, x: parseFloat(e.target.value || '0') } })
-              }
+              onChange={(e) => setMap({ origin: { ...map.origin, x: parseFloat(e.target.value || '0') } })}
             />
 
             <label className="small muted">Origin Y</label>
@@ -766,9 +732,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
               type="number"
               value={map.origin.y}
               disabled={gridLocked}
-              onChange={(e) =>
-                setMap({ origin: { ...map.origin, y: parseFloat(e.target.value || '0') } })
-              }
+              onChange={(e) => setMap({ origin: { ...map.origin, y: parseFloat(e.target.value || '0') } })}
             />
           </div>
 
@@ -793,7 +757,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
             <div className="col">
               <div className="small muted">Zoom</div>
               <div className="small" style={{ marginTop: 6 }}>
-                {Math.round((zoom ?? 1) * 100)}%
+                {Math.round(zoom * 100)}%
               </div>
               <div className="row" style={{ gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
                 <button className="btn" onClick={() => zoomAtScreenPoint({ x: 512, y: 320 }, 1.1)}>+</button>
@@ -813,14 +777,14 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
           ref={canvasRef}
           width={1024}
           height={640}
-          onWheel={onWheel}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerCancel}
           style={{
-            touchAction: 'none', // IMPORTANT: enables custom pinch/pan on mobile
-            cursor: calibOn ? 'crosshair' : gridLocked ? 'grab' : 'grab',
+            touchAction: 'none',
+            overscrollBehavior: 'contain', // ✅ prevents scroll chaining (mobile + some desktop cases)
+            cursor: calibOn ? 'crosshair' : 'grab',
           }}
         />
       </div>
