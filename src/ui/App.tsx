@@ -16,13 +16,13 @@ export default function App() {
 
   const tabs: Tab[] = ['Heroes','Fellowship','Dice','Oracles','Map','Journal','Settings'];
 
-  const set = useCallback<React.Dispatch<React.SetStateAction<StoredState>>>((next) => {
+  const set: React.Dispatch<React.SetStateAction<StoredState>> = (next) => {
     setState((prev) => {
       const nextState = typeof next === 'function' ? (next as (s: StoredState) => StoredState)(prev) : next;
       saveState(nextState);
       return nextState;
     });
-  }, []);
+  };
 
   const header = useMemo(() => {
     return (
