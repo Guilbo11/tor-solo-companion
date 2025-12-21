@@ -9,7 +9,7 @@ type Props = {
 
 export default function FloatingDiceSheet({ open, onClose }: Props) {
   const [dice, setDice] = useState(2);
-  const [fav, setFav] = useState(false);
+  const [featMode, setFeatMode] = useState<'normal'|'favoured'|'illFavoured'>('normal');
   const [weary, setWeary] = useState(false);
   const [tn, setTn] = useState<number | ''>('');
   const [res, setRes] = useState<RollResult | null>(null);
@@ -46,7 +46,7 @@ export default function FloatingDiceSheet({ open, onClose }: Props) {
 
     const r = rollTOR({
       dice,
-      favoured: fav,
+      featMode,
       weary,
       tn: typeof tn === 'number' ? tn : undefined,
     });
@@ -85,13 +85,17 @@ export default function FloatingDiceSheet({ open, onClose }: Props) {
           </div>
         </div>
 
-        <div className="row" style={{ marginTop: 10, gap: 10 }}>
-          <label className="row" style={{ gap: 8 }}>
-            <input type="checkbox" checked={fav} onChange={(e) => setFav(e.target.checked)} />
-            <span className="small">Favoured (roll 2 feat)</span>
-          </label>
+        <div className="row" style={{ marginTop: 10, gap: 10, flexWrap: 'wrap' }}>
+          <div className="col" style={{minWidth: 220}}>
+            <label className="small muted">Feat die mode</label>
+            <select className="input" value={featMode} onChange={(e)=>setFeatMode(e.target.value as any)}>
+              <option value="normal">Normal (1 Feat die)</option>
+              <option value="favoured">Favoured (2 Feat dice, keep best)</option>
+              <option value="illFavoured">Ill-favoured (2 Feat dice, keep worst)</option>
+            </select>
+          </div>
 
-          <label className="row" style={{ gap: 8 }}>
+          <label className="row" style={{ gap: 8, alignSelf: 'end' }}>
             <input type="checkbox" checked={weary} onChange={(e) => setWeary(e.target.checked)} />
             <span className="small">Weary (1–3 count as 0)</span>
           </label>

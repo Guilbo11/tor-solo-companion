@@ -2,6 +2,8 @@ import React, { useMemo, useState } from 'react';
 import { StoredState, saveState } from '../core/storage';
 import { compendiums, findEntryById, sortByName } from '../core/compendiums';
 import { computeDerived, rollNameFallback } from '../core/tor2e';
+import { getSkillAttribute, getSkillTN } from '../core/skills';
+import { rollTOR, RollResult } from '../core/dice';
 import BottomSheet from './BottomSheet';
 
 type Props = {
@@ -118,6 +120,8 @@ export default function HeroesPanel({ state, setState }: Props) {
       callingId: '',
       featureIds: [],
       striderMode: false,
+      standardOfLiving: 'Common',
+      mount: { vigour: 1, label: 'Old horse / half-starved pony' },
       attributes: { strength: 2, heart: 2, wits: 2 },
       endurance: { max: 20, current: 20, load: 0, fatigue: 0 },
       hope: { max: 8, current: 8 },
@@ -132,6 +136,12 @@ export default function HeroesPanel({ state, setState }: Props) {
       equipped: { weaponId: 'unarmed' },
       parry: { base: 0, other: 0 },
       protectionOther: 0,
+      usefulItems: [],
+      previousExperience: {
+        baselineSkillRatings: Object.fromEntries((compendiums.skills.entries ?? []).map((s: any) => [s.id, 0])),
+        baselineCombatProficiencies: { axes: 0, bows: 0, spears: 0, swords: 0 },
+        committed: false,
+      },
       skillRatings: Object.fromEntries((compendiums.skills.entries ?? []).map((s: any) => [s.id, 0])),
       skillFavoured: {},
       virtueIds: [],
@@ -148,7 +158,28 @@ export default function HeroesPanel({ state, setState }: Props) {
   }
 
   function updateHero(id: string, patch: any) {
-    const nextHeroes = heroes.map(h => h.id === id ? { ...h, ...patch, updatedAt: new Date().toISOString() } : h);
+    const nextHeroes = heroes.map(h => {
+      if (h.id !== id) return h;
+      const merged = { ...h, ...patch };
+      // keep common nested objects intact when patch provides partials
+      if (h.attributes || patch.attributes) merged.attributes = { ...(h.attributes ?? {}), ...(patch.attributes ?? {}) };
+      if (h.endurance || patch.endurance) merged.endurance = { ...(h.endurance ?? {}), ...(patch.endurance ?? {}) };
+      if (h.hope || patch.hope) merged.hope = { ...(h.hope ?? {}), ...(patch.hope ?? {}) };
+      if (h.shadow || patch.shadow) merged.shadow = { ...(h.shadow ?? {}), ...(patch.shadow ?? {}) };
+      if (h.conditions || patch.conditions) merged.conditions = { ...(h.conditions ?? {}), ...(patch.conditions ?? {}) };
+      if (h.points || patch.points) merged.points = { ...(h.points ?? {}), ...(patch.points ?? {}) };
+      if (h.parry || patch.parry) merged.parry = { ...(h.parry ?? {}), ...(patch.parry ?? {}) };
+      if (h.combatProficiencies || patch.combatProficiencies) merged.combatProficiencies = { ...(h.combatProficiencies ?? {}), ...(patch.combatProficiencies ?? {}) };
+
+      const d = computeDerived(merged);
+      // Store computed load for display and auto-toggle weary per rule.
+      merged.endurance = { ...(merged.endurance ?? {}), load: d.loadTotal };
+      const curEnd = Number(merged.endurance?.current ?? 0);
+      const weary = curEnd < d.loadTotal;
+      merged.conditions = { ...(merged.conditions ?? {}), weary };
+
+      return { ...merged, updatedAt: new Date().toISOString() };
+    });
     const next: StoredState = { ...state, heroes: nextHeroes };
     setState(next);
     saveState(next);
@@ -254,16 +285,15 @@ export default function HeroesPanel({ state, setState }: Props) {
                         <div className="grid2">
                           <div className="miniCard">
                             <div className="miniTitle">Endurance</div>
-                            <div className="row" style={{gap:8}}>
-                              <input className="input" type="number" value={hero.endurance?.current ?? 0} onChange={(e)=>updateHero(hero.id,{endurance:{...(hero.endurance??{}),current:Number(e.target.value)}})}/>
+                            <div className="row" style={{gap:8, alignItems:'center', flexWrap:'wrap'}}>
+                              <input className="input" style={{maxWidth: 92}} type="number" value={hero.endurance?.current ?? 0} onChange={(e)=>updateHero(hero.id,{endurance:{...(hero.endurance??{}),current:Number(e.target.value)}})}/>
                               <span className="muted">/</span>
-                              <input className="input" type="number" value={hero.endurance?.max ?? 0} onChange={(e)=>updateHero(hero.id,{endurance:{...(hero.endurance??{}),max:Number(e.target.value)}})}/>
+                              <input className="input" style={{maxWidth: 92}} type="number" value={hero.endurance?.max ?? 0} onChange={(e)=>updateHero(hero.id,{endurance:{...(hero.endurance??{}),max:Number(e.target.value)}})}/>
+                              <span className="muted small" style={{marginLeft: 6}}>
+                                Load {derived.loadTotal}{(hero.endurance?.current ?? 0) < derived.loadTotal ? <span title="Weary" style={{marginLeft: 6}}>❗</span> : null}
+                              </span>
                             </div>
                             <div className="row" style={{gap:8, marginTop:8}}>
-                              <div style={{flex:1}}>
-                                <div className="label">Load</div>
-                                <input className="input" type="number" value={derived.loadTotal} readOnly />
-                              </div>
                               <div style={{flex:1}}>
                                 <div className="label">Fatigue</div>
                                 <input className="input" type="number" value={hero.endurance?.fatigue ?? 0} onChange={(e)=>updateHero(hero.id,{endurance:{...(hero.endurance??{}),fatigue:Number(e.target.value)}})}/>
@@ -273,10 +303,10 @@ export default function HeroesPanel({ state, setState }: Props) {
 
                           <div className="miniCard">
                             <div className="miniTitle">Hope</div>
-                            <div className="row" style={{gap:8}}>
-                              <input className="input" type="number" value={hero.hope?.current ?? 0} onChange={(e)=>updateHero(hero.id,{hope:{...(hero.hope??{}),current:Number(e.target.value)}})}/>
+                            <div className="row" style={{gap:8, alignItems:'center', flexWrap:'wrap'}}>
+                              <input className="input" style={{maxWidth: 92}} type="number" value={hero.hope?.current ?? 0} onChange={(e)=>updateHero(hero.id,{hope:{...(hero.hope??{}),current:Number(e.target.value)}})}/>
                               <span className="muted">/</span>
-                              <input className="input" type="number" value={hero.hope?.max ?? 0} onChange={(e)=>updateHero(hero.id,{hope:{...(hero.hope??{}),max:Number(e.target.value)}})}/>
+                              <input className="input" style={{maxWidth: 92}} type="number" value={hero.hope?.max ?? 0} onChange={(e)=>updateHero(hero.id,{hope:{...(hero.hope??{}),max:Number(e.target.value)}})}/>
                             </div>
                             <div className="row" style={{gap:8, marginTop:8}}>
                               <div style={{flex:1}}>
@@ -365,11 +395,137 @@ export default function HeroesPanel({ state, setState }: Props) {
                           </div>
                         </div>
                       </div>
+
+                      <div className="section">
+                        <div className="sectionTitle">Attacks</div>
+                        <AttackSection hero={hero} derived={derived} />
+                      </div>
                     </>
                   )}
 
                   {activeTab === 'Skills' && (
                     <div className="section" style={{marginTop: 0}}>
+                      <div className="sectionTitle">Previous Experience</div>
+                      {(() => {
+                        const pe = hero.previousExperience ?? {
+                          baselineSkillRatings: { ...(hero.skillRatings ?? {}) },
+                          baselineCombatProficiencies: { axes: hero.combatProficiencies?.axes ?? 0, bows: hero.combatProficiencies?.bows ?? 0, spears: hero.combatProficiencies?.spears ?? 0, swords: hero.combatProficiencies?.swords ?? 0 },
+                          committed: false,
+                        };
+
+                        const skillCost = (toLevel: number) => {
+                          if (toLevel <= 1) return 1;
+                          if (toLevel === 2) return 2;
+                          if (toLevel === 3) return 3;
+                          if (toLevel === 4) return 5;
+                          return 0;
+                        };
+                        const profCost = (toLevel: number) => {
+                          if (toLevel <= 1) return 2;
+                          if (toLevel === 2) return 4;
+                          if (toLevel === 3) return 6;
+                          return 0;
+                        };
+
+                        const computeSpent = () => {
+                          let spent = 0;
+                          const curSkills = hero.skillRatings ?? {};
+                          const baseSkills = pe.baselineSkillRatings ?? {};
+                          for (const [sid, cur] of Object.entries(curSkills)) {
+                            const b = Number((baseSkills as any)[sid] ?? 0);
+                            const c = Number(cur ?? 0);
+                            for (let lvl = b + 1; lvl <= Math.min(4, c); lvl++) spent += skillCost(lvl);
+                          }
+                          const curP = hero.combatProficiencies ?? {};
+                          const baseP = pe.baselineCombatProficiencies ?? { axes: 0, bows: 0, spears: 0, swords: 0 };
+                          (['axes','bows','spears','swords'] as const).forEach(k => {
+                            const b = Number((baseP as any)[k] ?? 0);
+                            const c = Number((curP as any)[k] ?? 0);
+                            for (let lvl = b + 1; lvl <= Math.min(3, c); lvl++) spent += profCost(lvl);
+                          });
+                          return spent;
+                        };
+
+                        const budget = hero.striderMode ? 15 : 10;
+                        const spent = computeSpent();
+                        const remaining = Math.max(0, budget - spent);
+                        const committed = !!pe.committed;
+
+                        const resetBaseline = () => {
+                          updateHero(hero.id, {
+                            previousExperience: {
+                              baselineSkillRatings: { ...(hero.skillRatings ?? {}) },
+                              baselineCombatProficiencies: { axes: hero.combatProficiencies?.axes ?? 0, bows: hero.combatProficiencies?.bows ?? 0, spears: hero.combatProficiencies?.spears ?? 0, swords: hero.combatProficiencies?.swords ?? 0 },
+                              committed: false,
+                            }
+                          });
+                        };
+
+                        const commit = () => {
+                          updateHero(hero.id, {
+                            previousExperience: {
+                              ...pe,
+                              committedSkillRatings: { ...(hero.skillRatings ?? {}) },
+                              committedCombatProficiencies: { axes: hero.combatProficiencies?.axes ?? 0, bows: hero.combatProficiencies?.bows ?? 0, spears: hero.combatProficiencies?.spears ?? 0, swords: hero.combatProficiencies?.swords ?? 0 },
+                              committed: true,
+                            }
+                          });
+                        };
+
+                        return (
+                          <>
+                            <div className="row" style={{gap: 10, flexWrap:'wrap'}}>
+                              <div className="small">Budget: <b>{budget}</b> · Spent: <b>{spent}</b> · Remaining: <b>{remaining}</b></div>
+                              <span className="muted small">(Skills up to XXXX, Proficiencies up to XXX for Previous Experience)</span>
+                            </div>
+                            <div className="row" style={{gap: 8, marginTop: 8, flexWrap:'wrap'}}>
+                              <button className="btn btn-ghost" onClick={resetBaseline}>Reset baseline</button>
+                              <button className="btn" disabled={committed} onClick={commit}>Commit</button>
+                              {committed ? <span className="small muted">Committed. Future increases are treated as progression.</span> : null}
+                            </div>
+                          </>
+                        );
+                      })()}
+
+                      <hr />
+
+                      <div className="sectionTitle">Combat Proficiencies</div>
+                      <div className="small muted">Use + / – to adjust quickly.</div>
+                      {(() => {
+                        const pe = hero.previousExperience;
+                        const committed = !!pe?.committed;
+                        const profs = hero.combatProficiencies ?? {};
+                        const rows: Array<{ key: 'axes'|'bows'|'spears'|'swords'; label: string }> = [
+                          { key: 'axes', label: 'Axes' },
+                          { key: 'bows', label: 'Bows' },
+                          { key: 'spears', label: 'Spears' },
+                          { key: 'swords', label: 'Swords' },
+                        ];
+                        const canEdit = !committed;
+                        return (
+                          <div className="skillsList">
+                            {rows.map(r => {
+                              const cur = Number((profs as any)[r.key] ?? 0);
+                              const committedVal = pe?.committedCombatProficiencies ? Number((pe.committedCombatProficiencies as any)[r.key] ?? 0) : undefined;
+                              const extra = (typeof committedVal === 'number') ? Math.max(0, cur - committedVal) : 0;
+                              return (
+                                <div key={r.key} className="skillRow">
+                                  <div className="skillName">{r.label}</div>
+                                  <div className="skillMeta">{committedVal !== undefined ? `Committed ${committedVal}${extra ? ` (+${extra})` : ''}` : ''}</div>
+                                  <div className="row" style={{gap:6}}>
+                                    <button className="btn btn-ghost" disabled={!canEdit || cur<=0} onClick={()=>updateHero(hero.id,{combatProficiencies:{...(profs as any),[r.key]:Math.max(0,cur-1)}})}>-</button>
+                                    <div className="skillNum" style={{minWidth: 24, textAlign:'center'}}>{cur}</div>
+                                    <button className="btn btn-ghost" disabled={!canEdit || cur>=6} onClick={()=>updateHero(hero.id,{combatProficiencies:{...(profs as any),[r.key]:Math.min(6,cur+1)}})}>+</button>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        );
+                      })()}
+
+                      <hr />
+
                       <div className="sectionTitle">Skills</div>
                       <div className="small muted">⭐ = Favoured (from Culture selection). Tap name for See more.</div>
                       {Object.keys(skillsByGroup).map(group => (
@@ -379,14 +535,25 @@ export default function HeroesPanel({ state, setState }: Props) {
                             {skillsByGroup[group].map((s:any)=>{
                               const rating = hero.skillRatings?.[s.id] ?? 0;
                               const isFav = derived.favouredSkillSet.has(s.id);
+                              const pe = hero.previousExperience;
+                              const committed = !!pe?.committed;
+                              const committedVal = pe?.committedSkillRatings ? Number((pe.committedSkillRatings as any)[s.id] ?? 0) : undefined;
+                              const extra = (typeof committedVal === 'number') ? Math.max(0, rating - committedVal) : 0;
                               return (
                                 <div key={s.id} className={"skillRow " + (isFav ? 'favoured' : '')}>
                                   <div className="skillName" onClick={()=>openEntry('skills', s.id)}>
                                     {isFav ? '⭐ ' : ''}{s.name}
                                   </div>
-                                  <div className="skillMeta">{s.attribute}</div>
-                                  <input className="skillNum" type="number" min={0} max={6} value={rating}
-                                    onChange={(e)=>updateHero(hero.id,{skillRatings:{...(hero.skillRatings??{}),[s.id]:Math.max(0,Math.min(6,Number(e.target.value)))}})} />
+                                  {(() => {
+                                    const attr = getSkillAttribute(s.id);
+                                    const tn = getSkillTN(hero, s.id);
+                                    return <div className="skillMeta">{attr} · TN {tn}{committedVal !== undefined ? ` · Committed ${committedVal}${extra ? ` (+${extra})` : ''}` : ''}</div>;
+                                  })()}
+                                  <div className="row" style={{gap:6}}>
+                                    <button className="btn btn-ghost" disabled={committed || rating<=0} onClick={()=>updateHero(hero.id,{skillRatings:{...(hero.skillRatings??{}),[s.id]:Math.max(0, rating-1)}})}>-</button>
+                                    <div className="skillNum" style={{minWidth: 24, textAlign:'center'}}>{rating}</div>
+                                    <button className="btn btn-ghost" disabled={committed || rating>=6} onClick={()=>updateHero(hero.id,{skillRatings:{...(hero.skillRatings??{}),[s.id]:Math.min(6, rating+1)}})}>+</button>
+                                  </div>
                                 </div>
                               );
                             })}
@@ -399,11 +566,18 @@ export default function HeroesPanel({ state, setState }: Props) {
                   {activeTab === 'Gear' && (
                     <>
                       <div className="section" style={{marginTop: 0}}>
-                        <div className="sectionTitle">Equipped</div>
-                        <GearEquippedEditor hero={hero} updateHero={(patch)=>updateHero(hero.id, patch)} onSeeMore={openEntry} />
+                        <div className="sectionTitle">Useful items</div>
+                        {(() => {
+                          const sol = hero.standardOfLiving ?? 'Common';
+                          const startingCount: any = { Poor: 0, Frugal: 1, Common: 2, Prosperous: 3, Rich: 4, 'Very Rich': 5 };
+                          const n = startingCount[sol] ?? 2;
+                          return <div className="small muted">Starting number for Standard of Living ({sol}): <b>{n}</b></div>;
+                        })()}
+                        <UsefulItemsEditor hero={hero} updateHero={(patch)=>updateHero(hero.id, patch)} />
                       </div>
                       <div className="section">
-                        <div className="sectionTitle">Inventory</div>
+                        <div className="sectionTitle">Inventory & Equipment</div>
+                        <div className="small muted">Use <b>Equip</b> to apply armour/shield/parry and add weapon options for Attacks. Use <b>Dropped</b> to remove from Load.</div>
                         <InventoryEditor hero={hero} updateHero={(patch)=>updateHero(hero.id, patch)} onSeeMore={openEntry} />
                       </div>
                     </>
@@ -414,7 +588,21 @@ export default function HeroesPanel({ state, setState }: Props) {
                       <div className="row">
                         <div className="field">
                           <div className="label">Culture</div>
-                          <select className="input" value={hero.cultureId ?? ''} onChange={(e)=>updateHero(hero.id,{cultureId:e.target.value})}>
+                          <select className="input" value={hero.cultureId ?? ''} onChange={(e)=>{
+                            const newId = e.target.value;
+                            const c:any = getCultureEntry(newId);
+                            const sol = c?.standardOfLiving ?? hero.standardOfLiving;
+                            // Reset previous experience baseline when culture changes.
+                            updateHero(hero.id,{
+                              cultureId: newId,
+                              standardOfLiving: sol,
+                              previousExperience: {
+                                baselineSkillRatings: { ...(hero.skillRatings ?? {}) },
+                                baselineCombatProficiencies: { axes: hero.combatProficiencies?.axes ?? 0, bows: hero.combatProficiencies?.bows ?? 0, spears: hero.combatProficiencies?.spears ?? 0, swords: hero.combatProficiencies?.swords ?? 0 },
+                                committed: false,
+                              }
+                            });
+                          }}>
                             <option value="">(none)</option>
                             {cultureOptions.map((c:any)=> <option key={c.id} value={c.id}>{c.name}</option>)}
                           </select>
@@ -446,6 +634,86 @@ export default function HeroesPanel({ state, setState }: Props) {
                         <label className={"toggle " + (hero.striderMode ? 'on' : '')}>
                           <input type="checkbox" checked={!!hero.striderMode} onChange={(e)=>updateHero(hero.id,{striderMode:e.target.checked})}/> Enabled (adds Strider-only flavour/UI)
                         </label>
+                      </div>
+
+                      <div className="section">
+                        <div className="sectionTitle">Culture Attribute Arrays</div>
+                        {(() => {
+                          const c:any = getCultureEntry(hero.cultureId);
+                          const rolls: any[] = Array.isArray(c?.attributeRolls) ? c.attributeRolls : [];
+                          if (!c || rolls.length === 0) return <div className="small muted">Select a culture to choose an Attribute array.</div>;
+                          const chosen = Number((hero as any).attributeRollChoice ?? 1);
+                          const setChoice = (n:number)=>updateHero(hero.id,{ attributeRollChoice: n });
+                          const applyChoice = (n:number) => {
+                            const r = rolls.find(x=>Number(x.roll)===n) ?? rolls[0];
+                            const strength = Number(r?.strength ?? hero.attributes?.strength ?? 2);
+                            const heart = Number(r?.heart ?? hero.attributes?.heart ?? 2);
+                            const wits = Number(r?.wits ?? hero.attributes?.wits ?? 2);
+                            const endBonus = Number(c?.derived?.enduranceBonus ?? 0);
+                            const hopeBonus = Number(c?.derived?.hopeBonus ?? 0);
+                            const parryBonus = Number(c?.derived?.parryBonus ?? 0);
+                            const endMax = strength + endBonus;
+                            const hopeMax = heart + hopeBonus;
+                            const parryBase = wits + parryBonus;
+                            updateHero(hero.id,{
+                              attributeRollChoice: n,
+                              attributes: { strength, heart, wits },
+                              endurance: { ...(hero.endurance??{}), max: endMax, current: Math.min(Number(hero.endurance?.current ?? endMax), endMax) },
+                              hope: { ...(hero.hope??{}), max: hopeMax, current: Math.min(Number(hero.hope?.current ?? hopeMax), hopeMax) },
+                              parry: { ...(hero.parry??{}), base: parryBase },
+                            });
+                          };
+                          const roll1d6 = () => 1 + Math.floor(Math.random()*6);
+                          return (
+                            <>
+                              <div className="small muted">Choose one set of Attributes, or roll a Success die. Derived: Endurance = STR + {c.derived?.enduranceBonus ?? 0}, Hope = HEART + {c.derived?.hopeBonus ?? 0}, Parry = WITS + {c.derived?.parryBonus ?? 0}.</div>
+                              <div className="row" style={{gap:8, flexWrap:'wrap', marginTop:8}}>
+                                <select className="input" value={chosen} onChange={(e)=>setChoice(Number(e.target.value))}>
+                                  {rolls.map((r:any)=> <option key={r.roll} value={r.roll}>Roll {r.roll}: {r.strength}/{r.heart}/{r.wits}</option>) }
+                                </select>
+                                <button className="btn" onClick={()=>applyChoice(chosen)}>Apply</button>
+                                <button className="btn btn-ghost" onClick={()=>{ const n=roll1d6(); setChoice(n); applyChoice(n); }}>Roll 1d6</button>
+                              </div>
+                            </>
+                          );
+                        })()}
+                      </div>
+
+                      <div className="section">
+                        <div className="sectionTitle">Standard of Living</div>
+                        <div className="row" style={{gap:8, flexWrap:'wrap'}}>
+                          <select className="input" value={hero.standardOfLiving ?? ''} onChange={(e)=>updateHero(hero.id,{standardOfLiving:e.target.value})}>
+                            {['Poor','Frugal','Common','Prosperous','Rich','Very Rich'].map(sol=> <option key={sol} value={sol}>{sol}</option>) }
+                          </select>
+                          <span className="small muted">Initial value comes from Culture (you can change it later).</span>
+                        </div>
+                      </div>
+
+                      <div className="section">
+                        <div className="sectionTitle">Ponies and Horses</div>
+                        {(() => {
+                          const sol = hero.standardOfLiving ?? 'Common';
+                          const options: Array<{label:string; vigour:number; minSol:string}> = [
+                            { label: 'Old horse / half-starved pony', vigour: 1, minSol: 'Poor' },
+                            { label: 'Pony', vigour: 2, minSol: 'Prosperous' },
+                            { label: 'Horse', vigour: 2, minSol: 'Rich' },
+                          ];
+                          const order = ['Poor','Frugal','Common','Prosperous','Rich','Very Rich'];
+                          const solIdx = order.indexOf(sol);
+                          const allowed = options.filter(o => order.indexOf(o.minSol) <= solIdx);
+                          const cur = hero.mount ?? { label: allowed[0].label, vigour: allowed[0].vigour };
+                          return (
+                            <div className="row" style={{gap:8, flexWrap:'wrap'}}>
+                              <select className="input" value={cur.label} onChange={(e)=>{
+                                const picked = allowed.find(a=>a.label===e.target.value) ?? allowed[0];
+                                updateHero(hero.id,{mount:{ label: picked.label, vigour: picked.vigour }});
+                              }}>
+                                {allowed.map(o=> <option key={o.label} value={o.label}>{o.label} (Vigour {o.vigour})</option>) }
+                              </select>
+                              <span className="small muted">Allowed by current Standard of Living ({sol}).</span>
+                            </div>
+                          );
+                        })()}
                       </div>
 
                       <div className="section">
@@ -624,7 +892,7 @@ function InventoryEditor({ hero, updateHero, onSeeMore }: { hero: any; updateHer
 
   function addCustom(itemName: string, itemQty: number) {
     const cur = hero.inventory ?? [];
-    updateHero({ inventory: [{ name: itemName, qty: itemQty }, ...cur] });
+    updateHero({ inventory: [{ id: uid('it'), name: itemName, qty: itemQty, load: 0, equipped: false, dropped: false }, ...cur] });
     setName(''); setQty(1);
   }
 
@@ -632,13 +900,28 @@ function InventoryEditor({ hero, updateHero, onSeeMore }: { hero: any; updateHer
     const entry = findEntryById(compendiums.equipment.entries ?? [], id);
     if (!entry) return;
     const cur = hero.inventory ?? [];
-    updateHero({ inventory: [{ name: entry.name, qty: 1, ref: { pack: 'tor2e-equipment', id: entry.id } }, ...cur] });
+    updateHero({ inventory: [{ id: uid('it'), name: entry.name, qty: 1, ref: { pack: 'tor2e-equipment', id: entry.id }, equipped: false, dropped: false }, ...cur] });
     setEquipId('');
   }
 
   function updateItem(idx: number, patch: any) {
     const cur = hero.inventory ?? [];
+    const equipCategory = (it: any) => {
+      if (it?.ref?.pack !== 'tor2e-equipment' || !it?.ref?.id) return null;
+      const e: any = findEntryById(compendiums.equipment.entries ?? [], it.ref.id);
+      return e?.category ?? null;
+    };
     const next = cur.map((it:any, i:number) => i === idx ? { ...it, ...patch } : it);
+    // If equipping an Armour/Headgear/Shield, ensure only one of that category is equipped.
+    if (patch?.equipped === true) {
+      const cat = equipCategory(cur[idx]);
+      if (cat === 'Armour' || cat === 'Headgear' || cat === 'Shield') {
+        for (let i = 0; i < next.length; i++) {
+          if (i === idx) continue;
+          if (equipCategory(next[i]) === cat) next[i] = { ...next[i], equipped: false };
+        }
+      }
+    }
     updateHero({ inventory: next });
   }
 
@@ -660,7 +943,7 @@ function InventoryEditor({ hero, updateHero, onSeeMore }: { hero: any; updateHer
 
       <div className="list" style={{marginTop: 10}}>
         {(hero.inventory ?? []).map((it:any, idx:number)=>(
-          <div key={idx} className="invRow" style={{alignItems:'center'}}>
+          <div key={it.id ?? idx} className="invRow" style={{alignItems:'center'}}>
             <button className="btn btn-ghost" style={{textAlign:'left'}} onClick={()=>{
               if (it.ref?.pack === 'tor2e-equipment' && it.ref?.id) onSeeMore('equipment', it.ref.id);
             }}>
@@ -678,7 +961,23 @@ function InventoryEditor({ hero, updateHero, onSeeMore }: { hero: any; updateHer
               ) : null}
             </button>
 
-            <input className="input" style={{maxWidth: 90}} type="number" min={1} value={it.qty ?? 1}
+            <label className="toggle" style={{marginRight: 6}} title="Equip">
+              <input type="checkbox" checked={!!it.equipped} disabled={!!it.dropped} onChange={(e)=>updateItem(idx,{equipped: e.target.checked})} />
+              <span className="small">Equip</span>
+            </label>
+
+            <label className="toggle" style={{marginRight: 6}} title="Dropped (removes from Load and disables Equip)">
+              <input type="checkbox" checked={!!it.dropped} onChange={(e)=>updateItem(idx,{dropped: e.target.checked, equipped: e.target.checked ? false : it.equipped})} />
+              <span className="small">Dropped</span>
+            </label>
+
+            <input className="input" style={{maxWidth: 72}} type="number" min={0} value={(it.load ?? '') as any}
+              placeholder="Load" onChange={(e)=>{
+                const v = e.target.value;
+                updateItem(idx,{load: v === '' ? undefined : Number(v)});
+              }} />
+
+            <input className="input" style={{maxWidth: 72}} type="number" min={1} value={it.qty ?? 1}
               onChange={(e)=>updateItem(idx,{qty: Number(e.target.value)})} />
 
             <button className="btn btn-ghost" onClick={()=>{
@@ -692,13 +991,128 @@ function InventoryEditor({ hero, updateHero, onSeeMore }: { hero: any; updateHer
   );
 }
 
+function UsefulItemsEditor({ hero, updateHero }: { hero: any; updateHero: (patch:any)=>void }) {
+  const items = Array.isArray(hero.usefulItems) ? hero.usefulItems : [];
+  const [name, setName] = useState('');
+  const [skillId, setSkillId] = useState('scan');
+  const skillOptions = useMemo(() => sortByName(compendiums.skills.entries ?? []), []);
+
+  function add() {
+    if (!name.trim()) return;
+    updateHero({ usefulItems: [{ id: uid('u'), name: name.trim(), skillId }, ...items] });
+    setName('');
+  }
+
+  function updateItem(idx: number, patch: any) {
+    const next = items.map((it:any, i:number) => i===idx ? { ...it, ...patch } : it);
+    updateHero({ usefulItems: next });
+  }
+
+  return (
+    <div>
+      <div className="row" style={{gap: 8, flexWrap:'wrap'}}>
+        <input className="input" placeholder="Item name" value={name} onChange={(e)=>setName(e.target.value)} />
+        <select className="input" style={{minWidth: 180}} value={skillId} onChange={(e)=>setSkillId(e.target.value)}>
+          {skillOptions.map((s:any)=> <option key={s.id} value={s.id}>{s.name}</option>)}
+        </select>
+        <button className="btn" onClick={add}>Add</button>
+      </div>
+
+      <div className="list" style={{marginTop: 10}}>
+        {items.map((it:any, idx:number)=> (
+          <div key={it.id ?? idx} className="invRow" style={{alignItems:'center'}}>
+            <input className="input" value={it.name ?? ''} onChange={(e)=>updateItem(idx,{name:e.target.value})} />
+            <select className="input" style={{minWidth: 160}} value={it.skillId ?? 'scan'} onChange={(e)=>updateItem(idx,{skillId:e.target.value})}>
+              {skillOptions.map((s:any)=> <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+            <button className="btn btn-ghost" onClick={()=>updateHero({ usefulItems: items.filter((_:any,i:number)=>i!==idx) })}>Remove</button>
+          </div>
+        ))}
+        {items.length===0 ? <div className="small muted">No useful items yet. Add anything and link it to a Skill.</div> : null}
+      </div>
+    </div>
+  );
+}
+
+function AttackSection({ hero, derived }: { hero: any; derived: any }) {
+  const [featMode, setFeatMode] = useState<'normal'|'favoured'|'illFavoured'>('normal');
+  const [weary, setWeary] = useState<boolean>(!!hero.conditions?.weary);
+  const [last, setLast] = useState<RollResult | null>(null);
+
+  const weapons = Array.isArray(derived.equippedWeapons) ? derived.equippedWeapons : [];
+
+  const profKey = (name: string) => {
+    const v = String(name || '').toLowerCase();
+    if (v.startsWith('axe')) return 'axes';
+    if (v.startsWith('bow')) return 'bows';
+    if (v.startsWith('spear')) return 'spears';
+    if (v.startsWith('sword')) return 'swords';
+    // common TOR categories
+    if (v.includes('axes')) return 'axes';
+    if (v.includes('bows')) return 'bows';
+    if (v.includes('spears')) return 'spears';
+    if (v.includes('swords')) return 'swords';
+    return null;
+  };
+
+  if (weapons.length === 0) {
+    return <div className="small muted">Equip one or more weapons in <b>Gear → Inventory & Equipment</b> to enable attack rolls.</div>;
+  }
+
+  return (
+    <div>
+      <div className="row" style={{gap:8, flexWrap:'wrap', marginBottom:8}}>
+        <div className="col" style={{minWidth: 220}}>
+          <div className="label">Feat die mode</div>
+          <select className="input" value={featMode} onChange={(e)=>setFeatMode(e.target.value as any)}>
+            <option value="normal">Normal (1 Feat die)</option>
+            <option value="favoured">Favoured (2 Feat dice, keep best)</option>
+            <option value="illFavoured">Ill-favoured (2 Feat dice, keep worst)</option>
+          </select>
+        </div>
+        <label className="toggle" style={{alignSelf:'end'}}>
+          <input type="checkbox" checked={weary} onChange={(e)=>setWeary(e.target.checked)} /> Weary
+        </label>
+      </div>
+
+      <div className="list">
+        {weapons.map((w:any)=>{
+          const k = profKey(w.combatProficiency);
+          const dice = k ? (hero.combatProficiencies?.[k] ?? 0) : 0;
+          return (
+            <div key={w.id} className="invRow" style={{alignItems:'center'}}>
+              <div style={{flex:1}}>
+                <div><b>{w.name}</b></div>
+                <div className="small muted">{w.combatProficiency ? `${w.combatProficiency}` : '—'} • DMG {w.damage ?? '—'} • INJ {w.injury ?? '—'} • Dice {dice}</div>
+              </div>
+              <button className="btn" onClick={()=>{
+                const r = rollTOR({ dice, featMode, weary });
+                setLast(r);
+              }}>Roll</button>
+            </div>
+          );
+        })}
+      </div>
+      {last ? (
+        <div className="small" style={{marginTop:8}}>
+          <b>Last attack roll:</b> Feat {last.feat.type==='Number'?last.feat.value:(last.feat.type==='Eye'?'Sauron':'Gandalf')}{last.feat2?` / ${last.feat2.type==='Number'?last.feat2.value:(last.feat2.type==='Eye'?'Sauron':'Gandalf')}`:''} • Success [{last.success.map(d=>d.icon?`6★`:String(d.value)).join(', ')}] • <b>Total {last.total}</b>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function AttributeBox({ label, value, tn, onChange }: { label: string; value: number; tn: number; onChange: (v:number)=>void }) {
   const v = typeof value === 'number' ? value : 2;
   return (
     <div className="miniCard">
       <div className="miniTitle">{label}</div>
       <div className="row" style={{gap:8}}>
-        <input className="input" type="number" min={2} max={8} value={v} onChange={(e)=>onChange(Math.max(2, Math.min(8, Number(e.target.value))))} />
+        <input className="input" type="number" min={2} max={8} value={v} onChange={(e)=>{
+          const n = parseInt(e.target.value, 10);
+          if (Number.isNaN(n)) return;
+          onChange(Math.max(2, Math.min(8, n)));
+        }} />
         <div className="tnPill">TN {tn}</div>
       </div>
     </div>

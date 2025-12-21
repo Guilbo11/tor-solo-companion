@@ -1,5 +1,6 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { defaultState, exportState, importState, loadState, saveState, StoredState } from '../core/storage';
+import { defaultState, loadState, saveState, StoredState } from '../core/storage';
+import { exportToTorc, importFromTorc } from '../core/torc';
 import DicePanel from './DicePanel';
 import JournalPanel from './JournalPanel';
 import MapPanel from './MapPanel';
@@ -36,22 +37,31 @@ export default function App() {
         </div>
         <div className="row" style={{ alignItems: 'center' }}>
           <button className="btn" onClick={() => {
-            const txt = exportState(state);
-            navigator.clipboard.writeText(txt);
-            alert('Export JSON copied to clipboard.');
-          }}>Export</button>
+            const blob = exportToTorc(state);
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `tor-companion-${new Date().toISOString().slice(0,10)}.torc`;
+            a.click();
+            URL.revokeObjectURL(url);
+          }}>Export .torc</button>
 
-          <button className="btn" onClick={() => {
-            const json = prompt('Paste previously exported JSON here:');
-            if (!json) return;
-            try {
-              const next = importState(json);
-              set(next);
-              alert('Imported!');
-            } catch (e: any) {
-              alert(e?.message ?? 'Import failed.');
-            }
-          }}>Import</button>
+          <label className="btn" style={{cursor:'pointer'}}>
+            Import .torc
+            <input type="file" accept=".torc" style={{display:'none'}} onChange={async (e)=>{
+              const f = e.target.files?.[0];
+              if (!f) return;
+              try {
+                const next = await importFromTorc(f);
+                set(next);
+                alert('Imported!');
+              } catch (err:any) {
+                alert(err?.message ?? 'Import failed.');
+              } finally {
+                (e.target as HTMLInputElement).value = '';
+              }
+            }} />
+          </label>
 
           <button className="btn" onClick={() => {
             if (!confirm('Reset all local data?')) return;

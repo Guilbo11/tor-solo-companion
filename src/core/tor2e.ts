@@ -9,6 +9,10 @@ export type Tor2eDerived = {
   protection: { armour: number; helm: number; other: number; total: number };
   favouredSkillSet: Set<string>;
   combatProficiencies: { axes: number; bows: number; spears: number; swords: number };
+  equippedWeapons: any[];
+  equippedArmour?: any;
+  equippedHelm?: any;
+  equippedShield?: any;
 };
 
 function clamp(n: number, lo: number, hi: number) {
@@ -81,40 +85,52 @@ export function computeDerived(hero: any): Tor2eDerived {
     swords: typeof heroProfs.swords === 'number' ? heroProfs.swords : baseProfs.swords,
   };
 
-  // Equipped items
+  // Equipped items can be driven by inventory flags (preferred) or legacy "equipped" slots.
+  const inv = Array.isArray(hero?.inventory) ? hero.inventory : [];
+  const equipment = compendiums.equipment.entries ?? [];
+  const resolveEquipRef = (it: any) => {
+    if (it?.ref?.pack === 'tor2e-equipment' && it?.ref?.id) return findEntryById(equipment, it.ref.id);
+    return null;
+  };
+
+  const invEquipped = inv.filter((it: any) => !!it?.equipped && !it?.dropped);
+  const invWeapons = invEquipped.map(resolveEquipRef).filter((e: any) => e?.category === 'Weapon');
+  const invArmour = invEquipped.map(resolveEquipRef).find((e: any) => e?.category === 'Armour') ?? null;
+  const invHelm = invEquipped.map(resolveEquipRef).find((e: any) => e?.category === 'Headgear') ?? null;
+  const invShield = invEquipped.map(resolveEquipRef).find((e: any) => e?.category === 'Shield') ?? null;
+
   const eq = hero?.equipped ?? {};
-  const weapon: any = eq.weaponId ? findEntryById(compendiums.equipment.entries ?? [], eq.weaponId) : null;
-  const armour: any = eq.armourId ? findEntryById(compendiums.equipment.entries ?? [], eq.armourId) : null;
-  const helm: any = eq.helmId ? findEntryById(compendiums.equipment.entries ?? [], eq.helmId) : null;
-  const shield: any = eq.shieldId ? findEntryById(compendiums.equipment.entries ?? [], eq.shieldId) : null;
+  const legacyWeapon: any = eq.weaponId ? findEntryById(equipment, eq.weaponId) : null;
+  const legacyArmour: any = eq.armourId ? findEntryById(equipment, eq.armourId) : null;
+  const legacyHelm: any = eq.helmId ? findEntryById(equipment, eq.helmId) : null;
+  const legacyShield: any = eq.shieldId ? findEntryById(equipment, eq.shieldId) : null;
+
+  const equippedWeapons = invWeapons.length ? invWeapons : (legacyWeapon ? [legacyWeapon] : []);
+  const equippedArmour = invArmour ?? legacyArmour;
+  const equippedHelm = invHelm ?? legacyHelm;
+  const equippedShield = invShield ?? legacyShield;
 
   const parryBase = typeof hero?.parry?.base === 'number' ? hero.parry.base : 0;
   const parryOther = typeof hero?.parry?.other === 'number' ? hero.parry.other : 0;
-  const parryShield = shield ? parseParryModifier(shield.parryModifier) : 0;
+  const parryShield = equippedShield ? parseParryModifier(equippedShield.parryModifier) : 0;
   const parryTotal = parryBase + parryShield + parryOther;
 
-  const protArmour = armour ? parseProtectionDice(armour.protection) : 0;
-  const protHelm = helm ? parseProtectionDice(helm.protection) : 0;
+  const protArmour = equippedArmour ? parseProtectionDice(equippedArmour.protection) : 0;
+  const protHelm = equippedHelm ? parseProtectionDice(equippedHelm.protection) : 0;
   const protOther = typeof hero?.protectionOther === 'number' ? hero.protectionOther : 0;
   const protTotal = protArmour + protHelm + protOther;
 
-  // Load total: inventory + equipped (avoid double count if equipped also in inventory)
+  // Load total: sum all inventory items not dropped, using manual load override when present.
   let loadTotal = 0;
-  const inv = Array.isArray(hero?.inventory) ? hero.inventory : [];
   for (const it of inv) {
+    if (it?.dropped) continue;
     const qty = typeof it?.qty === 'number' ? it.qty : 1;
-    if (it?.ref?.pack === 'tor2e-equipment' && it?.ref?.id) {
-      const e: any = findEntryById(compendiums.equipment.entries ?? [], it.ref.id);
-      const l = typeof e?.load === 'number' ? e.load : 0;
-      loadTotal += l * qty;
+    let l = typeof it?.load === 'number' ? it.load : 0;
+    if (typeof it?.load !== 'number' && it?.ref?.pack === 'tor2e-equipment' && it?.ref?.id) {
+      const e: any = findEntryById(equipment, it.ref.id);
+      l = typeof e?.load === 'number' ? e.load : 0;
     }
-  }
-  // If no inventory refs used, at least count equipped items
-  if (loadTotal === 0) {
-    for (const e of [weapon, armour, helm, shield]) {
-      const l = typeof e?.load === 'number' ? e.load : 0;
-      loadTotal += l;
-    }
+    loadTotal += l * qty;
   }
 
   return {
@@ -126,6 +142,10 @@ export function computeDerived(hero: any): Tor2eDerived {
     protection: { armour: protArmour, helm: protHelm, other: protOther, total: protTotal },
     favouredSkillSet: fav,
     combatProficiencies,
+    equippedWeapons,
+    equippedArmour: equippedArmour ?? undefined,
+    equippedHelm: equippedHelm ?? undefined,
+    equippedShield: equippedShield ?? undefined,
   };
 }
 

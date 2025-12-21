@@ -63,6 +63,19 @@ export type Hero = {
   // Modes
   striderMode?: boolean;
 
+  // Lifestyle
+  standardOfLiving?: 'Poor'|'Frugal'|'Common'|'Prosperous'|'Rich'|'Very Rich';
+  mount?: { vigour: number; label: string };
+
+  // Previous Experience (pre-campaign point buy)
+  previousExperience?: {
+    baselineSkillRatings: Record<string, number>; // snapshot
+    baselineCombatProficiencies: { axes: number; bows: number; spears: number; swords: number };
+    committedSkillRatings?: Record<string, number>; // snapshot at commit
+    committedCombatProficiencies?: { axes: number; bows: number; spears: number; swords: number };
+    committed?: boolean;
+  };
+
   // TOR 2e core stats
   attributes?: { strength: number; heart: number; wits: number };
   endurance?: { max: number; current: number; load: number; fatigue: number };
@@ -87,7 +100,19 @@ export type Hero = {
   parry?: { base: number; other: number };
   protectionOther?: number; // additional protection dice (e.g. rewards)
 
-  inventory?: { name: string; qty: number; ref?: { pack: string; id: string } }[];
+  usefulItems?: { id: string; name: string; skillId: string }[];
+
+  inventory?: {
+    id: string;
+    name: string;
+    qty: number;
+    // For compendium equipment items
+    ref?: { pack: string; id: string };
+    // Manual override for load (ex: treasure). If undefined and ref present, use compendium load.
+    load?: number;
+    equipped?: boolean;
+    dropped?: boolean;
+  }[];
   notes?: string;
 };
 
@@ -97,6 +122,8 @@ export type CalibDir = 'E' | 'NE' | 'NW' | 'W' | 'SW' | 'SE';
 export type MapState = {
   // background image as data URL (user-provided file -> stored locally)
   backgroundDataUrl?: string;
+  // Optional: when importing/exporting .torc, we can store the image as a file in the bundle.
+  backgroundAsset?: string;
 
   // hex overlay settings
   hexSize: number; // pixels radius
@@ -302,6 +329,20 @@ function ensureHeroDefaults(h: any): Hero {
 
     striderMode: typeof h?.striderMode === 'boolean' ? h.striderMode : false,
 
+    standardOfLiving: (h?.standardOfLiving ?? undefined) as any,
+    mount: h?.mount && typeof h.mount === 'object' ? {
+      vigour: typeof h.mount.vigour === 'number' ? h.mount.vigour : 0,
+      label: typeof h.mount.label === 'string' ? h.mount.label : '',
+    } : undefined,
+
+    previousExperience: h?.previousExperience && typeof h.previousExperience === 'object' ? {
+      baselineSkillRatings: (h.previousExperience.baselineSkillRatings && typeof h.previousExperience.baselineSkillRatings === 'object') ? h.previousExperience.baselineSkillRatings : {},
+      baselineCombatProficiencies: (h.previousExperience.baselineCombatProficiencies && typeof h.previousExperience.baselineCombatProficiencies === 'object') ? h.previousExperience.baselineCombatProficiencies : { axes: 0, bows: 0, spears: 0, swords: 0 },
+      committedSkillRatings: (h.previousExperience.committedSkillRatings && typeof h.previousExperience.committedSkillRatings === 'object') ? h.previousExperience.committedSkillRatings : undefined,
+      committedCombatProficiencies: (h.previousExperience.committedCombatProficiencies && typeof h.previousExperience.committedCombatProficiencies === 'object') ? h.previousExperience.committedCombatProficiencies : undefined,
+      committed: typeof h.previousExperience.committed === 'boolean' ? h.previousExperience.committed : false,
+    } : undefined,
+
     attributes: {
       strength: typeof h?.attributes?.strength === 'number' ? h.attributes.strength : 2,
       heart: typeof h?.attributes?.heart === 'number' ? h.attributes.heart : 2,
@@ -351,10 +392,20 @@ function ensureHeroDefaults(h: any): Hero {
       other: typeof h.parry.other === 'number' ? h.parry.other : 0,
     } : { base: 0, other: 0 },
     protectionOther: typeof h?.protectionOther === 'number' ? h.protectionOther : 0,
+    usefulItems: Array.isArray(h?.usefulItems) ? h.usefulItems.map((u:any)=>({
+      id: String(u?.id ?? crypto.randomUUID()),
+      name: String(u?.name ?? ''),
+      skillId: String(u?.skillId ?? 'scan'),
+    })) : [],
+
     inventory: Array.isArray(h?.inventory) ? h.inventory.map((it:any)=>({
+      id: String(it?.id ?? crypto.randomUUID()),
       name: String(it?.name ?? ''),
       qty: typeof it?.qty === 'number' ? it.qty : 1,
-      ref: it?.ref && typeof it.ref === 'object' ? { pack: String(it.ref.pack ?? ''), id: String(it.ref.id ?? '') } : undefined
+      ref: it?.ref && typeof it.ref === 'object' ? { pack: String(it.ref.pack ?? ''), id: String(it.ref.id ?? '') } : undefined,
+      load: typeof it?.load === 'number' ? it.load : undefined,
+      equipped: typeof it?.equipped === 'boolean' ? it.equipped : false,
+      dropped: typeof it?.dropped === 'boolean' ? it.dropped : false,
     })) : [],
     notes: typeof h?.notes === 'string' ? h.notes : '',
   };
@@ -383,6 +434,7 @@ function ensureOracleDefaults(o: any): OracleState {
 function ensureMapDefaults(m: any): MapState {
   const out: MapState = {
     backgroundDataUrl: typeof m?.backgroundDataUrl === 'string' ? m.backgroundDataUrl : undefined,
+    backgroundAsset: typeof m?.backgroundAsset === 'string' ? m.backgroundAsset : undefined,
     hexSize: typeof m?.hexSize === 'number' ? m.hexSize : 28,
     origin: {
       x: typeof m?.origin?.x === 'number' ? m.origin.x : 380,
