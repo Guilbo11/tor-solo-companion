@@ -21,8 +21,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Safety: ensure nothing committed interferes with installs/build
-      - name: Clean working directory
+      # Hard clean: prevents any accidental committed node_modules/dist from interfering
+      - name: Clean workspace
         run: |
           rm -rf node_modules dist
           ls -la
@@ -31,21 +31,35 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
+          # IMPORTANT: disable cache for now while fixing (we can re-enable later)
+          # cache: npm
 
-      - name: Install dependencies (with devDependencies)
-        run: npm ci --include=dev
+      - name: Show npm config (debug)
+        run: |
+          node -v
+          npm -v
+          npm config get production || true
+          npm config get omit || true
+
+      # If the lockfile was generated in "prod-only" mode, npm ci will never install vite.
+      # We remove it in the runner to force a clean dev install based on package.json.
+      - name: Remove lockfile if it blocks devDependencies
+        run: |
+          rm -f package-lock.json
+          ls -la
+
+      - name: Install dependencies (force devDependencies)
+        run: npm install --include=dev --no-audit --no-fund
         env:
           NODE_ENV: development
           NPM_CONFIG_PRODUCTION: "false"
           NPM_CONFIG_OMIT: ""
 
-      - name: Ensure executable bits (esbuild + vite bin wrappers)
+      - name: Verify Vite is installed
         run: |
-          node ./scripts/fix-esbuild-permissions.js
-          chmod +x node_modules/.bin/vite || true
-          chmod +x node_modules/.bin/esbuild || true
-          chmod +x node_modules/@esbuild/*/bin/esbuild || true
+          node -e "console.log('vite version:', require('./node_modules/vite/package.json').version)"
+          node -e "console.log('@vitejs/plugin-react version:', require('./node_modules/@vitejs/plugin-react/package.json').version)"
+          ls -la node_modules/vite/bin
 
       - name: Build site
         run: npm run build
@@ -60,9 +74,11 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: build
+
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
