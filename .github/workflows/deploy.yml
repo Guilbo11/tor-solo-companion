@@ -21,7 +21,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Safety: ensure node_modules/dist from repo NEVER interfere
+      # Safety: ensure nothing committed interferes with installs/build
       - name: Clean working directory
         run: |
           rm -rf node_modules dist
@@ -40,11 +40,12 @@ jobs:
           NPM_CONFIG_PRODUCTION: "false"
           NPM_CONFIG_OMIT: ""
 
-      # Hard sanity check: fail early if esbuild is broken
-      - name: Sanity check esbuild binary
+      - name: Ensure executable bits (esbuild + vite bin wrappers)
         run: |
-          test -s node_modules/@esbuild/linux-x64/bin/esbuild
-          ls -la node_modules/@esbuild/linux-x64/bin/esbuild
+          node ./scripts/fix-esbuild-permissions.js
+          chmod +x node_modules/.bin/vite || true
+          chmod +x node_modules/.bin/esbuild || true
+          chmod +x node_modules/@esbuild/*/bin/esbuild || true
 
       - name: Build site
         run: npm run build
