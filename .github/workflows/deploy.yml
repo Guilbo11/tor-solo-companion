@@ -17,10 +17,15 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      # Safety: ensure node_modules/dist from repo NEVER interfere
+      - name: Clean working directory
+        run: |
+          rm -rf node_modules dist
+          ls -la
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -28,19 +33,18 @@ jobs:
           node-version: 20
           cache: npm
 
-      - name: Install dependencies (force devDependencies)
-        run: npm install --include=dev
+      - name: Install dependencies (with devDependencies)
+        run: npm ci --include=dev
         env:
           NODE_ENV: development
           NPM_CONFIG_PRODUCTION: "false"
           NPM_CONFIG_OMIT: ""
 
-      # Optional debug: prints permissions so we can confirm the root cause quickly
-      - name: Debug permissions
+      # Hard sanity check: fail early if esbuild is broken
+      - name: Sanity check esbuild binary
         run: |
-          ls -la node_modules/.bin || true
-          ls -la node_modules/.bin/vite || true
-          ls -la node_modules/vite/bin || true
+          test -s node_modules/@esbuild/linux-x64/bin/esbuild
+          ls -la node_modules/@esbuild/linux-x64/bin/esbuild
 
       - name: Build site
         run: npm run build
@@ -55,11 +59,9 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: build
-
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
