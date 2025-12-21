@@ -1,0 +1,497 @@
+{
+  "id": "lore-table",
+  "label": "Lore Table",
+  "version": "1.0.0",
+  "system": "The One Ring (Strider Mode)",
+  "dice": {
+    "feat": [
+      "sauron",
+      "gandalf",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "d6": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ]
+  },
+  "tables": {
+    "sauron": [
+      {
+        "d6": 1,
+        "action": "Abandon",
+        "aspect": "Corrupted",
+        "focus": "Curse"
+      },
+      {
+        "d6": 2,
+        "action": "Attack",
+        "aspect": "Cruel",
+        "focus": "Despair"
+      },
+      {
+        "d6": 3,
+        "action": "Betray",
+        "aspect": "Deceptive",
+        "focus": "Enemy"
+      },
+      {
+        "d6": 4,
+        "action": "Corrupt",
+        "aspect": "Fell",
+        "focus": "Fear"
+      },
+      {
+        "d6": 5,
+        "action": "Defeat",
+        "aspect": "Ruined",
+        "focus": "Shadow"
+      },
+      {
+        "d6": 6,
+        "action": "Weaken",
+        "aspect": "Treacherous",
+        "focus": "War"
+      }
+    ],
+    "gandalf": [
+      {
+        "d6": 1,
+        "action": "Believe",
+        "aspect": "Flourishing",
+        "focus": "Courage"
+      },
+      {
+        "d6": 2,
+        "action": "Bolster",
+        "aspect": "Beautiful",
+        "focus": "Duty"
+      },
+      {
+        "d6": 3,
+        "action": "Defend",
+        "aspect": "Good",
+        "focus": "Fellowship"
+      },
+      {
+        "d6": 4,
+        "action": "Forgive",
+        "aspect": "Kind",
+        "focus": "Hope"
+      },
+      {
+        "d6": 5,
+        "action": "Resist",
+        "aspect": "Gentle",
+        "focus": "Love"
+      },
+      {
+        "d6": 6,
+        "action": "Strengthen",
+        "aspect": "Wondrous",
+        "focus": "Peace"
+      }
+    ],
+    "1": [
+      {
+        "d6": 1,
+        "action": "Aid",
+        "aspect": "Active",
+        "focus": "Battle"
+      },
+      {
+        "d6": 2,
+        "action": "Arrive",
+        "aspect": "Ancient",
+        "focus": "Border"
+      },
+      {
+        "d6": 3,
+        "action": "Await",
+        "aspect": "Bold",
+        "focus": "Burden"
+      },
+      {
+        "d6": 4,
+        "action": "Breach",
+        "aspect": "Bright",
+        "focus": "Council"
+      },
+      {
+        "d6": 5,
+        "action": "Break",
+        "aspect": "Broken",
+        "focus": "Court"
+      },
+      {
+        "d6": 6,
+        "action": "Capture",
+        "aspect": "Cheerless",
+        "focus": "Creature"
+      }
+    ],
+    "2": [
+      {
+        "d6": 1,
+        "action": "Change",
+        "aspect": "Cold",
+        "focus": "Darkness"
+      },
+      {
+        "d6": 2,
+        "action": "Chase",
+        "aspect": "Concealed",
+        "focus": "Death"
+      },
+      {
+        "d6": 3,
+        "action": "Command",
+        "aspect": "Dangerous",
+        "focus": "Defence"
+      },
+      {
+        "d6": 4,
+        "action": "Control",
+        "aspect": "Dark",
+        "focus": "Depths"
+      },
+      {
+        "d6": 5,
+        "action": "Create",
+        "aspect": "Dead",
+        "focus": "Doubt"
+      },
+      {
+        "d6": 6,
+        "action": "Defy",
+        "aspect": "Defended",
+        "focus": "Dreams"
+      }
+    ],
+    "3": [
+      {
+        "d6": 1,
+        "action": "Demand",
+        "aspect": "Desolate",
+        "focus": "Fate"
+      },
+      {
+        "d6": 2,
+        "action": "Discover",
+        "aspect": "Destroyed",
+        "focus": "Fire"
+      },
+      {
+        "d6": 3,
+        "action": "Disguise",
+        "aspect": "Dreadful",
+        "focus": "Folk"
+      },
+      {
+        "d6": 4,
+        "action": "Endure",
+        "aspect": "Empty",
+        "focus": "Followers"
+      },
+      {
+        "d6": 5,
+        "action": "Escape",
+        "aspect": "Evil",
+        "focus": "Greed"
+      },
+      {
+        "d6": 6,
+        "action": "Evade",
+        "aspect": "Faded",
+        "focus": "Haven"
+      }
+    ],
+    "4": [
+      {
+        "d6": 1,
+        "action": "Explore",
+        "aspect": "Far-reaching",
+        "focus": "History"
+      },
+      {
+        "d6": 2,
+        "action": "Find",
+        "aspect": "Fierce",
+        "focus": "Honour"
+      },
+      {
+        "d6": 3,
+        "action": "Focus",
+        "aspect": "Foreboding",
+        "focus": "Journey"
+      },
+      {
+        "d6": 4,
+        "action": "Gather",
+        "aspect": "Forgotten",
+        "focus": "Kindred"
+      },
+      {
+        "d6": 5,
+        "action": "Guard",
+        "aspect": "Fragile",
+        "focus": "Knowledge"
+      },
+      {
+        "d6": 6,
+        "action": "Guide",
+        "aspect": "Ghastly",
+        "focus": "Land"
+      }
+    ],
+    "5": [
+      {
+        "d6": 1,
+        "action": "Hide",
+        "aspect": "Gloomy",
+        "focus": "Leader"
+      },
+      {
+        "d6": 2,
+        "action": "Hinder",
+        "aspect": "Growing",
+        "focus": "Legend"
+      },
+      {
+        "d6": 3,
+        "action": "Hoard",
+        "aspect": "Hidden",
+        "focus": "Life"
+      },
+      {
+        "d6": 4,
+        "action": "Hold",
+        "aspect": "Ill-fated",
+        "focus": "Light"
+      },
+      {
+        "d6": 5,
+        "action": "Hunt",
+        "aspect": "Impenetrable",
+        "focus": "Luck"
+      },
+      {
+        "d6": 6,
+        "action": "Journey",
+        "aspect": "Inspiring",
+        "focus": "Memory"
+      }
+    ],
+    "6": [
+      {
+        "d6": 1,
+        "action": "Lead",
+        "aspect": "Isolated",
+        "focus": "Message"
+      },
+      {
+        "d6": 2,
+        "action": "Learn",
+        "aspect": "Lofty",
+        "focus": "Might"
+      },
+      {
+        "d6": 3,
+        "action": "Leave",
+        "aspect": "Lost",
+        "focus": "Nature"
+      },
+      {
+        "d6": 4,
+        "action": "Lose",
+        "aspect": "Menacing",
+        "focus": "Pain"
+      },
+      {
+        "d6": 5,
+        "action": "Mourn",
+        "aspect": "Mighty",
+        "focus": "Path"
+      },
+      {
+        "d6": 6,
+        "action": "Move",
+        "aspect": "Mysterious",
+        "focus": "Patron"
+      }
+    ],
+    "7": [
+      {
+        "d6": 1,
+        "action": "Persist",
+        "aspect": "Noble",
+        "focus": "Peril"
+      },
+      {
+        "d6": 2,
+        "action": "Preserve",
+        "aspect": "Obstructed",
+        "focus": "Plan"
+      },
+      {
+        "d6": 3,
+        "action": "Prevent",
+        "aspect": "Old",
+        "focus": "Power"
+      },
+      {
+        "d6": 4,
+        "action": "Refuse",
+        "aspect": "Ominous",
+        "focus": "Prophecy"
+      },
+      {
+        "d6": 5,
+        "action": "Reject",
+        "aspect": "Open",
+        "focus": "Quest"
+      },
+      {
+        "d6": 6,
+        "action": "Remove",
+        "aspect": "Peaceful",
+        "focus": "Refuge"
+      }
+    ],
+    "8": [
+      {
+        "d6": 1,
+        "action": "Replenish",
+        "aspect": "Restored",
+        "focus": "Riddle"
+      },
+      {
+        "d6": 2,
+        "action": "Restore",
+        "aspect": "Sheltered",
+        "focus": "Ruins"
+      },
+      {
+        "d6": 3,
+        "action": "Scheme",
+        "aspect": "Silent",
+        "focus": "Rumour"
+      },
+      {
+        "d6": 4,
+        "action": "Search",
+        "aspect": "Simple",
+        "focus": "Secret"
+      },
+      {
+        "d6": 5,
+        "action": "Seize",
+        "aspect": "Small",
+        "focus": "Skill"
+      },
+      {
+        "d6": 6,
+        "action": "Share",
+        "aspect": "Sombre",
+        "focus": "Song"
+      }
+    ],
+    "9": [
+      {
+        "d6": 1,
+        "action": "Slay",
+        "aspect": "Stony",
+        "focus": "Story"
+      },
+      {
+        "d6": 2,
+        "action": "Steal",
+        "aspect": "Stout",
+        "focus": "Strength"
+      },
+      {
+        "d6": 3,
+        "action": "Summon",
+        "aspect": "Stricken",
+        "focus": "Time"
+      },
+      {
+        "d6": 4,
+        "action": "Surrender",
+        "aspect": "Stubborn",
+        "focus": "Tool"
+      },
+      {
+        "d6": 5,
+        "action": "Surround",
+        "aspect": "Twisted",
+        "focus": "Treasure"
+      },
+      {
+        "d6": 6,
+        "action": "Threaten",
+        "aspect": "Unnatural",
+        "focus": "Trust"
+      }
+    ],
+    "10": [
+      {
+        "d6": 1,
+        "action": "Transform",
+        "aspect": "Veiled",
+        "focus": "Truth"
+      },
+      {
+        "d6": 2,
+        "action": "Trap",
+        "aspect": "Vigorous",
+        "focus": "Vengeance"
+      },
+      {
+        "d6": 3,
+        "action": "Trick",
+        "aspect": "Weary",
+        "focus": "Wealth"
+      },
+      {
+        "d6": 4,
+        "action": "Uncover",
+        "aspect": "Wild",
+        "focus": "Weapon"
+      },
+      {
+        "d6": 5,
+        "action": "Uphold",
+        "aspect": "Wretched",
+        "focus": "Wilds"
+      },
+      {
+        "d6": 6,
+        "action": "Withstand",
+        "aspect": "Young",
+        "focus": "Wish"
+      }
+    ]
+  },
+  "format": {
+    "row": {
+      "d6": "number",
+      "action": "string",
+      "aspect": "string",
+      "focus": "string"
+    },
+    "display": "{action} {aspect} {focus}"
+  }
+}

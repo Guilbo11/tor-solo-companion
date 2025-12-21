@@ -1,0 +1,6780 @@
+{
+  "packId": "tor-2e-compendium-en.tor2e-caracs-en",
+  "label": "Characteristics",
+  "documentName": "Item",
+  "exportedAt": "2025-12-19T18:47:04.028Z",
+  "count": 178,
+  "documents": [
+    {
+      "name": "Tough",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/distinctive_feature.png",
+      "folder": "fwVNxh2T10beebWx",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 146</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "distinctiveFeature",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "0Wj2usHO8bw9GDd0",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620272,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Lordly",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/distinctive_feature.png",
+      "folder": "SzQgbTYVpGxj26Fj",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 68</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "distinctiveFeature",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "0qYOhBKAnh6HHyox",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620033,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Skin-coat",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "6XsBcc5dRetiJ9Tv",
+      "system": {
+        "description": {
+          "value": "<p>Peoples of Wilderland (2nd edition) : page(s) 4</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "1GjmppfsiRTfIs9H",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620906,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Fierce shot",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "KU1qGGVaclUsvtSG",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 81</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "1ZlZqZj1NsyitGFv",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620423,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "A hunter’s resolve",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "GtzrfUa3IGAhZotd",
+      "system": {
+        "description": {
+          "value": "<p>Peoples of Wilderland (2nd edition) : page(s) 10</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "2H50agxbD6eb48B2",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621035,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Wicked",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/distinctive_feature.png",
+      "folder": "fwVNxh2T10beebWx",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 152</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "distinctiveFeature",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "2jhHICwQRNPXmZEG",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620312,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Endurance of the Ranger",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "r7ab5LHdwn6lyjWV",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 88</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "2kF9dk72nWMETtq7",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620793,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Hardiness",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "FIH9S57edqboYRqz",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 80</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "33HJi8cJnb5QjTlm",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620347,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Tall",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/distinctive_feature.png",
+      "folder": "SzQgbTYVpGxj26Fj",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 69</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "distinctiveFeature",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "3HLChdbI0Zdc0m0j",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620065,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Fair",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/distinctive_feature.png",
+      "folder": "SzQgbTYVpGxj26Fj",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 68</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "distinctiveFeature",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "3rdFt3zWER6fuQlE",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620027,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Twice-baked honey-cakes",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "6XsBcc5dRetiJ9Tv",
+      "system": {
+        "description": {
+          "value": "<p>Peoples of Wilderland (2nd edition) : page(s) 4</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "4gFlpAFRwV64fQel",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620931,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Ways of the wild",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "r7ab5LHdwn6lyjWV",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 89</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "5YNXNf2j3rMr7g0a",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620853,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Strike Fear",
+      "type": "fell-ability",
+      "img": "systems/tor2e/assets/images/icons/adversary_fell-ability.png",
+      "folder": "XYcx572rj7XetGPb",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 152</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "active": {
+          "value": true,
+          "type": "Boolean",
+          "label": "tor2e.fellAbilities.details.active"
+        },
+        "cost": {
+          "value": "1",
+          "type": "Number",
+          "label": "tor2e.fellAbilities.details.cost"
+        }
+      },
+      "_id": "5rvByhZtQkPtnGNT",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109622454,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "4 - Murderous",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/shadow-weakness.png",
+      "folder": "TSFapH8MPTMY5Pmk",
+      "system": {
+        "description": {
+          "value": "<p>Shadow path : Curse of Vengeance</p><p>Core book (2nd edition) : page(s) 141</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "flaw",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "636ZiayGElUIRKRN",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621288,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Elvish dreams",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "Pd3MVEcvcdbOVFDG",
+      "system": {
+        "description": {
+          "value": "<p>Peoples of Wilderland (2nd edition) : page(s) 7</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "65WOfYGeBjbkfwgr",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620990,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Fell",
+      "type": "reward",
+      "img": "systems/tor2e/assets/images/icons/reward.png",
+      "folder": "XN04Z6gcSLySioq9",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 79</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.reward.details.type"
+        }
+      },
+      "_id": "79BUPxNnX20atoJ2",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621163,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Suspicious",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/distinctive_feature.png",
+      "folder": "fwVNxh2T10beebWx",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 153</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "distinctiveFeature",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "8JASgxA0BBodJ2O7",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620263,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Scan",
+      "type": "skill",
+      "img": "systems/tor2e/assets/images/icons/skills/skill-scan.webp",
+      "folder": "wEnmcvDXRtK5AoZg",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 15</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "perception",
+          "type": "String",
+          "label": "tor2e.skills.details.skillGroup"
+        },
+        "associatedStat": {
+          "value": "",
+          "type": "String",
+          "label": "tor2e.skills.details.associatedStat"
+        },
+        "favoured": {
+          "value": false,
+          "type": "Boolean",
+          "label": "tor2e.stats.favoured"
+        },
+        "value": 0,
+        "type": "Number",
+        "associatedstat": {
+          "value": "wits"
+        }
+      },
+      "_id": "8jNxHRpbZgsKCYLe",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621982,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Beorn’s enchantment",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "6XsBcc5dRetiJ9Tv",
+      "system": {
+        "description": {
+          "value": "<p>Peoples of Wilderland (2nd edition) : page(s) 4</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "9bWVTmA1NVAaaGKT",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620864,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "3 - Overconfident",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/shadow-weakness.png",
+      "folder": "QrelDqfdxgJvPCO0",
+      "system": {
+        "description": {
+          "value": "<p>Shadow path : Lure of Power</p><p>Core book (2nd edition) : page(s) 141</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "flaw",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "9dkr5bs6ND6DD1SE",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621408,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Deadly archery",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "DhQpZcGcgTzMMQYU",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 84</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "9wo40alSGLqiG3QX",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620579,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Grievious",
+      "type": "reward",
+      "img": "systems/tor2e/assets/images/icons/reward.png",
+      "folder": "XN04Z6gcSLySioq9",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 79</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.reward.details.type"
+        }
+      },
+      "_id": "AUgluKrsrJT9ZUP7",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621177,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Prowess",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "FIH9S57edqboYRqz",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 80</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "B2aTgKpvAyDWMCmV",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620379,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Deadly Wound",
+      "type": "fell-ability",
+      "img": "systems/tor2e/assets/images/icons/adversary_fell-ability.png",
+      "folder": "XYcx572rj7XetGPb",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 157</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "active": {
+          "value": false,
+          "type": "Boolean",
+          "label": "tor2e.fellAbilities.details.active"
+        },
+        "cost": {
+          "value": "0",
+          "type": "Number",
+          "label": "tor2e.fellAbilities.details.cost"
+        }
+      },
+      "_id": "BASF0uG3ANu5uqRx",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109622086,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "1 - Idle",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/shadow-weakness.png",
+      "folder": "sIGGOY814xsVx407",
+      "system": {
+        "description": {
+          "value": "<p>Shadow path : Wandering-Madness</p><p>Core book (2nd edition) : page(s) 142</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "flaw",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "BEfr0G1vn5pIG2SC",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621607,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "3 - Scheming",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/shadow-weakness.png",
+      "folder": "8yy566YQivOlL64C",
+      "system": {
+        "description": {
+          "value": "<p>Shadow path : Lure of Secrets</p><p>Core book (2nd edition) : page(s) 142</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "flaw",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "BJMIuDsF9lv7cDSR",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621485,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Vicious",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/distinctive_feature.png",
+      "folder": "fwVNxh2T10beebWx",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 157</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "distinctiveFeature",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "BKJ4qV0KfniFLVkc",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620290,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Desperate courage",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "ToWG9QX6vTUgBIR8",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 88</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "BLXFqtWy8fvCXxzi",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620741,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Leadership",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/distinctive_feature.png",
+      "folder": "obCpJl2oHHzORLcl",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 44</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "distinctiveFeature",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "BkwgCFR0nSdZUYJH",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620117,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Dull-witted",
+      "type": "fell-ability",
+      "img": "systems/tor2e/assets/images/icons/adversary_fell-ability.png",
+      "folder": "XYcx572rj7XetGPb",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 151</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "active": {
+          "value": false,
+          "type": "Boolean",
+          "label": "tor2e.fellAbilities.details.active"
+        },
+        "cost": {
+          "value": "0",
+          "type": "Number",
+          "label": "tor2e.fellAbilities.details.cost"
+        }
+      },
+      "_id": "DMlGm9UMNEtqywbJ",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109622173,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Song",
+      "type": "skill",
+      "img": "systems/tor2e/assets/images/icons/skills/skill-song.webp",
+      "folder": "wEnmcvDXRtK5AoZg",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 15</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "custom",
+          "type": "String",
+          "label": "tor2e.skills.details.skillGroup"
+        },
+        "associatedStat": {
+          "value": "",
+          "type": "String",
+          "label": "tor2e.skills.details.associatedStat"
+        },
+        "favoured": {
+          "value": false,
+          "type": "Boolean",
+          "label": "tor2e.stats.favoured"
+        },
+        "value": 0,
+        "type": "Number",
+        "associatedstat": {
+          "value": "body"
+        }
+      },
+      "_id": "EBYOvG7qadBeCjOZ",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621759,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Rustic",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/distinctive_feature.png",
+      "folder": "SzQgbTYVpGxj26Fj",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 68</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "distinctiveFeature",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "EM8JZEKOafcm13ZL",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620035,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Dark for dark business",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "A0AlU6Ogzvqfyk3v",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 83</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "F4AN3U7BE86riZrW",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620481,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Against the unseen",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "DhQpZcGcgTzMMQYU",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 84</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "F5Fhw8yXkxzA1GPS",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620566,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Fierce folk",
+      "type": "fell-ability",
+      "img": "systems/tor2e/assets/images/icons/adversary_fell-ability.png",
+      "folder": "XYcx572rj7XetGPb",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 146</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "active": {
+          "value": true,
+          "type": "Boolean",
+          "label": "tor2e.fellAbilities.details.active"
+        },
+        "cost": {
+          "value": "1",
+          "type": "Number",
+          "label": "tor2e.fellAbilities.details.cost"
+        }
+      },
+      "_id": "FHMP5FQvRI2fnOIB",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109622222,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Strong",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/distinctive_feature.png",
+      "folder": "fwVNxh2T10beebWx",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 150</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "distinctiveFeature",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "FKBwAYtsaLKeUFcp",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620254,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Fierce",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/distinctive_feature.png",
+      "folder": "SzQgbTYVpGxj26Fj",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 68</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "distinctiveFeature",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "Fbsycozqwl0g8GYW",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620029,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Dragon-Slayer",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "KU1qGGVaclUsvtSG",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 81</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "FvryQLMCbkzXKpyD",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620403,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "The art of smoking",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "ToWG9QX6vTUgBIR8",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 88</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "FwaatTq83NkAkPWQ",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620779,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Great strength",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "6XsBcc5dRetiJ9Tv",
+      "system": {
+        "description": {
+          "value": "<p>Peoples of Wilderland (2nd edition) : page(s) 4</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "G2sXqnY18LrbBYbV",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620890,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "1 - Grasping",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/shadow-weakness.png",
+      "folder": "SkyeUt1TM8nWYDj3",
+      "system": {
+        "description": {
+          "value": "<p>Shadow path : Dragon-Sickness</p><p>Core book (2nd edition) : page(s) 141</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "flaw",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "G3CNuzsVEfQvWdzF",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621303,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Rhymes of Lore",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/distinctive_feature.png",
+      "folder": "obCpJl2oHHzORLcl",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 45</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "distinctiveFeature",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "Gw3XQlA3uBgqjmqn",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620125,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Splitting blow",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "6XsBcc5dRetiJ9Tv",
+      "system": {
+        "description": {
+          "value": "<p>Peoples of Wilderland (2nd edition) : page(s) 4</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "HGThgGBiElXyo1yh",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620918,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Heartless",
+      "type": "fell-ability",
+      "img": "systems/tor2e/assets/images/icons/adversary_fell-ability.png",
+      "folder": "XYcx572rj7XetGPb",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 154</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "active": {
+          "value": false,
+          "type": "Boolean",
+          "label": "tor2e.fellAbilities.details.active"
+        },
+        "cost": {
+          "value": "0",
+          "type": "Number",
+          "label": "tor2e.fellAbilities.details.cost"
+        }
+      },
+      "_id": "Hlg5JEfRxkWOUtzS",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109622305,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Canny",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/distinctive_feature.png",
+      "folder": "fwVNxh2T10beebWx",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 146</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "distinctiveFeature",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "HxsXlj12FrDPjSiX",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620164,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Cram",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "KU1qGGVaclUsvtSG",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 81</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "I22YMPxyaZkOk2dD",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620390,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Broken spells",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "A0AlU6Ogzvqfyk3v",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 83</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "I2e0x7WIGc4H5GKd",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620471,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Untameable spirit",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "A0AlU6Ogzvqfyk3v",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 84</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "I4OzYtiLfD1AT463",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620555,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Gleam of wrath",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "DhQpZcGcgTzMMQYU",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 85</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "IBPhwTIZi0A1p3k4",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620615,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Three is a company",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "l9V5VxnmlFg9UOgn",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 86</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "IFDi0J12Vmag2ZqG",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620689,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Fear of Fire",
+      "type": "fell-ability",
+      "img": "systems/tor2e/assets/images/icons/adversary_fell-ability.png",
+      "folder": "XYcx572rj7XetGPb",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 152</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "active": {
+          "value": false,
+          "type": "Boolean",
+          "label": "tor2e.fellAbilities.details.active"
+        },
+        "cost": {
+          "value": "0",
+          "type": "Number",
+          "label": "tor2e.fellAbilities.details.cost"
+        }
+      },
+      "_id": "IfJ1NbayotaykQie",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109622199,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Hideous Toughness",
+      "type": "fell-ability",
+      "img": "systems/tor2e/assets/images/icons/adversary_fell-ability.png",
+      "folder": "XYcx572rj7XetGPb",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 149</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "active": {
+          "value": false,
+          "type": "Boolean",
+          "label": "tor2e.fellAbilities.details.active"
+        },
+        "cost": {
+          "value": "0",
+          "type": "Number",
+          "label": "tor2e.fellAbilities.details.cost"
+        }
+      },
+      "_id": "Iw3d84oUDIaHHybG",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109622324,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "High destiny",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "KU1qGGVaclUsvtSG",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 82</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "J95l7BjmkL7368dW",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620437,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Orc-poison",
+      "type": "fell-ability",
+      "img": "systems/tor2e/assets/images/icons/adversary_fell-ability.png",
+      "folder": "XYcx572rj7XetGPb",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 150</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "active": {
+          "value": false,
+          "type": "Boolean",
+          "label": "tor2e.fellAbilities.details.active"
+        },
+        "cost": {
+          "value": "0",
+          "type": "Number",
+          "label": "tor2e.fellAbilities.details.cost"
+        }
+      },
+      "_id": "JYxTViMnAu9Jt3Kc",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109622388,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Foresight of their kindred",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "r7ab5LHdwn6lyjWV",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 88</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "Jv47DSsVOAaqKeOC",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620805,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Heir of Arnor",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "r7ab5LHdwn6lyjWV",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 88</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "Jw4bfnN9KG8Ny9OR",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620817,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Bold",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/distinctive_feature.png",
+      "folder": "SzQgbTYVpGxj26Fj",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 67</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "distinctiveFeature",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "KRBGi6nXwvnLLiVR",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620025,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Vengeful",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/distinctive_feature.png",
+      "folder": "fwVNxh2T10beebWx",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 100</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "distinctiveFeature",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "KajjBisCmapO4ka1",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620281,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Natural watchfulness",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "GtzrfUa3IGAhZotd",
+      "system": {
+        "description": {
+          "value": "<p>Peoples of Wilderland (2nd edition) : page(s) 10</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "KgP03fAx5UVStEjS",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621096,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Close-fitting",
+      "type": "reward",
+      "img": "systems/tor2e/assets/images/icons/reward.png",
+      "folder": "XN04Z6gcSLySioq9",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 79</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.reward.details.type"
+        }
+      },
+      "_id": "KsSjp7tdrJdSEMHj",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621131,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Royalty revealed",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "r7ab5LHdwn6lyjWV",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 89</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "LmAV1Bhw3P9BKiL8",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620828,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Patient",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/distinctive_feature.png",
+      "folder": "SzQgbTYVpGxj26Fj",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 68</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "distinctiveFeature",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "MCqQepJed6BXz3My",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620034,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Mastery",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "FIH9S57edqboYRqz",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 80</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "MJD63f2h0oKrcvCB",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620360,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Hungry",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/distinctive_feature.png",
+      "folder": "fwVNxh2T10beebWx",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 152</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "distinctiveFeature",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "MJN1AnTdldUjjx9V",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620197,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Folk-Lore",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/distinctive_feature.png",
+      "folder": "obCpJl2oHHzORLcl",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 45</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "distinctiveFeature",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "MhhXTetu5A7Vtq9v",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620110,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Horrible Strength",
+      "type": "fell-ability",
+      "img": "systems/tor2e/assets/images/icons/adversary_fell-ability.png",
+      "folder": "XYcx572rj7XetGPb",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 148</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "active": {
+          "value": true,
+          "type": "Boolean",
+          "label": "tor2e.fellAbilities.details.active"
+        },
+        "cost": {
+          "value": "1",
+          "type": "Number",
+          "label": "tor2e.fellAbilities.details.cost"
+        }
+      },
+      "_id": "NedNjpsdg3gVOBdU",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109622346,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "4 - Traitorous",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/shadow-weakness.png",
+      "folder": "8yy566YQivOlL64C",
+      "system": {
+        "description": {
+          "value": "<p>Shadow path : Lure of Secrets</p><p>Core book (2nd edition) : page(s) 142</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "flaw",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "OSh5h7ea8NA9WLIV",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621502,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Eager",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/distinctive_feature.png",
+      "folder": "SzQgbTYVpGxj26Fj",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 67</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "distinctiveFeature",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "P8XqwYY2OZft92VS",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620027,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Nimble",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/distinctive_feature.png",
+      "folder": "fwVNxh2T10beebWx",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 147</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "distinctiveFeature",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "PV73mEyArgQKM4K6",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620216,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Reinforced",
+      "type": "reward",
+      "img": "systems/tor2e/assets/images/icons/reward.png",
+      "folder": "XN04Z6gcSLySioq9",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 79</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.reward.details.type"
+        }
+      },
+      "_id": "Q0m2t12rLQxRwJo8",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621214,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Riddle",
+      "type": "skill",
+      "img": "systems/tor2e/assets/images/icons/skills/skill-riddle.webp",
+      "folder": "wEnmcvDXRtK5AoZg",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 15</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "custom",
+          "type": "String",
+          "label": "tor2e.skills.details.skillGroup"
+        },
+        "associatedStat": {
+          "value": "",
+          "type": "String",
+          "label": "tor2e.skills.details.associatedStat"
+        },
+        "favoured": {
+          "value": false,
+          "type": "Boolean",
+          "label": "tor2e.stats.favoured"
+        },
+        "value": 0,
+        "type": "Number",
+        "associatedstat": {
+          "value": "wits"
+        }
+      },
+      "_id": "QQU0Jrlq2tdIgI1w",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109622025,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Insight",
+      "type": "skill",
+      "img": "systems/tor2e/assets/images/icons/skills/skill-insight.webp",
+      "folder": "wEnmcvDXRtK5AoZg",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 14</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "perception",
+          "type": "String",
+          "label": "tor2e.skills.details.skillGroup"
+        },
+        "associatedStat": {
+          "value": "",
+          "type": "String",
+          "label": "tor2e.skills.details.associatedStat"
+        },
+        "favoured": {
+          "value": false,
+          "type": "Boolean",
+          "label": "tor2e.stats.favoured"
+        },
+        "value": 0,
+        "type": "Number",
+        "associatedstat": {
+          "value": "heart"
+        }
+      },
+      "_id": "QTFbdh9rwzYY6S3j",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621841,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Cruel",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/distinctive_feature.png",
+      "folder": "fwVNxh2T10beebWx",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 146</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "distinctiveFeature",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "QY6nSF6KmGFpa6Gf",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620173,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "3 - Uncaring",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/shadow-weakness.png",
+      "folder": "sIGGOY814xsVx407",
+      "system": {
+        "description": {
+          "value": "<p>Shadow path : Wandering-Madness</p><p>Core book (2nd edition) : page(s) 142</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "flaw",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "QbvPaUdbOP7RQG9L",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621644,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Savage assault",
+      "type": "fell-ability",
+      "img": "systems/tor2e/assets/images/icons/adversary_fell-ability.png",
+      "folder": "XYcx572rj7XetGPb",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 199</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "active": {
+          "value": true,
+          "type": "Boolean",
+          "label": "tor2e.fellAbilities.details.active"
+        },
+        "cost": {
+          "value": "1",
+          "type": "Number",
+          "label": "tor2e.fellAbilities.details.cost"
+        }
+      },
+      "_id": "Qkz2ijiDOKMfdLry",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109622410,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Shadow-Lore",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/distinctive_feature.png",
+      "folder": "obCpJl2oHHzORLcl",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 46</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "distinctiveFeature",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "R1E2cDyR8diLaFVJ",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620141,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Hardened",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/distinctive_feature.png",
+      "folder": "fwVNxh2T10beebWx",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 98</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "distinctiveFeature",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "R9NKkzk1VE1m0NEz",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620189,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Keen-eyed",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/distinctive_feature.png",
+      "folder": "SzQgbTYVpGxj26Fj",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 68</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "distinctiveFeature",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "RQEJtbuOJMWMDpfo",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620032,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Bold",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/distinctive_feature.png",
+      "folder": "fwVNxh2T10beebWx",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 97</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "distinctiveFeature",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "RdzwDNNge8BAxFkE",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620149,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Snake-­like Speed",
+      "type": "fell-ability",
+      "img": "systems/tor2e/assets/images/icons/adversary_fell-ability.png",
+      "folder": "XYcx572rj7XetGPb",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 147</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "active": {
+          "value": true,
+          "type": "Boolean",
+          "label": "tor2e.fellAbilities.details.active"
+        },
+        "cost": {
+          "value": "1",
+          "type": "Number",
+          "label": "tor2e.fellAbilities.details.cost"
+        }
+      },
+      "_id": "Rr8h9iyZb7RkcWi3",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109622431,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Stealthy",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/distinctive_feature.png",
+      "folder": "fwVNxh2T10beebWx",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 152</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "distinctiveFeature",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "SPxW9mOit35JSihr",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620246,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Memory of ancient days",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "DhQpZcGcgTzMMQYU",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 85</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "Sqr3WPVoofZsMZnG",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620628,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Elf-lights",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "Pd3MVEcvcdbOVFDG",
+      "system": {
+        "description": {
+          "value": "<p>Peoples of Wilderland (2nd edition) : page(s) 7</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "SttvE1JnnwNmem59",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620976,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Wary",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/distinctive_feature.png",
+      "folder": "SzQgbTYVpGxj26Fj",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 69</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "distinctiveFeature",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "T0XWZRgdy2gTBsAz",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620080,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Baruk Khazâd !",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "A0AlU6Ogzvqfyk3v",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 82</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "T7MCNQuNiFSwC9bv",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620458,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Against the unseen",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "Pd3MVEcvcdbOVFDG",
+      "system": {
+        "description": {
+          "value": "<p>Peoples of Wilderland (2nd edition) : page(s) 7</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "THqaZUbS2IH2GJ8g",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620950,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Vigilant",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/distinctive_feature.png",
+      "folder": "fwVNxh2T10beebWx",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 150</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "distinctiveFeature",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "UOrDddZKqXWXKB7V",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620300,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Dreadful Spells",
+      "type": "fell-ability",
+      "img": "systems/tor2e/assets/images/icons/adversary_fell-ability.png",
+      "folder": "XYcx572rj7XetGPb",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 154</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "active": {
+          "value": false,
+          "type": "Boolean",
+          "label": "tor2e.fellAbilities.details.active"
+        },
+        "cost": {
+          "value": "0",
+          "type": "Number",
+          "label": "tor2e.fellAbilities.details.cost"
+        }
+      },
+      "_id": "UvSW492XXwQd8Rdp",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109622152,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Gleam of wrath",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "Pd3MVEcvcdbOVFDG",
+      "system": {
+        "description": {
+          "value": "<p>Peoples of Wilderland (2nd edition) : page(s) 7</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "VXzSG4AgMVkOrGIN",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621004,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Persuade",
+      "type": "skill",
+      "img": "systems/tor2e/assets/images/icons/skills/skill-persuade.webp",
+      "folder": "wEnmcvDXRtK5AoZg",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 15</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "personality",
+          "type": "String",
+          "label": "tor2e.skills.details.skillGroup"
+        },
+        "associatedStat": {
+          "value": "",
+          "type": "String",
+          "label": "tor2e.skills.details.associatedStat"
+        },
+        "favoured": {
+          "value": false,
+          "type": "Boolean",
+          "label": "tor2e.stats.favoured"
+        },
+        "value": 0,
+        "type": "Number",
+        "associatedstat": {
+          "value": "wits"
+        }
+      },
+      "_id": "VbKuq1C21WyCZ8GU",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621943,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Tough as old tree-roots",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "l9V5VxnmlFg9UOgn",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 86</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "VhJJtcudq9dy555F",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620704,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Stern",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/distinctive_feature.png",
+      "folder": "SzQgbTYVpGxj26Fj",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 68</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "distinctiveFeature",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "VrHhdR8FjjGtlZeh",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620044,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Thick Hide",
+      "type": "fell-ability",
+      "img": "systems/tor2e/assets/images/icons/adversary_fell-ability.png",
+      "folder": "XYcx572rj7XetGPb",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 152</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "active": {
+          "value": true,
+          "type": "Boolean",
+          "label": "tor2e.fellAbilities.details.active"
+        },
+        "cost": {
+          "value": "1",
+          "type": "Number",
+          "label": "tor2e.fellAbilities.details.cost"
+        }
+      },
+      "_id": "WByBggtEMyiuztNl",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109622475,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Keen",
+      "type": "reward",
+      "img": "systems/tor2e/assets/images/icons/reward.png",
+      "folder": "XN04Z6gcSLySioq9",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 79</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.reward.details.type"
+        }
+      },
+      "_id": "WDOyccjK7GY8ip43",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621196,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Great leap",
+      "type": "fell-ability",
+      "img": "systems/tor2e/assets/images/icons/adversary_fell-ability.png",
+      "folder": "XYcx572rj7XetGPb",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 150</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "active": {
+          "value": true,
+          "type": "Boolean",
+          "label": "tor2e.fellAbilities.details.active"
+        },
+        "cost": {
+          "value": "1",
+          "type": "Number",
+          "label": "tor2e.fellAbilities.details.cost"
+        }
+      },
+      "_id": "XCMz9HNRjfXv5zRI",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109622241,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Rebellious",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/distinctive_feature.png",
+      "folder": "fwVNxh2T10beebWx",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 150</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "distinctiveFeature",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "XmOZ1oH1AsR0XcC8",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620226,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Explore",
+      "type": "skill",
+      "img": "systems/tor2e/assets/images/icons/skills/skill-explore.webp",
+      "folder": "wEnmcvDXRtK5AoZg",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 14</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "survival",
+          "type": "String",
+          "label": "tor2e.skills.details.skillGroup"
+        },
+        "associatedStat": {
+          "value": "",
+          "type": "String",
+          "label": "tor2e.skills.details.associatedStat"
+        },
+        "favoured": {
+          "value": false,
+          "type": "Boolean",
+          "label": "tor2e.stats.favoured"
+        },
+        "value": 0,
+        "type": "Number",
+        "associatedstat": {
+          "value": "wits"
+        }
+      },
+      "_id": "XujFNCRywOLbXI1n",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109622002,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Subtle",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/distinctive_feature.png",
+      "folder": "SzQgbTYVpGxj26Fj",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 69</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "distinctiveFeature",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "YMPRghNfoRHvbOsu",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620051,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Burglary",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/distinctive_feature.png",
+      "folder": "obCpJl2oHHzORLcl",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 45</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "distinctiveFeature",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "YtsRS79DMt24VZZw",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620095,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Deathless",
+      "type": "fell-ability",
+      "img": "systems/tor2e/assets/images/icons/adversary_fell-ability.png",
+      "folder": "XYcx572rj7XetGPb",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 154</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "active": {
+          "value": true,
+          "type": "Boolean",
+          "label": "tor2e.fellAbilities.details.active"
+        },
+        "cost": {
+          "value": "1",
+          "type": "Number",
+          "label": "tor2e.fellAbilities.details.cost"
+        }
+      },
+      "_id": "Zafrcxrc1gtx23cY",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109622107,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Dour-handed",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "FIH9S57edqboYRqz",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 80</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "Zk85ZNa5ZSsAE7c3",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620331,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Battle",
+      "type": "skill",
+      "img": "systems/tor2e/assets/images/icons/skills/skill-battle.webp",
+      "folder": "wEnmcvDXRtK5AoZg",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 14</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "vocation",
+          "type": "String",
+          "label": "tor2e.skills.details.skillGroup"
+        },
+        "associatedStat": {
+          "value": "",
+          "type": "String",
+          "label": "tor2e.skills.details.associatedStat"
+        },
+        "favoured": {
+          "value": false,
+          "type": "Boolean",
+          "label": "tor2e.stats.favoured"
+        },
+        "value": 0,
+        "type": "Number",
+        "associatedstat": {
+          "value": "heart"
+        }
+      },
+      "_id": "aEGjIaEFpe8W9Mfh",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621908,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Dwarf-Friend",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "KU1qGGVaclUsvtSG",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 81</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "aWfMlNXEknZsjAIv",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620413,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Deadly archery",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "Pd3MVEcvcdbOVFDG",
+      "system": {
+        "description": {
+          "value": "<p>Peoples of Wilderland (2nd edition) : page(s) 7</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "aYvgL9jnRdFwH6zg",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620963,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Irritable",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/distinctive_feature.png",
+      "folder": "fwVNxh2T10beebWx",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 152</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "distinctiveFeature",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "adbnR5Ngf5Oe481L",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620207,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Cunning",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/distinctive_feature.png",
+      "folder": "SzQgbTYVpGxj26Fj",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 67</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "distinctiveFeature",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "b4Wn86HwyYH25Ntw",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620026,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Forest harrier",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "GtzrfUa3IGAhZotd",
+      "system": {
+        "description": {
+          "value": "<p>Peoples of Wilderland (2nd edition) : page(s) 10</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "bZAQZSXkCWAjhHOj",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621067,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Athletics",
+      "type": "skill",
+      "img": "systems/tor2e/assets/images/icons/skills/skill-athletics.webp",
+      "folder": "wEnmcvDXRtK5AoZg",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 14</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "movement",
+          "type": "String",
+          "label": "tor2e.skills.details.skillGroup"
+        },
+        "associatedStat": {
+          "value": "",
+          "type": "String",
+          "label": "tor2e.skills.details.associatedStat"
+        },
+        "favoured": {
+          "value": false,
+          "type": "Boolean",
+          "label": "tor2e.stats.favoured"
+        },
+        "value": 0,
+        "type": "Number",
+        "associatedstat": {
+          "value": "body"
+        }
+      },
+      "_id": "bsp8A1qfZNEPTZnF",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621700,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Herbal remedies",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "GtzrfUa3IGAhZotd",
+      "system": {
+        "description": {
+          "value": "<p>Peoples of Wilderland (2nd edition) : page(s) 10</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "camXIgzB8bbxasyJ",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621048,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Brutish",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/distinctive_feature.png",
+      "folder": "fwVNxh2T10beebWx",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 152</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "distinctiveFeature",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "cbkZtShC0fnWh1Zq",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620157,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Hunting",
+      "type": "skill",
+      "img": "systems/tor2e/assets/images/icons/skills/skill-hunting.webp",
+      "folder": "wEnmcvDXRtK5AoZg",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 14</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "survival",
+          "type": "String",
+          "label": "tor2e.skills.details.skillGroup"
+        },
+        "associatedStat": {
+          "value": "",
+          "type": "String",
+          "label": "tor2e.skills.details.associatedStat"
+        },
+        "favoured": {
+          "value": false,
+          "type": "Boolean",
+          "label": "tor2e.stats.favoured"
+        },
+        "value": 0,
+        "type": "Number",
+        "associatedstat": {
+          "value": "body"
+        }
+      },
+      "_id": "cqs3TNMCO6xOkt04",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621739,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Hate Sunlight",
+      "type": "fell-ability",
+      "img": "systems/tor2e/assets/images/icons/adversary_fell-ability.png",
+      "folder": "XYcx572rj7XetGPb",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 148</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "active": {
+          "value": false,
+          "type": "Boolean",
+          "label": "tor2e.fellAbilities.details.active"
+        },
+        "cost": {
+          "value": "0",
+          "type": "Number",
+          "label": "tor2e.fellAbilities.details.cost"
+        }
+      },
+      "_id": "d7Xc6vA9GGu3lcMu",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109622262,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "2 - Arrogant",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/shadow-weakness.png",
+      "folder": "QrelDqfdxgJvPCO0",
+      "system": {
+        "description": {
+          "value": "<p>Shadow path : Lure of Power</p><p>Core book (2nd edition) : page(s) 141</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "flaw",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "dcZkteRo2yV1x5M7",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621392,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Enhearten",
+      "type": "skill",
+      "img": "systems/tor2e/assets/images/icons/skills/skill-enhearten.webp",
+      "folder": "wEnmcvDXRtK5AoZg",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 14</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "personality",
+          "type": "String",
+          "label": "tor2e.skills.details.skillGroup"
+        },
+        "associatedStat": {
+          "value": "",
+          "type": "String",
+          "label": "tor2e.skills.details.associatedStat"
+        },
+        "favoured": {
+          "value": false,
+          "type": "Boolean",
+          "label": "tor2e.stats.favoured"
+        },
+        "value": 0,
+        "type": "Number",
+        "associatedstat": {
+          "value": "heart"
+        }
+      },
+      "_id": "de6t6GJ8DkJ3N6qc",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621804,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Wilful",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/distinctive_feature.png",
+      "folder": "SzQgbTYVpGxj26Fj",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 69</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "distinctiveFeature",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "e5uw0pTp9HGW2T0u",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620087,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "3 - Cruel",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/shadow-weakness.png",
+      "folder": "TSFapH8MPTMY5Pmk",
+      "system": {
+        "description": {
+          "value": "<p>Shadow path : Curse of Vengeance</p><p>Core book (2nd edition) : page(s) 141</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "flaw",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "ebMBVgp52l2cZ4wZ",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621272,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Secretive",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/distinctive_feature.png",
+      "folder": "SzQgbTYVpGxj26Fj",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 68</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "distinctiveFeature",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "ehu9SfO6dmmBDgD0",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620037,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Ruthless",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/distinctive_feature.png",
+      "folder": "fwVNxh2T10beebWx",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 147</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "distinctiveFeature",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "ewZFBm0oZ18IxNDp",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620235,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "1 - Haughty",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/shadow-weakness.png",
+      "folder": "8yy566YQivOlL64C",
+      "system": {
+        "description": {
+          "value": "<p>Shadow path : Lure of Secrets</p><p>Core book (2nd edition) : page(s) 142</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "flaw",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "g67HmSENzf7deQqc",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621444,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "3 - Deceitful",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/shadow-weakness.png",
+      "folder": "SkyeUt1TM8nWYDj3",
+      "system": {
+        "description": {
+          "value": "<p>Shadow path : Dragon-Sickness</p><p>Core book (2nd edition) : page(s) 141</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "flaw",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "gPsmVT7wAuqjy7zv",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621338,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Howl of Triumph",
+      "type": "fell-ability",
+      "img": "systems/tor2e/assets/images/icons/adversary_fell-ability.png",
+      "folder": "XYcx572rj7XetGPb",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 157</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "active": {
+          "value": true,
+          "type": "Boolean",
+          "label": "tor2e.fellAbilities.details.active"
+        },
+        "cost": {
+          "value": "1",
+          "type": "Number",
+          "label": "tor2e.fellAbilities.details.cost"
+        }
+      },
+      "_id": "gv03W8CqH9zbfrPw",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109622366,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Small folk",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "l9V5VxnmlFg9UOgn",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 85</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "h9fspSgGbM8fW1dC",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620663,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "2 - Mistrustful",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/shadow-weakness.png",
+      "folder": "SkyeUt1TM8nWYDj3",
+      "system": {
+        "description": {
+          "value": "<p>Shadow path : Dragon-Sickness</p><p>Core book (2nd edition) : page(s) 141</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "flaw",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "hl7kobIfq44w2HTm",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621318,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Elbereth Gilthoniel !",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "DhQpZcGcgTzMMQYU",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 84</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "hoc9qRWi7bIRwwjr",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620594,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Healing",
+      "type": "skill",
+      "img": "systems/tor2e/assets/images/icons/skills/skill-healing.webp",
+      "folder": "wEnmcvDXRtK5AoZg",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 14</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "survival",
+          "type": "String",
+          "label": "tor2e.skills.details.skillGroup"
+        },
+        "associatedStat": {
+          "value": "",
+          "type": "String",
+          "label": "tor2e.skills.details.associatedStat"
+        },
+        "favoured": {
+          "value": false,
+          "type": "Boolean",
+          "label": "tor2e.stats.favoured"
+        },
+        "value": 0,
+        "type": "Number",
+        "associatedstat": {
+          "value": "heart"
+        }
+      },
+      "_id": "hod7Ul9jii76OJI0",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621866,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Fair-spoken",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/distinctive_feature.png",
+      "folder": "SzQgbTYVpGxj26Fj",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 68</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "distinctiveFeature",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "hsXgyDU24BzxxERs",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620028,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Art of disappearing",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "l9V5VxnmlFg9UOgn",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 85</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "htQaVgPqVLKpeYIJ",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620639,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Stone-hard",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "A0AlU6Ogzvqfyk3v",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 83</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "iIryDdiLGD2GdmgL",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620533,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Hound of Mirkwood",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "GtzrfUa3IGAhZotd",
+      "system": {
+        "description": {
+          "value": "<p>Peoples of Wilderland (2nd edition) : page(s) 10</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "iKNhwCwGWN55RhX1",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621083,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "1 - Spiteful",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/shadow-weakness.png",
+      "folder": "TSFapH8MPTMY5Pmk",
+      "system": {
+        "description": {
+          "value": "<p>Shadow path : Curse of Vengeance</p><p>Core book (2nd edition) : page(s) 141</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "flaw",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "jFGirkIeY6MOuCBr",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621231,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Proud",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/distinctive_feature.png",
+      "folder": "SzQgbTYVpGxj26Fj",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 68</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "distinctiveFeature",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "jRc4QOnRaSEVjMiD",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620034,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Sure at the mark",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "l9V5VxnmlFg9UOgn",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 86</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "joXgw98YcLNFjUNg",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620673,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Durin’s way",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "A0AlU6Ogzvqfyk3v",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 83</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "jrJ8oDaxwrAGd8EJ",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620507,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Brave at a pinch",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "l9V5VxnmlFg9UOgn",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 85</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "jyk1sPHyEfa2lATS",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620649,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Stealth",
+      "type": "skill",
+      "img": "systems/tor2e/assets/images/icons/skills/skill-stealth.webp",
+      "folder": "wEnmcvDXRtK5AoZg",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 15</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "movement",
+          "type": "String",
+          "label": "tor2e.skills.details.skillGroup"
+        },
+        "associatedStat": {
+          "value": "",
+          "type": "String",
+          "label": "tor2e.skills.details.associatedStat"
+        },
+        "favoured": {
+          "value": false,
+          "type": "Boolean",
+          "label": "tor2e.stats.favoured"
+        },
+        "value": 0,
+        "type": "Number",
+        "associatedstat": {
+          "value": "wits"
+        }
+      },
+      "_id": "k1WvSfh7xTYVHVnB",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621963,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Inquisitive",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/distinctive_feature.png",
+      "folder": "SzQgbTYVpGxj26Fj",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 68</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "distinctiveFeature",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "kKDhhG13lmsuyCyJ",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620032,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Defiance",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "ToWG9QX6vTUgBIR8",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 87</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "kND6BEcNxk85TLeS",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620727,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Craft",
+      "type": "skill",
+      "img": "systems/tor2e/assets/images/icons/skills/skill-craft.webp",
+      "folder": "wEnmcvDXRtK5AoZg",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 14</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "vocation",
+          "type": "String",
+          "label": "tor2e.skills.details.skillGroup"
+        },
+        "associatedStat": {
+          "value": "",
+          "type": "String",
+          "label": "tor2e.skills.details.associatedStat"
+        },
+        "favoured": {
+          "value": false,
+          "type": "Boolean",
+          "label": "tor2e.stats.favoured"
+        },
+        "value": 0,
+        "type": "Number",
+        "associatedstat": {
+          "value": "body"
+        }
+      },
+      "_id": "kcdmTl8cduvNyRJs",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621777,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Strength of will",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "r7ab5LHdwn6lyjWV",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 89</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "ldxOWzoqxEiPzJWg",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620841,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "4 - Cowardly",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/shadow-weakness.png",
+      "folder": "sIGGOY814xsVx407",
+      "system": {
+        "description": {
+          "value": "<p>Shadow path : Wandering-Madness</p><p>Core book (2nd edition) : page(s) 142</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "flaw",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "lqY4bkLMqZwkYqTo",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621662,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Friendly and familiar",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "ToWG9QX6vTUgBIR8",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 88</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "lrq3S3Fn6yiOW804",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620753,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "4 - Thieving",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/shadow-weakness.png",
+      "folder": "SkyeUt1TM8nWYDj3",
+      "system": {
+        "description": {
+          "value": "<p>Shadow path : Dragon-Sickness</p><p>Core book (2nd edition) : page(s) 141</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "flaw",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "lvacyYNdu7kwLATr",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621353,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "The langage of birds",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "KU1qGGVaclUsvtSG",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 82</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "m5NjYaM0coNf3wfc",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620447,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Generous",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/distinctive_feature.png",
+      "folder": "SzQgbTYVpGxj26Fj",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 68</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "distinctiveFeature",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "mIKHXLaJRWyTKfwv",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620030,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Travel",
+      "type": "skill",
+      "img": "systems/tor2e/assets/images/icons/skills/skill-travel.webp",
+      "folder": "wEnmcvDXRtK5AoZg",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 15</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "movement",
+          "type": "String",
+          "label": "tor2e.skills.details.skillGroup"
+        },
+        "associatedStat": {
+          "value": "",
+          "type": "String",
+          "label": "tor2e.skills.details.associatedStat"
+        },
+        "favoured": {
+          "value": false,
+          "type": "Boolean",
+          "label": "tor2e.stats.favoured"
+        },
+        "value": 0,
+        "type": "Number",
+        "associatedstat": {
+          "value": "heart"
+        }
+      },
+      "_id": "mcUdw2MgEri8BcDH",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621822,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Elvish dreams",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "DhQpZcGcgTzMMQYU",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 85</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "mdtK9roCHX5h0cG8",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620605,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Brother to bears",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "6XsBcc5dRetiJ9Tv",
+      "system": {
+        "description": {
+          "value": "<p>Peoples of Wilderland (2nd edition) : page(s) 4</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "mqAdFdDSjMwJgMc5",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620878,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Bree-pony",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "ToWG9QX6vTUgBIR8",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 87</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "mrUDMvOToj0o60Vb",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620715,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Shots in the dark",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "Pd3MVEcvcdbOVFDG",
+      "system": {
+        "description": {
+          "value": "<p>Peoples of Wilderland (2nd edition) : page(s) 7</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "n6n6n24lhKwv3xhP",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621020,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Honourable",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/distinctive_feature.png",
+      "folder": "SzQgbTYVpGxj26Fj",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 68</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "distinctiveFeature",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "pRhIbzOIEOTLx5yr",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620031,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Awareness",
+      "type": "skill",
+      "img": "systems/tor2e/assets/images/icons/skills/skill-awareness.webp",
+      "folder": "wEnmcvDXRtK5AoZg",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 14</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "perception",
+          "type": "String",
+          "label": "tor2e.skills.details.skillGroup"
+        },
+        "associatedStat": {
+          "value": "",
+          "type": "String",
+          "label": "tor2e.skills.details.associatedStat"
+        },
+        "favoured": {
+          "value": false,
+          "type": "Boolean",
+          "label": "tor2e.stats.favoured"
+        },
+        "value": 0,
+        "type": "Number",
+        "associatedstat": {
+          "value": "body"
+        }
+      },
+      "_id": "q88wr1SZcHjwlGAJ",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621721,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "4 - Tyrannica",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/shadow-weakness.png",
+      "folder": "QrelDqfdxgJvPCO0",
+      "system": {
+        "description": {
+          "value": "<p>Shadow path : Lure of Power</p><p>Core book (2nd edition) : page(s) 141</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "flaw",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "q8QbW9Bik35zvU9o",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621426,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "4 - Fearful",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/shadow-weakness.png",
+      "folder": "UrpPqK5VqCXxHwUq",
+      "system": {
+        "description": {
+          "value": "<p>Shadow path : Path of Despair</p><p>Core book (2nd edition) : page(s) 142</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "flaw",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "qIxGRKCStITurUNS",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621580,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Nimbleness",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "FIH9S57edqboYRqz",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 80</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "qgwqbaA4YqzEh0Tx",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620370,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Staunching song",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "GtzrfUa3IGAhZotd",
+      "system": {
+        "description": {
+          "value": "<p>Peoples of Wilderland (2nd edition) : page(s) 10</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "qq3Itx2B6Zy56LKP",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621111,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Confidence",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "FIH9S57edqboYRqz",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 80</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "rId6RdD6dpCyTL6v",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620322,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Craven",
+      "type": "fell-ability",
+      "img": "systems/tor2e/assets/images/icons/adversary_fell-ability.png",
+      "folder": "XYcx572rj7XetGPb",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 147</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "active": {
+          "value": false,
+          "type": "Boolean",
+          "label": "tor2e.fellAbilities.details.active"
+        },
+        "cost": {
+          "value": "0",
+          "type": "Number",
+          "label": "tor2e.fellAbilities.details.cost"
+        }
+      },
+      "_id": "rgdFNpvZe49f5By1",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109622066,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "1 - Resentful",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/shadow-weakness.png",
+      "folder": "QrelDqfdxgJvPCO0",
+      "system": {
+        "description": {
+          "value": "<p>Shadow path : Lure of Power</p><p>Core book (2nd edition) : page(s) 141</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "flaw",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "rgtTvnikb7V89gdV",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621370,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Yell of Triumph",
+      "type": "fell-ability",
+      "img": "systems/tor2e/assets/images/icons/adversary_fell-ability.png",
+      "folder": "XYcx572rj7XetGPb",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 147</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "active": {
+          "value": true,
+          "type": "Boolean",
+          "label": "tor2e.fellAbilities.details.active"
+        },
+        "cost": {
+          "value": "1",
+          "type": "Number",
+          "label": "tor2e.fellAbilities.details.cost"
+        }
+      },
+      "_id": "sIfzmp007tJjdLb3",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109622500,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "2 - Forgetful",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/shadow-weakness.png",
+      "folder": "sIGGOY814xsVx407",
+      "system": {
+        "description": {
+          "value": "<p>Shadow path : Wandering-Madness</p><p>Core book (2nd edition) : page(s) 142</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "flaw",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "suLrVZ7q9IsR5V3u",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621626,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "True-hearted",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/distinctive_feature.png",
+      "folder": "SzQgbTYVpGxj26Fj",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 69</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "distinctiveFeature",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "tWkUcv8soWKvEOiN",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620073,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "2 - Scornful",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/shadow-weakness.png",
+      "folder": "8yy566YQivOlL64C",
+      "system": {
+        "description": {
+          "value": "<p>Shadow path : Lure of Secrets</p><p>Core book (2nd edition) : page(s) 142</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "flaw",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "uHtAaUE0obURl6ui",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621467,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Awe",
+      "type": "skill",
+      "img": "systems/tor2e/assets/images/icons/skills/skill-awe.webp",
+      "folder": "wEnmcvDXRtK5AoZg",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 14</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "personality",
+          "type": "String",
+          "label": "tor2e.skills.details.skillGroup"
+        },
+        "associatedStat": {
+          "value": "",
+          "type": "String",
+          "label": "tor2e.skills.details.associatedStat"
+        },
+        "favoured": {
+          "value": false,
+          "type": "Boolean",
+          "label": "tor2e.stats.favoured"
+        },
+        "value": 0,
+        "type": "Number",
+        "associatedstat": {
+          "value": "body"
+        }
+      },
+      "_id": "uIJrev6FdE9Kldae",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621683,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Cunning make",
+      "type": "reward",
+      "img": "systems/tor2e/assets/images/icons/reward.png",
+      "folder": "XN04Z6gcSLySioq9",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 79</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.reward.details.type"
+        }
+      },
+      "_id": "uOxL4YZbJEjwSWjY",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621149,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Strange as news from Bree",
+      "type": "virtues",
+      "img": "systems/tor2e/assets/images/icons/virtue.png",
+      "folder": "ToWG9QX6vTUgBIR8",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 88</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "type": {
+          "value": "tor2e.virtues.details.type",
+          "type": "String",
+          "label": "tor2e.virtues.details.type"
+        }
+      },
+      "_id": "vPYeiFHGEeMkoIsd",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620764,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Grim",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/distinctive_feature.png",
+      "folder": "fwVNxh2T10beebWx",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 98</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "distinctiveFeature",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "vSJyt3WsA45id1mX",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620181,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "3 - Guilt-ridden",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/shadow-weakness.png",
+      "folder": "UrpPqK5VqCXxHwUq",
+      "system": {
+        "description": {
+          "value": "<p>Shadow path : Path of Despair</p><p>Core book (2nd edition) : page(s) 142</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "flaw",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "vnz9EqILBsvvenKQ",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621563,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Enemy-Lore",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/distinctive_feature.png",
+      "folder": "obCpJl2oHHzORLcl",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 45</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "distinctiveFeature",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "vthiDNAC9BKdfpqP",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620102,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Faithful",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/distinctive_feature.png",
+      "folder": "SzQgbTYVpGxj26Fj",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 68</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "distinctiveFeature",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "w6zv1ZxnlIF4J6jZ",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620028,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Denizen of the Dark",
+      "type": "fell-ability",
+      "img": "systems/tor2e/assets/images/icons/adversary_fell-ability.png",
+      "folder": "XYcx572rj7XetGPb",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 152</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "active": {
+          "value": false,
+          "type": "Boolean",
+          "label": "tor2e.fellAbilities.details.active"
+        },
+        "cost": {
+          "value": "0",
+          "type": "Number",
+          "label": "tor2e.fellAbilities.details.cost"
+        }
+      },
+      "_id": "wXtAjvCWjfYxVoFG",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109622130,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Courtesy",
+      "type": "skill",
+      "img": "systems/tor2e/assets/images/icons/skills/skill-courtesy.webp",
+      "folder": "wEnmcvDXRtK5AoZg",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 14</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "custom",
+          "type": "String",
+          "label": "tor2e.skills.details.skillGroup"
+        },
+        "associatedStat": {
+          "value": "",
+          "type": "String",
+          "label": "tor2e.skills.details.associatedStat"
+        },
+        "favoured": {
+          "value": false,
+          "type": "Boolean",
+          "label": "tor2e.stats.favoured"
+        },
+        "value": 0,
+        "type": "Number",
+        "associatedstat": {
+          "value": "heart"
+        }
+      },
+      "_id": "wY4DqORgS9KdLxOq",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621885,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "2 - Brutal",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/shadow-weakness.png",
+      "folder": "TSFapH8MPTMY5Pmk",
+      "system": {
+        "description": {
+          "value": "<p>Shadow path : Curse of Vengeance</p><p>Core book (2nd edition) : page(s) 141</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "flaw",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "wg6bj0vlh9zmKttI",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621248,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "2 - Wavering",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/shadow-weakness.png",
+      "folder": "UrpPqK5VqCXxHwUq",
+      "system": {
+        "description": {
+          "value": "<p>Shadow path : Path of Despair</p><p>Core book (2nd edition) : page(s) 142</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "flaw",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "wmrbThWR0wueOZ8a",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621542,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Lore",
+      "type": "skill",
+      "img": "systems/tor2e/assets/images/icons/skills/skill-lore.webp",
+      "folder": "wEnmcvDXRtK5AoZg",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 15</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "vocation",
+          "type": "String",
+          "label": "tor2e.skills.details.skillGroup"
+        },
+        "associatedStat": {
+          "value": "",
+          "type": "String",
+          "label": "tor2e.skills.details.associatedStat"
+        },
+        "favoured": {
+          "value": false,
+          "type": "Boolean",
+          "label": "tor2e.stats.favoured"
+        },
+        "value": 0,
+        "type": "Number",
+        "associatedstat": {
+          "value": "wits"
+        }
+      },
+      "_id": "xc49Hxj6R7B9F8Tl",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109622045,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Hatred [subject]",
+      "type": "fell-ability",
+      "img": "systems/tor2e/assets/images/icons/adversary_fell-ability.png",
+      "folder": "XYcx572rj7XetGPb",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 148</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "active": {
+          "value": false,
+          "type": "Boolean",
+          "label": "tor2e.fellAbilities.details.active"
+        },
+        "cost": {
+          "value": "0",
+          "type": "Number",
+          "label": "tor2e.fellAbilities.details.cost"
+        }
+      },
+      "_id": "yzxXvvpyozjxySZv",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109622283,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Swift",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/distinctive_feature.png",
+      "folder": "SzQgbTYVpGxj26Fj",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 69</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "distinctiveFeature",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "z0e0hDjt2i1vHFAF",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620057,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "1 - Troubled",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/shadow-weakness.png",
+      "folder": "UrpPqK5VqCXxHwUq",
+      "system": {
+        "description": {
+          "value": "<p>Shadow path : Path of Despair</p><p>Core book (2nd edition) : page(s) 142</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "flaw",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "zO2qF7wrLiJf75Ob",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109621520,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    },
+    {
+      "name": "Merry",
+      "type": "trait",
+      "img": "systems/tor2e/assets/images/icons/distinctive_feature.png",
+      "folder": "SzQgbTYVpGxj26Fj",
+      "system": {
+        "description": {
+          "value": "<p>Core book (2nd edition) : page(s) 68</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "group": {
+          "value": "distinctiveFeature",
+          "type": "String",
+          "label": "tor2e.traits.details.traitGroup"
+        }
+      },
+      "_id": "zzBx20k2GVifWA3X",
+      "effects": [],
+      "flags": {},
+      "_stats": {
+        "systemId": "tor2e",
+        "systemVersion": "2.3.0",
+        "coreVersion": "12.331",
+        "createdTime": 1689109620033,
+        "modifiedTime": 1689111269494,
+        "lastModifiedBy": "kMhI2Mo2gxl6OwVl",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "kMhI2Mo2gxl6OwVl": 3
+      }
+    }
+  ]
+}

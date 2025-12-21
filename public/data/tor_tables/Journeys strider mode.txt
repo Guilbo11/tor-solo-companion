@@ -1,0 +1,293 @@
+Journeys strider mode
+
+JOURNEYS
+In The One Ring, journeys are a key aspect of undertaking
+quests and errands. For a solo Player-hero,
+these journeys
+offer an opportunity to explore Tolkien’s richly imagined
+world, face uncertainties and danger, and put your abilities
+to the test. The structure of journeys in The One Ring are
+perfect for Strider Mode adventures, because they tend to
+introduce encounters and obstacles organically, and offer a
+clear objective for your character.
+Journeys for a lone Player-hero
+are resolved mostly as
+described in The One Ring core rulebook (page 108), with a
+few changes as detailed below. Player-heroes
+also have access
+to the Strider Distinctive Feature (page 5).
+WHEN TO USE THE JOURNEY RULES
+As described in The One Ring core rulebook (page 109), the
+rules for journey resolution should be used when travelling
+to a specific destination across dangerous lands. If there is
+enough uncertainty or danger to warrant a skill test, but the
+journey is not worthy of the full journey rules, you can see
+how you fare with a TRAVEL roll. For mundane travel within
+safe territory, or when returning home along the same path,
+the fate of your journey can be resolved without any rolls.
+SETTING OFF INTO THE UNKNOWN
+When playing The One Ring as part of a Company with a Loremaster,
+you would normally have limited knowledge of your
+destination and what lies along your path. As a solo player,
+you must balance the information needed to manage the
+journey with the viewpoint of your character.
+To resolve a journey and imagine the places and people
+you encounter, use the tools The One Ring provides for Loremasters,
+including maps, random tables, and region information.
+In addition, you can rely on the Telling Table (page 10),
+Lore Table (page 11), and other tables provided in this supplement
+to help bridge the gap between your knowledge as a
+character and that which a Loremaster
+would normally provide.
+If your Player-hero
+is particularly well travelled and experienced,
+there will be more overlap of the information needed
+to manage the journey with your character’s knowledge. If
+your Player-hero
+is new to adventuring and unfamiliar with
+the world beyond their home, you will rely on Loremaster
+tools without letting that information impact decisions from
+the perspective of your character.
+JOURNEY ROLES
+Journey roles are not used in Strider Mode. Instead, your
+Player-hero
+must tend to all aspects of travel; you will still roll
+for journey events (see below), but those events are keyed
+directly to skills instead of roles.
+
+SOLO JOURNEY EVENTS
+FEAT DIE EVENT CONSEQUENCES OF THE SKILL ROLL
+FATIGUE POINTS
+GAINED
+Sauron Terrible Misfortune If the roll fails, you are Wounded. 3
+1 Despair If the roll fails, gain 2 Shadow points (Dread). 2
+2–3 Ill Choices If the roll fails, gain 1 Shadow point (Dread). 2
+4–7 Mishap If the roll fails, add 1 day to the length of the journey, and gain 1 additional
+Fatigue.
+2
+8–9 Short Cut If the roll succeeds, reduce the length of the journey by 1 day. 1
+10 Chance-meeting
+If the roll succeeds, no Fatigue is gained, and you may improvise an
+encounter favouring your Player-hero.
+1
+Gandalf Joyful Sight If the roll succeeds regain 1 Hope. —
+
+SOLO JOURNEY EVENTS
+To resolve journey events for a lone Player-hero,
+skip the
+event’s target step (page 112 of The One Ring core rulebook).
+Instead, you are always the target of the event, and the challenged
+ability is determined by the event’s nature.
+As described on page 113 of The One Ring core rulebook,
+roll on the Journey Events Table to determine the event type.
+Your current location affects this roll as follows:
+♦ If it is within a Border Land, make a Favoured Feat die roll.
+♦ If it is within a Wild Land, roll one Feat die.
+♦ If it is within a Dark Land, make an Ill-favoured
+Feat die roll.
+The Journey Events table above is slightly modified from the
+version in the core rules to put the focus on a lone Player-hero.
+Once the event type is determined, choose one of the following
+options to help envision the nature of the event and
+the challenge or opportunity your character faces.
+♦ Based on the result from the Solo Journey Events
+Table, imagine an incident or opportunity in a way
+that fits the current situation and surroundings. Then,
+make a test using an appropriate skill: EXPLORE,
+AWARENESS, or HUNTING. Check the Solo Journey
+Events table for the consequences of this skill roll.
+♦ Reveal the nature of the event using an Event Detail
+Table (see below).
+EVENT DETAIL
+To help envision the nature of an event, use an Event Detail
+table to expand on the information provided by the Solo Journey
+Events Table.
+First, select the appropriate table for the type of event,
+and check your result by rolling one Success Die. To speed
+things along, you can roll this Success Die alongside your
+Feat Die when first rolling on the Solo Journey Events Table.
+Take a moment to envision the nature of the incident or
+opportunity using the Event Detail prompt. If you need more
+information, you can use the Telling Table (page 10) or
+Lore Table (page 11) to answer questions about the event.
+Once you have imagined the event and your character’s
+response, make the indicated skill roll. As described in the
+standard journey rules, if the event takes place in a hex suggesting
+a hard terrain, lose (1d) on this roll. If the event happens
+along a road, gain (1d).
+Finally, resolve the scene using the consequence and
+Fatigue Points gained or lost as shown in each Event Detail
+table.
+EVENT DETAIL: TERRIBLE MISFORTUNE
+SUCCESS
+DIE EVENT OUTCOME
+1 Dire confrontation Noteworthy Encounter
+2 Rival Predator HUNTING to avoid
+becoming the hunted
+3 Violent weather EXPLORE to find shelter
+4 Hidden hazard AWARENESS to avoid
+stumbling into danger
+5 Dangerous terrain EXPLORE to find a safer
+route
+6 Stalking enemy AWARENESS to spot the
+foul presence
+CONSEQUENCES OF THE SKILL ROLL: If the roll fails, the target
+is Wounded.
+FATIGUE POINTS GAINED: 3
+
+EVENT DETAIL: DESPAIR
+SUCCESS
+DIE EVENT OUTCOME
+1 Servants of the Enemy Noteworthy Encounter
+2 Torrential weather EXPLORE to find the
+least exposed path
+3 Nightmarish presence AWARENESS to sense
+the danger
+4 Fading vigour HUNTING to gain
+sustenance
+5 Corrupted site EXPLORE to find your
+way out
+6 Grisly scene or foreboding
+portent
+AWARENESS to be
+forewarned
+CONSEQUENCES OF THE SKILL ROLL: If the roll fails, gain 2
+Shadow points (Dread).
+FATIGUE POINTS GAINED: 2
+EVENT DETAIL: ILL CHOICES
+SUCCESS
+DIE EVENT OUTCOME
+1 Mismanaged
+provisions
+HUNTING to replenish
+stores
+2 Wayward path EXPLORE to retrace
+your steps
+3 Overlooked hazard AWARENESS to escape
+safely
+4 Lost quarry HUNTING to follow its
+tracks
+5 Disorienting environs EXPLORE to find your
+way
+6 Haunting visions AWARENESS to overcome
+darkness
+CONSEQUENCES OF THE SKILL ROLL: If the roll fails, gain
+1 Shadow point (Dread).
+FATIGUE POINTS GAINED: 2
+EVENT DETAIL: MISHAP
+SUCCESS
+DIE EVENT OUTCOME
+1 Sparse wildlife HUNTING to forage
+what you can
+2 Lost direction EXPLORE to find your
+way
+3 Obstructed path AWARENESS to spot a
+way around
+4 Elusive quarry HUNTING to track it
+down
+5 Rough terrain EXPLORE to safely
+traverse
+6 Wandering enemies AWARENESS to sense
+their coming
+CONSEQUENCES OF THE SKILL ROLL: If the roll fails, add 1
+day to the length of the journey, and gain 1 additional
+Fatigue.
+FATIGUE POINTS GAINED: 2
+EVENT DETAIL: SHORT CUT
+SUCCESS
+DIE EVENT OUTCOME
+1 Game trail HUNTING to traverse
+the path
+2 Secluded path EXPLORE to navigate
+the wilds
+3 Helpful tracks AWARENESS to follow
+the tracks
+4 Animal guide HUNTING to follow at a
+distance
+5 Favourable weather EXPLORE to make the
+most of it
+6 Familiar waypoint AWARENESS to recognize
+the landmark
+CONSEQUENCES OF THE SKILL ROLL: If the roll succeeds,
+reduce the length of the journey by 1 day.
+FATIGUE POINTS GAINED: 1
+
+EVENT DETAIL: CHANCE MEETING
+SUCCESS
+DIE EVENT OUTCOME
+1 Lone hunter HUNTING to trade
+stories
+2 Fellow traveller EXPLORE to learn about
+the path ahead
+3 Discreet watcher AWARENESS to spot
+them
+4 Noble beast HUNTING to commune
+5 Secluded encampment EXPLORE to find your
+way off the beaten
+path
+6 Auspicious gathering Noteworthy Encounter
+CONSEQUENCES OF THE SKILL ROLL: If the roll succeeds, no
+Fatigue is gained, and you may envision a favourable
+encounter.
+FATIGUE POINTS GAINED: 1
+EVENT DETAIL: JOYFUL SIGHT
+SUCCESS
+DIE EVENT OUTCOME
+1 Majestic creatures HUNTING to observe
+without startling them
+2 Inspiring vista EXPLORE to reach a
+vantage point
+3 Benevolent being AWARENESS to sense
+their presence
+4 Abundant foraging HUNTING to replenish
+your rations
+5 Ancient monument AWARENESS to recognize
+its significance
+6 Peaceful sanctuary Noteworthy Encounter
+CONSEQUENCES OF THE SKILL ROLL: If the roll succeeds,
+regain 1 Hope.
+FATIGUE POINTS GAINED: —
+NOTEWORT HY ENCOUNTERS
+A Noteworthy Encounter result on an Event Detail table indicates
+an event which should not be resolved with a single
+skill roll. Instead, give this event additional focus by treating
+it as an extended encounter or scene. This scene might
+incorporate skill rolls, combat, a council, or a Skill Endeavour
+as appropriate.
+You can also choose to translate any of the detailed event
+results into a Noteworthy Encounter instead of using a single
+skill test. In this way, you give a specific challenge or opportunity
+more focus if it is interesting to you or especially relevant
+to your Player-hero
+or their quests. Overcoming a significant
+challenge as part of a Noteworthy Event can then provide
+experience as a Player-hero
+milestone (page 7).
+RESOLVING EVENTS
+FOR A NOTEWORT HY ENCOUNTER
+For a noteworthy encounter which is not decided using a single
+skill roll, you still need to determine the overall outcome
+when applying the consequences for your journey event. To
+do so, decide if the event was ultimately favourable for your
+character.
+♦ If you managed to overcome a challenge or had an
+overall positive event, treat it as a successful skill roll.
+♦ If you failed to overcome a challenge, or faced severe
+hardship or complications, use the failed result.
+MAKING JOURNEYS COME ALIVE
+For a solo Player-hero,
+there may be a tendency to move
+through the journey sequence without giving focus to the
+ongoing narrative. Avoid this by taking the time to plan your
+navigation as your character would, with the limited information
+available to them. Then, after each marching test
+or event, imagine the details of the adventure. What is the
+weather? What is the nature of the terrain and path? What
+do you see or encounter? Where do you make camp and
+how do those surroundings inspire you or put you on edge?
+Use the maps, area descriptions, and tables provided in
+The One Ring core rulebook and supplements to help reveal
+the nature of your surroundings. If you have a specific question,
+use the Telling Table (page 10). If you want inspiration
+for the nature of an encounter or your surroundings, use the
+Lore Table (page 11).

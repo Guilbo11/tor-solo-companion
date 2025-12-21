@@ -1,0 +1,37 @@
+{
+  "pack": "tor2e-virtues",
+  "type": "virtue",
+  "version": 2,
+  "entries": [
+    {
+      "id": "confidence",
+      "name": "Confidence",
+      "description": "Raise your Hope by 2."
+    },
+    {
+      "id": "dour-handed",
+      "name": "Dour-handed",
+      "description": "Add +1 damage on a Heavy Blow, and +1 to Feat Die on a Pierce."
+    },
+    {
+      "id": "hardiness",
+      "name": "Hardiness",
+      "description": "Raise your Endurance by 2."
+    },
+    {
+      "id": "mastery",
+      "name": "Mastery",
+      "description": "Choose two Skills and make them Favoured."
+    },
+    {
+      "id": "nimbleness",
+      "name": "Nimbleness",
+      "description": "Raise your Parry rating by 1."
+    },
+    {
+      "id": "prowess",
+      "name": "Prowess",
+      "description": "Reduce one Attribute TN by 1."
+    }
+  ]
+}
