@@ -1,0 +1,77 @@
+Combat strider mode
+
+COMBAT
+In Strider Mode, rather than facing foes shoulder-to-
+shoulder
+with your Company, you must stand alone against the enemy.
+Strider Mode offers some tools for the solo Player-hero,
+including a new stance to give lone, bow-wielding
+Player-heroes
+a fighting chance.
+SKIRMISH STANCE
+Combat in Strider Mode operates much the same as in
+The One Ring core rules, with a number of opening volleys
+(depending on the distance between combatants) preceding
+close combat.
+But for Player-heroes
+who prefer bows and thrown weapons,
+the Skirmish stance allows a solo Player-hero
+to fight “on
+the move,” exchanging ranged attacks while seeking advantageous
+positions from which to strike.
+SKIRMISH STANCE (RANGED COMBAT)
+You fight on the move, navigating the terrain and exchanging
+volleys with pursuing or fleeing foes.
+♦ You can only attack your adversaries using ranged
+weapons. Adversaries that attack you with melee weapons
+lose (1d), while those who attack you with ranged
+weapons suffer no penalty.
+♦ For ranged attack rolls, you lose (1d).
+♦ To escape from combat, roll for your ranged attack
+(without losing (1d) on the roll). If you succeed, you
+do not inflict any damage but instead leave the battlefield
+— otherwise you remain engaged.
+♦ Combat Task: Gain Ground
+GAIN GROUND — SKIRMISH STANCE
+Combatants on the move can attempt to gain an advantageous
+position against their foes, ambushing enemies or firing from
+an overlook. To do so, the acting player makes an ATHLETICS
+or SCAN roll as the main action for the round.
+On a successful roll, the attacker gains (1d) on their next
+ranged attack, plus another (1d) for each Success icon
+rolled. These bonus dice can be used on a ranged attack
+roll to escape from combat (see Skirmish Stance).
+COMPLICATIONS AND ADVANTAGES
+Without a Loremaster,
+the solo player must decide whether
+their Player-hero
+and any adversaries fight with complications
+or advantages.
+Sometimes it’s clear based on the environment and the
+circumstances of the battle — the Player-hero
+fights in knee-deep
+water or unleashes arrows over a great distance. Rolling
+a rune or icon can also serve as a trigger for a
+complication or advantage to make a fight more complex
+and interesting.
+ADVERSARY ACTIONS
+In Strider Mode, the solo player finds themselves in the
+unique position of controlling both their Player-hero
+and
+the adversaries in their path.
+In combat, an adversary uses the weapon best suited to
+the situation, depending on the stance of the Player-hero.
+If
+multiple weapons apply, the adversary uses the one which
+gives them the biggest advantage or greatest chance of dealing
+damage.
+SPECIAL DAMAGE
+When spending icons to trigger special damage from an
+adversary, use the Heavy Blow special damage result unless
+the adversary lists a special damage option in its stat block.
+FELL ABILITIES
+If using an adversary’s Fell Ability would give them a clear
+advantage in combat, they use it, spending any Resolve/Hate
+required. If the ability would come at a cost or pose a risk
+to the adversary or their allies, you can ask the Telling Table
+(page 10) to determine the enemy’s behaviour.

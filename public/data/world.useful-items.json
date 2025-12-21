@@ -1,0 +1,150 @@
+{
+  "packId": "world.useful-items",
+  "label": "Useful Items",
+  "documentName": "Item",
+  "exportedAt": "2025-12-19T18:47:05.297Z",
+  "count": 3,
+  "documents": [
+    {
+      "name": "Camo cape",
+      "type": "miscellaneous",
+      "_id": "D1t38Rf4VTKSEHbN",
+      "img": "icons/svg/item-bag.svg",
+      "system": {
+        "description": {
+          "value": "<p>Hunting</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "load": {
+          "value": 0,
+          "type": "Number",
+          "label": "tor2e.items.common.load"
+        },
+        "dropped": {
+          "value": false,
+          "type": "Boolean",
+          "label": "tor2e.items.common.dropped"
+        },
+        "equipped": {
+          "value": false,
+          "type": "Boolean",
+          "label": "tor2e.items.common.equipped"
+        },
+        "quantity": 1
+      },
+      "effects": [],
+      "folder": null,
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "jDKdEkYdbapUvJU9": 3
+      },
+      "flags": {},
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "coreVersion": "12.331",
+        "systemId": "tor2e",
+        "systemVersion": "4.2.0",
+        "createdTime": 1732120041107,
+        "modifiedTime": 1732120049690,
+        "lastModifiedBy": "jDKdEkYdbapUvJU9"
+      }
+    },
+    {
+      "name": "Hunting Knife",
+      "type": "miscellaneous",
+      "_id": "jEjDRVLtrvOAqMlG",
+      "img": "icons/svg/item-bag.svg",
+      "system": {
+        "description": {
+          "value": "<p>Hunting</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "load": {
+          "value": 0,
+          "type": "Number",
+          "label": "tor2e.items.common.load"
+        },
+        "dropped": {
+          "value": false,
+          "type": "Boolean",
+          "label": "tor2e.items.common.dropped"
+        },
+        "equipped": {
+          "value": false,
+          "type": "Boolean",
+          "label": "tor2e.items.common.equipped"
+        },
+        "quantity": 1
+      },
+      "effects": [],
+      "folder": null,
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "jDKdEkYdbapUvJU9": 3
+      },
+      "flags": {},
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "coreVersion": "12.331",
+        "systemId": "tor2e",
+        "systemVersion": "4.2.0",
+        "createdTime": 1732060853437,
+        "modifiedTime": 1732060916633,
+        "lastModifiedBy": "jDKdEkYdbapUvJU9"
+      }
+    },
+    {
+      "name": "Detailed set of maps",
+      "type": "miscellaneous",
+      "_id": "otu1w1Zyu12nmA1Y",
+      "img": "icons/svg/item-bag.svg",
+      "system": {
+        "description": {
+          "value": "<p>Travel</p>",
+          "type": "String",
+          "label": "tor2e.common.description"
+        },
+        "load": {
+          "value": 0,
+          "type": "Number",
+          "label": "tor2e.items.common.load"
+        },
+        "dropped": {
+          "value": false,
+          "type": "Boolean",
+          "label": "tor2e.items.common.dropped"
+        },
+        "equipped": {
+          "value": false,
+          "type": "Boolean",
+          "label": "tor2e.items.common.equipped"
+        },
+        "quantity": 1
+      },
+      "effects": [],
+      "folder": null,
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "jDKdEkYdbapUvJU9": 3
+      },
+      "flags": {},
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "coreVersion": "12.331",
+        "systemId": "tor2e",
+        "systemVersion": "4.2.0",
+        "createdTime": 1732068361223,
+        "modifiedTime": 1732068374542,
+        "lastModifiedBy": "jDKdEkYdbapUvJU9"
+      }
+    }
+  ]
+}

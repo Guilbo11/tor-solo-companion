@@ -1,0 +1,199 @@
+{
+  "pack": "tor2e-patrons",
+  "type": "patron",
+  "version": 2,
+  "entries": [
+    {
+      "id": "balin-son-of-fundin",
+      "name": "Balin, Son Of Fundin",
+      "group": "Patrons",
+      "description": "Patrons\n\nYOUR PATRON\nPerhaps the most important choice for a lone Player-hero\nis\ntheir Patron. A Patron can provide the motive for an errand\nor quest, and help tether your Player-hero\nto the larger world.\nIntroducing a Patron can serve as a great way to kick off a\ncampaign for a new character, and meeting with them during\nthe Fellowship Phase offers an opportunity to report on your\nprogress or accept a new task.\nIn choosing your Patron, pay close attention to their\nFavoured Callings, as well as their Agenda — ensure both\nsupport your intended goals with solo games. For Player-heroes\ninterested in undertaking missions against the Shadow,\nGandalf and Gilraen present enticing options. A Player-hero\nseeking fame and lost relics might find Bilbo or Balin more\nsuitable.\n\nPATRON QUESTS\nIn the following tables, each starting Patron is given a set of\nquests fitting their agendas. Use these to help inspire the\nnature of a Patron-given\nquest as a starting adventure for your\ncharacter, or the next goal within a continuing campaign.\nTo select a quest from a Patron, pick one that interests you,\nroll one 6-sided Success die for a random result, or accept\nthe missions in sequence starting with the first. Envision the\ndetails of the task as revealed by the Patron, and consider the\nopen questions posed by each. If the quest involves travel,\nidentify the destination. If the destination is unknown to you\nand the patron, consider what you must do to locate your\nobjective.\n\nIf you ask the Patron questions about the mission, you\ncan simply imagine their answer as appropriate to the nature\nof the task, or use the Telling Table and Lore Table to help\ninspire their response. Leave room for aspects of the quest\nwhich are unknown to both you and your Patron.",
+      "quests": [
+        {
+          "die": 1,
+          "text": "Dark whispers plague a Dwarven territory. What nameless Shadow lurks in the wilds?"
+        },
+        {
+          "die": 2,
+          "text": "This broken artifact could be a potent weapon against the enemy. What is this item, and who wields the skill to reforge it?"
+        },
+        {
+          "die": 3,
+          "text": "The Dwarven ruins hold great secrets — and weapons against the Enemy. What is the nature of these ruins, and what treasures do they hold?"
+        },
+        {
+          "die": 4,
+          "text": "A powerful comrade has fallen in battle against the Enemy. Who are they, and what did they carry vital to our survival?"
+        },
+        {
+          "die": 5,
+          "text": "A Dwarven stronghold now lies with the Enemy. Who leads these foul creatures, and how have they defiled our sacred site?"
+        },
+        {
+          "die": 6,
+          "text": "A powerful lieutenant of the Enemy grows in power. Who is this shadowy figure, and how have they amassed followers?"
+        }
+      ]
+    },
+    {
+      "id": "bilbo-baggins",
+      "name": "Bilbo Baggins",
+      "group": "Patrons",
+      "description": "Patrons\n\nYOUR PATRON\nPerhaps the most important choice for a lone Player-hero\nis\ntheir Patron. A Patron can provide the motive for an errand\nor quest, and help tether your Player-hero\nto the larger world.\nIntroducing a Patron can serve as a great way to kick off a\ncampaign for a new character, and meeting with them during\nthe Fellowship Phase offers an opportunity to report on your\nprogress or accept a new task.\nIn choosing your Patron, pay close attention to their\nFavoured Callings, as well as their Agenda — ensure both\nsupport your intended goals with solo games. For Player-heroes\ninterested in undertaking missions against the Shadow,\nGandalf and Gilraen present enticing options. A Player-hero\nseeking fame and lost relics might find Bilbo or Balin more\nsuitable.\n\nPATRON QUESTS\nIn the following tables, each starting Patron is given a set of\nquests fitting their agendas. Use these to help inspire the\nnature of a Patron-given\nquest as a starting adventure for your\ncharacter, or the next goal within a continuing campaign.\nTo select a quest from a Patron, pick one that interests you,\nroll one 6-sided Success die for a random result, or accept\nthe missions in sequence starting with the first. Envision the\ndetails of the task as revealed by the Patron, and consider the\nopen questions posed by each. If the quest involves travel,\nidentify the destination. If the destination is unknown to you\nand the patron, consider what you must do to locate your\nobjective.\n\nIf you ask the Patron questions about the mission, you\ncan simply imagine their answer as appropriate to the nature\nof the task, or use the Telling Table and Lore Table to help\ninspire their response. Leave room for aspects of the quest\nwhich are unknown to both you and your Patron.",
+      "quests": [
+        {
+          "die": 1,
+          "text": "This particular delicacy is a rare treat. What is this precious item, and where can it be found?"
+        },
+        {
+          "die": 2,
+          "text": "Scout the area and make a note of significant landmarks to aid cartography. How has the land changed?"
+        },
+        {
+          "die": 3,
+          "text": "The roads grow dark and perilous. What vital missive do you carry, and to whom must it be delivered?"
+        },
+        {
+          "die": 4,
+          "text": "An ancient text confounds attempts to decipher it. What is the nature of this text, and who possesses the knowledge to translate it?"
+        },
+        {
+          "die": 5,
+          "text": "The Enemy holds a map of special significance. What secrets does this map hold, and why is it vital?"
+        },
+        {
+          "die": 6,
+          "text": "An artifact of great importance has resurfaced. What is this item, and why must we find it before the enemy does?"
+        }
+      ]
+    },
+    {
+      "id": "cirdan-the-shipwright",
+      "name": "Cirdan The Shipwright",
+      "group": "Patrons",
+      "description": "Patrons\n\nYOUR PATRON\nPerhaps the most important choice for a lone Player-hero\nis\ntheir Patron. A Patron can provide the motive for an errand\nor quest, and help tether your Player-hero\nto the larger world.\nIntroducing a Patron can serve as a great way to kick off a\ncampaign for a new character, and meeting with them during\nthe Fellowship Phase offers an opportunity to report on your\nprogress or accept a new task.\nIn choosing your Patron, pay close attention to their\nFavoured Callings, as well as their Agenda — ensure both\nsupport your intended goals with solo games. For Player-heroes\ninterested in undertaking missions against the Shadow,\nGandalf and Gilraen present enticing options. A Player-hero\nseeking fame and lost relics might find Bilbo or Balin more\nsuitable.\n\nPATRON QUESTS\nIn the following tables, each starting Patron is given a set of\nquests fitting their agendas. Use these to help inspire the\nnature of a Patron-given\nquest as a starting adventure for your\ncharacter, or the next goal within a continuing campaign.\nTo select a quest from a Patron, pick one that interests you,\nroll one 6-sided Success die for a random result, or accept\nthe missions in sequence starting with the first. Envision the\ndetails of the task as revealed by the Patron, and consider the\nopen questions posed by each. If the quest involves travel,\nidentify the destination. If the destination is unknown to you\nand the patron, consider what you must do to locate your\nobjective.\n\nIf you ask the Patron questions about the mission, you\ncan simply imagine their answer as appropriate to the nature\nof the task, or use the Telling Table and Lore Table to help\ninspire their response. Leave room for aspects of the quest\nwhich are unknown to both you and your Patron.",
+      "quests": [
+        {
+          "die": 1,
+          "text": "Supplies wane as the Enemy draws near. What vital resource for the building of ships must you deliver?"
+        },
+        {
+          "die": 2,
+          "text": "An ancient enemy of the Elves has resurfaced and made themselves known. Who are they, and what grudge do they bear?"
+        },
+        {
+          "die": 3,
+          "text": "Hope falters in these dark days, so travel to a remote beacon and rekindle its flame. What shadowy presence seeks to prevent this?"
+        },
+        {
+          "die": 4,
+          "text": "Our missives fall into the hands of the Enemy. What fate befalls our messengers?"
+        },
+        {
+          "die": 5,
+          "text": "An artifact of great importance to the Elves is carried by a servant of the Enemy. Who is this creature, and why do they covet the artifact?"
+        },
+        {
+          "die": 6,
+          "text": "The ships of the Grey Havens are fashioned from sacred wood. What malady taints these trees?"
+        }
+      ]
+    },
+    {
+      "id": "gandalf-the-grey",
+      "name": "Gandalf The Grey",
+      "group": "Patrons",
+      "description": "Patrons\n\nYOUR PATRON\nPerhaps the most important choice for a lone Player-hero\nis\ntheir Patron. A Patron can provide the motive for an errand\nor quest, and help tether your Player-hero\nto the larger world.\nIntroducing a Patron can serve as a great way to kick off a\ncampaign for a new character, and meeting with them during\nthe Fellowship Phase offers an opportunity to report on your\nprogress or accept a new task.\nIn choosing your Patron, pay close attention to their\nFavoured Callings, as well as their Agenda — ensure both\nsupport your intended goals with solo games. For Player-heroes\ninterested in undertaking missions against the Shadow,\nGandalf and Gilraen present enticing options. A Player-hero\nseeking fame and lost relics might find Bilbo or Balin more\nsuitable.\n\nPATRON QUESTS\nIn the following tables, each starting Patron is given a set of\nquests fitting their agendas. Use these to help inspire the\nnature of a Patron-given\nquest as a starting adventure for your\ncharacter, or the next goal within a continuing campaign.\nTo select a quest from a Patron, pick one that interests you,\nroll one 6-sided Success die for a random result, or accept\nthe missions in sequence starting with the first. Envision the\ndetails of the task as revealed by the Patron, and consider the\nopen questions posed by each. If the quest involves travel,\nidentify the destination. If the destination is unknown to you\nand the patron, consider what you must do to locate your\nobjective.\n\nIf you ask the Patron questions about the mission, you\ncan simply imagine their answer as appropriate to the nature\nof the task, or use the Telling Table and Lore Table to help\ninspire their response. Leave room for aspects of the quest\nwhich are unknown to both you and your Patron.",
+      "quests": [
+        {
+          "die": 1,
+          "text": "The people need hope in these dark times. Where is this remote settlement, and what good news do you bring?"
+        },
+        {
+          "die": 2,
+          "text": "Carry word of the Enemy’s movements to our trusted ally. Who is this ally, and how can they aid us?"
+        },
+        {
+          "die": 3,
+          "text": "A possible ally has made themselves known to us. Who is this ally, and what must we do to earn their trust?"
+        },
+        {
+          "die": 4,
+          "text": "Our vision is clouded, our path uncertain. We must capture a servant of the Enemy. Who are they, and what do they know?"
+        },
+        {
+          "die": 5,
+          "text": "News has reached us of a terrible weapon the Enemy means to bear. What is this weapon, and who wields it?"
+        },
+        {
+          "die": 6,
+          "text": "The Shadow has captured an ally. Who is this ally, and where are they imprisoned?"
+        }
+      ]
+    },
+    {
+      "id": "gilraendaughter-of-dirhael",
+      "name": "Gilraen,Daughter Of Dirhael",
+      "group": "Patrons",
+      "description": "Patrons\n\nYOUR PATRON\nPerhaps the most important choice for a lone Player-hero\nis\ntheir Patron. A Patron can provide the motive for an errand\nor quest, and help tether your Player-hero\nto the larger world.\nIntroducing a Patron can serve as a great way to kick off a\ncampaign for a new character, and meeting with them during\nthe Fellowship Phase offers an opportunity to report on your\nprogress or accept a new task.\nIn choosing your Patron, pay close attention to their\nFavoured Callings, as well as their Agenda — ensure both\nsupport your intended goals with solo games. For Player-heroes\ninterested in undertaking missions against the Shadow,\nGandalf and Gilraen present enticing options. A Player-hero\nseeking fame and lost relics might find Bilbo or Balin more\nsuitable.\n\nPATRON QUESTS\nIn the following tables, each starting Patron is given a set of\nquests fitting their agendas. Use these to help inspire the\nnature of a Patron-given\nquest as a starting adventure for your\ncharacter, or the next goal within a continuing campaign.\nTo select a quest from a Patron, pick one that interests you,\nroll one 6-sided Success die for a random result, or accept\nthe missions in sequence starting with the first. Envision the\ndetails of the task as revealed by the Patron, and consider the\nopen questions posed by each. If the quest involves travel,\nidentify the destination. If the destination is unknown to you\nand the patron, consider what you must do to locate your\nobjective.\n\nIf you ask the Patron questions about the mission, you\ncan simply imagine their answer as appropriate to the nature\nof the task, or use the Telling Table and Lore Table to help\ninspire their response. Leave room for aspects of the quest\nwhich are unknown to both you and your Patron.",
+      "quests": [
+        {
+          "die": 1,
+          "text": "A Ranger has gone missing. What has become of them?"
+        },
+        {
+          "die": 2,
+          "text": "A powerful servant of the Enemy lurks nearby. Who are they, and why do they target our Rangers?"
+        },
+        {
+          "die": 3,
+          "text": "Enemy patrols prowl along the road, targeting merchants and supply wagons. Who leads these deadly patrols?"
+        },
+        {
+          "die": 4,
+          "text": "A settlement has come under the eye of the Shadow. Why is this place significant?"
+        },
+        {
+          "die": 5,
+          "text": "Monstrous servants of the Enemy encroach. What manner of weapon do they carry?"
+        },
+        {
+          "die": 6,
+          "text": "We’ve received no word from a remote Ranger refuge. What fate has befallen our allies?"
+        }
+      ]
+    },
+    {
+      "id": "tom-bombadil-and-lady-goldberry",
+      "name": "Tom Bombadil And Lady Goldberry",
+      "group": "Patrons",
+      "description": "Patrons\n\nYOUR PATRON\nPerhaps the most important choice for a lone Player-hero\nis\ntheir Patron. A Patron can provide the motive for an errand\nor quest, and help tether your Player-hero\nto the larger world.\nIntroducing a Patron can serve as a great way to kick off a\ncampaign for a new character, and meeting with them during\nthe Fellowship Phase offers an opportunity to report on your\nprogress or accept a new task.\nIn choosing your Patron, pay close attention to their\nFavoured Callings, as well as their Agenda — ensure both\nsupport your intended goals with solo games. For Player-heroes\ninterested in undertaking missions against the Shadow,\nGandalf and Gilraen present enticing options. A Player-hero\nseeking fame and lost relics might find Bilbo or Balin more\nsuitable.\n\nPATRON QUESTS\nIn the following tables, each starting Patron is given a set of\nquests fitting their agendas. Use these to help inspire the\nnature of a Patron-given\nquest as a starting adventure for your\ncharacter, or the next goal within a continuing campaign.\nTo select a quest from a Patron, pick one that interests you,\nroll one 6-sided Success die for a random result, or accept\nthe missions in sequence starting with the first. Envision the\ndetails of the task as revealed by the Patron, and consider the\nopen questions posed by each. If the quest involves travel,\nidentify the destination. If the destination is unknown to you\nand the patron, consider what you must do to locate your\nobjective.\n\nIf you ask the Patron questions about the mission, you\ncan simply imagine their answer as appropriate to the nature\nof the task, or use the Telling Table and Lore Table to help\ninspire their response. Leave room for aspects of the quest\nwhich are unknown to both you and your Patron.",
+      "quests": [
+        {
+          "die": 1,
+          "text": "Creatures of the wilds have come under a dark affliction. What is this sickness, and what rare ingredient holds the key to a cure?"
+        },
+        {
+          "die": 2,
+          "text": "A sacred spring runs black with some malady of the Shadow. What taints this source, and what manner of foul creature guards it?"
+        },
+        {
+          "die": 3,
+          "text": "A group of travellers seeks escort through the wilds. Who are they, and what is their vital mission?"
+        },
+        {
+          "die": 4,
+          "text": "The Shadow corrupts a sacred site. What is this place, and what foul presence now taints it?"
+        },
+        {
+          "die": 5,
+          "text": "A precious flower blooms for the first time in many years. What is this plant, and why is it so vital?"
+        },
+        {
+          "die": 6,
+          "text": "An ancient, sacred tree hosts a foul presence. What is this shadow, and can it be purged?"
+        }
+      ]
+    }
+  ]
+}
