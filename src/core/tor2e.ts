@@ -25,6 +25,7 @@ export function tnFromRating(rating: number) {
 
 export function parseProtectionDice(value: any): number {
   // Examples in compendium: "1d", "3d", "+1d", "—"
+  if (typeof value === 'number') return value;
   if (typeof value !== 'string') return 0;
   const v = value.trim();
   if (!v || v === '—' || v === '-') return 0;
@@ -35,6 +36,7 @@ export function parseProtectionDice(value: any): number {
 }
 
 export function parseParryModifier(value: any): number {
+  if (typeof value === 'number') return value;
   if (typeof value !== 'string') return 0;
   const v = value.trim();
   const m = v.match(/([+-]?)(\d+)/);

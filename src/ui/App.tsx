@@ -11,14 +11,14 @@ import FellowshipPanel from './FellowshipPanel';
 import FloatingDieButton from './FloatingDieButton';
 import FloatingDiceSheet from './FloatingDiceSheet';
 
-type Tab = 'Heroes'|'Fellowship'|'Dice'|'Oracles'|'Map'|'Journal'|'Settings';
+type Tab = 'Campaigns'|'Fellowship'|'Dice'|'Oracles'|'Map'|'Journal'|'Settings';
 
 export default function App() {
   const [state, setState] = useState<StoredState>(() => loadState());
-  const [tab, setTab] = useState<Tab>('Heroes');
+  const [tab, setTab] = useState<Tab>('Campaigns');
   const [diceSheetOpen, setDiceSheetOpen] = useState(false);
 
-  const tabs: Tab[] = ['Heroes','Fellowship','Dice','Oracles','Map','Journal','Settings'];
+  const tabs: Tab[] = ['Campaigns','Fellowship','Dice','Oracles','Map','Journal','Settings'];
 
   const set: React.Dispatch<React.SetStateAction<StoredState>> = (next) => {
     setState((prev) => {
@@ -44,10 +44,10 @@ export default function App() {
             a.download = `tor-companion-${new Date().toISOString().slice(0,10)}.torc`;
             a.click();
             URL.revokeObjectURL(url);
-          }}>Export .torc</button>
+          }}>Export</button>
 
           <label className="btn" style={{cursor:'pointer'}}>
-            Import .torc
+            Import
             <input type="file" accept=".torc" style={{display:'none'}} onChange={async (e)=>{
               const f = e.target.files?.[0];
               if (!f) return;
@@ -81,7 +81,7 @@ export default function App() {
         ))}
       </div>
 
-      {tab === 'Heroes' && <HeroesPanel state={state} setState={set} />}
+      {tab === 'Campaigns' && <HeroesPanel state={state} setState={set} />}
       {tab === 'Fellowship' && <FellowshipPanel state={state} setState={set} />}
       {tab === 'Dice' && <DicePanel />}
       {tab === 'Oracles' && <OraclesPanel state={state} setState={set} />}

@@ -179,3 +179,7 @@ canvas { border-radius: 14px; border: 1px solid #1f2a3a; background: #0b0f14; }
 .kv:last-child{ border-bottom:none; }
 .kv .k{ color:#9fb0cf; font-size:12px; }
 .kv .v{ text-align:right; }
+
+
+.btn-danger{ background:#4a1a1a; border:1px solid #7a2a2a; color:#ffd7d7; padding:10px 12px; border-radius:12px; }
+.btn-danger:hover{ filter: brightness(1.08); }

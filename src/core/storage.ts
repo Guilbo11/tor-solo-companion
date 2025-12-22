@@ -1,10 +1,12 @@
 export type StoredState = {
-  version: 3;
+  version: 4;
   journal: JournalEntry[];
   journeys: Journey[];
   fellowship: FellowshipState;
   map: MapState;
   oracle: OracleState;
+  campaigns: Campaign[];
+  activeCampaignId?: string;
   heroes: Hero[];
   ui?: UIState;
 };
@@ -47,8 +49,17 @@ export type UIState = {
   heroesExpandedId?: string | null;
 };
 
+
+export type Campaign = {
+  id: string;
+  name: string;
+  createdAt: string; // ISO
+  updatedAt: string; // ISO
+};
+
 export type Hero = {
   id: string;
+  campaignId?: string;
   name: string;
   createdAt: string; // ISO
   updatedAt: string; // ISO
@@ -163,7 +174,12 @@ export function loadState(): StoredState {
   if (!raw) return defaultState();
   try {
     const parsed = JSON.parse(raw) as StoredState;
-    if (parsed?.version !== 3) return defaultState();
+    if (parsed?.version !== 3 && parsed?.version !== 4) return defaultState();
+
+    // Migrate v3 -> v4 (campaigns)
+    if (parsed?.version === 3) {
+      return ensureDefaults(migrateV3ToV4(parsed as any));
+    }
 
     // Ensure defaults exist even if older saved state is missing new fields
     return ensureDefaults(parsed);
@@ -178,10 +194,12 @@ export function saveState(state: StoredState) {
 
 export function defaultState(): StoredState {
   return ensureDefaults({
-    version: 3,
+    version: 4,
     journal: [],
     journeys: [],
     fellowship: { mode: 'company', companyName: '' },
+    campaigns: [{ id: 'camp-1', name: 'My Campaign', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }],
+    activeCampaignId: 'camp-1',
     heroes: [],
     ui: {},
     map: {
@@ -273,14 +291,34 @@ export function importState(json: string): StoredState {
   return ensureDefaults(parsed);
 }
 
+
+function migrateV3ToV4(s: any): any {
+  const now = new Date().toISOString();
+  const campId = 'camp-1';
+  const campaigns = [{ id: campId, name: 'My Campaign', createdAt: now, updatedAt: now }];
+  const heroes = Array.isArray(s?.heroes) ? s.heroes.map((h:any)=> ({ ...h, campaignId: h?.campaignId ?? campId })) : [];
+  return { ...s, version: 4, campaigns, activeCampaignId: campId, heroes };
+}
+
+function ensureCampaignDefaults(c: any): Campaign {
+  return {
+    id: String(c?.id ?? crypto.randomUUID()),
+    name: String(c?.name ?? 'Campaign'),
+    createdAt: String(c?.createdAt ?? new Date().toISOString()),
+    updatedAt: String(c?.updatedAt ?? new Date().toISOString()),
+  };
+}
+
 function ensureDefaults(s: StoredState): StoredState {
   const out: StoredState = {
-    version: 3,
+    version: 4,
     journal: Array.isArray((s as any).journal) ? (s as any).journal : [],
     journeys: Array.isArray((s as any).journeys) ? (s as any).journeys.map(ensureJourneyDefaults) : [],
     fellowship: ensureFellowshipDefaults((s as any).fellowship),
     oracle: ensureOracleDefaults((s as any).oracle),
     map: ensureMapDefaults((s as any).map),
+    campaigns: Array.isArray((s as any).campaigns) ? (s as any).campaigns.map(ensureCampaignDefaults) : [{ id: 'camp-1', name: 'My Campaign', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }],
+    activeCampaignId: typeof (s as any).activeCampaignId === 'string' ? (s as any).activeCampaignId : ((Array.isArray((s as any).campaigns) && (s as any).campaigns[0]?.id) ? String((s as any).campaigns[0].id) : 'camp-1'),
     heroes: Array.isArray((s as any).heroes) ? (s as any).heroes.map(ensureHeroDefaults) : [],
     ui: (s as any).ui && typeof (s as any).ui === 'object' ? (s as any).ui : {},
   };
@@ -317,6 +355,7 @@ function ensureFellowshipDefaults(f: any): FellowshipState {
 function ensureHeroDefaults(h: any): Hero {
   const out: Hero = {
     id: String(h?.id ?? crypto.randomUUID()),
+    campaignId: typeof h?.campaignId === 'string' ? h.campaignId : 'camp-1',
     name: String(h?.name ?? 'Unnamed'),
     createdAt: String(h?.createdAt ?? new Date().toISOString()),
     updatedAt: String(h?.updatedAt ?? new Date().toISOString()),

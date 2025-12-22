@@ -21,12 +21,18 @@ export default function HeroesPanel({ state, setState }: Props) {
 
   // Mobile-first inner tabs (PocketForge-ish)
   const [heroTab, setHeroTab] = useState<Record<string, 'Sheet'|'Skills'|'Gear'|'More'>>({});
+  const [showFeatChoices, setShowFeatChoices] = useState(true);
+  const [showAddVirtuesRewards, setShowAddVirtuesRewards] = useState(true);
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sheetTitle, setSheetTitle] = useState('');
   const [sheetBody, setSheetBody] = useState<{ description?: string; flavor?: string } | null>(null);
 
-  const heroes = state.heroes ?? [];
+  const campaigns = (state as any).campaigns ?? [];
+  const activeCampaignId = (state as any).activeCampaignId ?? (campaigns[0]?.id ?? 'camp-1');
+  const [view, setView] = useState<'campaigns'|'heroes'>('campaigns');
+  const heroesAll = (state as any).heroes ?? [];
+  const heroes = heroesAll.filter((h:any)=> (h.campaignId ?? activeCampaignId) === activeCampaignId);
 
   const skillsByGroup = useMemo(() => {
     const groups: Record<string, any[]> = { Personality: [], Movement: [], Perception: [], Survival: [], Custom: [], Vocation: [] };
@@ -108,10 +114,58 @@ export default function HeroesPanel({ state, setState }: Props) {
     saveState(updated);
   }
 
+
+  function setActiveCampaign(id: string) {
+    setState((s:any) => {
+      const updated = { ...s, activeCampaignId: id };
+      saveState(updated);
+      return updated;
+    });
+  }
+
+  function addCampaign() {
+    const name = prompt('Campaign name?', 'New Campaign');
+    if (!name) return;
+    const now = new Date().toISOString();
+    const newCamp = { id: uid('camp'), name: String(name), createdAt: now, updatedAt: now };
+    setState((s:any) => {
+      const next = { ...s, campaigns: [...((s as any).campaigns ?? []), newCamp], activeCampaignId: newCamp.id };
+      saveState(next);
+      return next;
+    });
+    setView('heroes');
+  }
+
+  function deleteCampaign(id: string) {
+    const camp = (campaigns ?? []).find((c:any)=>c.id===id);
+    const ok = window.confirm(`Delete campaign "${camp?.name ?? id}"? This is irreversible and will delete all heroes in it.`);
+    if (!ok) return;
+    setState((s:any)=>{
+      const nextCampaigns = ((s as any).campaigns ?? []).filter((c:any)=>c.id!==id);
+      const nextHeroes = ((s as any).heroes ?? []).filter((h:any)=> (h.campaignId ?? (s as any).activeCampaignId) !== id);
+      const nextActive = (s as any).activeCampaignId===id ? (nextCampaigns[0]?.id ?? 'camp-1') : (s as any).activeCampaignId;
+      const next = { ...s, campaigns: nextCampaigns, heroes: nextHeroes, activeCampaignId: nextActive };
+      saveState(next);
+      return next;
+    });
+    setView('campaigns');
+  }
+
+  function deleteHero(id: string) {
+    const hero = heroesAll.find((h:any)=>h.id===id);
+    const ok = window.confirm(`Delete hero "${hero?.name ?? id}"? This is irreversible.`);
+    if (!ok) return;
+    setState((s:any)=>{
+      const next = { ...s, heroes: ((s as any).heroes ?? []).filter((h:any)=>h.id!==id) };
+      saveState(next);
+      return next;
+    });
+  }
   function addHero() {
     const now = new Date().toISOString();
     const newHero = {
       id: uid('hero'),
+      campaignId: activeCampaignId,
       name: 'New Hero',
       createdAt: now,
       updatedAt: now,
@@ -158,7 +212,7 @@ export default function HeroesPanel({ state, setState }: Props) {
   }
 
   function updateHero(id: string, patch: any) {
-    const nextHeroes = heroes.map(h => {
+    const nextHeroes = heroesAll.map(h => {
       if (h.id !== id) return h;
       const merged = { ...h, ...patch };
       // keep common nested objects intact when patch provides partials
@@ -200,11 +254,67 @@ export default function HeroesPanel({ state, setState }: Props) {
   return (
     <div className="panel">
       <div className="panelHeader">
-        <div className="panelTitle">Heroes</div>
-        <button className="btn" onClick={addHero}>+ Add</button>
-      </div>
+        {view === 'campaigns' ? (
+          <>
+            <div className="panelTitle">Campaigns</div>
+            <button className="btn" onClick={addCampaign}>+ New</button>
+          </>
+        ) : (
+          <>
+            <div className="row" style={{alignItems:'center', gap:8}}>
+              <button className="btn btn-ghost" onClick={()=>setView('campaigns')}>← Back</button>
+              <div>
+                <div className="panelTitle" style={{margin:0}}>Campaign</div>
+                <div className="small muted">{(campaigns.find((c:any)=>c.id===activeCampaignId)?.name ?? '—')}</div>
+              </div>
+            </div>
+            <div className="row" style={{gap:8, alignItems:'center'}}>
+              <button className="btn btn-ghost" onClick={addCampaign}>+ Campaign</button>
+              <button className="btn" onClick={addHero}>+ Hero</button>
+            </div>
+          </>
+        )}
+      </div></div>
 
-      <div className="hint">
+      
+      {view === 'campaigns' ? (
+        <>
+          <div className="hint">
+            Create multiple campaigns (solo runs). Tap a campaign to open it.
+          </div>
+
+          {campaigns.length === 0 && (
+            <div className="empty">No campaigns yet. Click <b>+ New</b> to create one.</div>
+          )}
+
+          <div className="cards">
+            {campaigns.map((c:any) => {
+              const count = heroesAll.filter((h:any)=> (h.campaignId ?? activeCampaignId) === c.id).length;
+              return (
+                <div key={c.id} className="card">
+                  <div className="cardTop">
+                    <div className="cardTopLeft" onClick={()=>{
+                      setActiveCampaign(c.id);
+                      setView('heroes');
+                    }}>
+                      <div className="heroName">{c.name}</div>
+                      <div className="sub">{count} hero{count===1?'':'es'}</div>
+                    </div>
+                    <div className="cardTopRight">
+                      <button className="btn btn-danger" title="Delete" onClick={(e)=>{
+                        e.stopPropagation();
+                        deleteCampaign(c.id);
+                      }}>🗑</button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      ) : (
+        <>
+<div className="hint">
         Tap a skill or feature name to open <b>See more</b> (bottom sheet).
       </div>
 
@@ -242,6 +352,7 @@ export default function HeroesPanel({ state, setState }: Props) {
                     setActiveId(hero.id);
                     persistUI(next, hero.id);
                   }}>{isExpanded ? 'Hide' : 'Show'}</button>
+                  <button className="btn btn-danger" title="Delete" onClick={(e)=>{ e.stopPropagation(); deleteHero(hero.id); }}>🗑</button>
                 </div>
               </div>
 
@@ -682,7 +793,16 @@ export default function HeroesPanel({ state, setState }: Props) {
                       <div className="section">
                         <div className="sectionTitle">Standard of Living</div>
                         <div className="row" style={{gap:8, flexWrap:'wrap'}}>
-                          <select className="input" value={hero.standardOfLiving ?? ''} onChange={(e)=>updateHero(hero.id,{standardOfLiving:e.target.value})}>
+                          <select className="input" value={hero.standardOfLiving ?? ''} onChange={(e)=>{
+                            const sol = e.target.value as any;
+                            const order = ['Poor','Frugal','Common','Prosperous','Rich','Very Rich'];
+                            const idx = order.indexOf(sol);
+                            const mount = idx < order.indexOf('Common') ? undefined
+                              : (idx < order.indexOf('Prosperous') ? { label: 'Old horse / half-starved pony', vigour: 1 }
+                                : (idx < order.indexOf('Rich') ? { label: 'Decent pony or horse', vigour: 2 }
+                                  : { label: 'Fine horse', vigour: 3 }));
+                            updateHero(hero.id,{standardOfLiving: sol, mount});
+                          }}>
                             {['Poor','Frugal','Common','Prosperous','Rich','Very Rich'].map(sol=> <option key={sol} value={sol}>{sol}</option>) }
                           </select>
                           <span className="small muted">Initial value comes from Culture (you can change it later).</span>
@@ -694,9 +814,11 @@ export default function HeroesPanel({ state, setState }: Props) {
                         {(() => {
                           const sol = hero.standardOfLiving ?? 'Common';
                           const options: Array<{label:string; vigour:number; minSol:string}> = [
-                            { label: 'Old horse / half-starved pony', vigour: 1, minSol: 'Poor' },
-                            { label: 'Pony', vigour: 2, minSol: 'Prosperous' },
-                            { label: 'Horse', vigour: 2, minSol: 'Rich' },
+                            // Based on Ponies and Horses table (TOR 2e / Strider Mode notes)
+                            { label: '(none)', vigour: 0, minSol: 'Poor' },
+                            { label: 'Old horse / half-starved pony', vigour: 1, minSol: 'Common' },
+                            { label: 'Decent pony or horse', vigour: 2, minSol: 'Prosperous' },
+                            { label: 'Fine horse', vigour: 3, minSol: 'Rich' },
                           ];
                           const order = ['Poor','Frugal','Common','Prosperous','Rich','Very Rich'];
                           const solIdx = order.indexOf(sol);
@@ -706,7 +828,7 @@ export default function HeroesPanel({ state, setState }: Props) {
                             <div className="row" style={{gap:8, flexWrap:'wrap'}}>
                               <select className="input" value={cur.label} onChange={(e)=>{
                                 const picked = allowed.find(a=>a.label===e.target.value) ?? allowed[0];
-                                updateHero(hero.id,{mount:{ label: picked.label, vigour: picked.vigour }});
+                                updateHero(hero.id, picked.vigour === 0 ? { mount: undefined } : { mount:{ label: picked.label, vigour: picked.vigour } });
                               }}>
                                 {allowed.map(o=> <option key={o.label} value={o.label}>{o.label} (Vigour {o.vigour})</option>) }
                               </select>
@@ -744,8 +866,13 @@ export default function HeroesPanel({ state, setState }: Props) {
 
                       <div className="section">
                         <div className="sectionTitle">Distinctive Features</div>
+                        <div className="row" style={{justifyContent:'space-between', alignItems:'center'}}>
+                          <div className="small muted">Selectable list</div>
+                          <button className="btn btn-ghost" onClick={()=>setShowFeatChoices(v=>!v)}>{showFeatChoices ? 'Hide' : 'Show'}</button>
+                        </div>
                         <div className="small">Tap to select. Tap “i” for description.</div>
-                        <div className="pillGrid">
+                        {showFeatChoices && (
+                          <div className="pillGrid">
                           {featureOptions.map((f:any)=>{
                             const selected = (hero.featureIds ?? []).includes(f.id);
                             return (
@@ -755,9 +882,9 @@ export default function HeroesPanel({ state, setState }: Props) {
                                 updateHero(hero.id,{featureIds: next});
                               }}>
                                 <span className="pillName">{f.name}</span>
-                                <button className="pillInfo" onClick={(e)=>{ e.stopPropagation(); openEntry('features', f.id); }}>i</button>
+                                <button className="pillInfo" onClick={(e)=>{ e.stopPropagation(); openEntry('features', f.id); }>See more</button>
                               </div>
-                            );
+                        )});
                           })}
                         </div>
                       </div>
@@ -769,7 +896,8 @@ export default function HeroesPanel({ state, setState }: Props) {
                           const f:any = findEntryById(compendiums.features.entries ?? [], fid);
                           return (
                             <div key={fid} className="pillRow">
-                              <button className="btn btn-ghost" onClick={()=>openEntry('features', fid)}>{f?.name ?? fid}</button>
+                              <div style={{flex:1}}>{f?.name ?? fid}</div>
+                              <button className="btn btn-ghost" onClick={()=>openEntry('features', fid)}>See more</button>
                               <button className="btn btn-ghost" onClick={()=>{
                                 const cur = hero.featureIds ?? [];
                                 updateHero(hero.id, { featureIds: cur.filter((x:string)=>x!==fid) });
@@ -777,17 +905,31 @@ export default function HeroesPanel({ state, setState }: Props) {
                             </div>
                           );
                         })}
+                        {hero.striderMode ? (
+                          <div className="pillRow">
+                            <div style={{flex:1}}><b>STRIDER</b></div>
+                            <button className="btn btn-ghost" onClick={()=>{
+                              openCustomSheet({ title: 'STRIDER', description: 'Wandering the wilds of Middle-earth alone hardens the spirit and sharpens the senses. Solo Player-heroes receive an extra Distinctive Feature: Strider. While journeying, the Player-hero is considered Inspired on skill rolls.' });
+                            }}>See more</button>
+                          </div>
+                        ) : null}
                       </div>
 
                       <div className="section">
                         <div className="sectionTitle">Virtues & Rewards</div>
+                        <div className="row" style={{justifyContent:'space-between', alignItems:'center'}}>
+                          <div className="small muted">Add/roll controls</div>
+                          <button className="btn btn-ghost" onClick={()=>setShowAddVirtuesRewards(v=>!v)}>{showAddVirtuesRewards ? 'Hide' : 'Show'}</button>
+                        </div>
+                        {showAddVirtuesRewards && (
                         <div className="row" style={{gap: 8, flexWrap:'wrap'}}>
                           <button className="btn btn-ghost" onClick={()=>addVirtueRoll(hero)}>Roll Virtue (1d6)</button>
                           <button className="btn btn-ghost" onClick={()=>addRewardRoll(hero)}>Roll Reward (1d6)</button>
                         </div>
+                        )}
 
                         <div className="row" style={{marginTop: 10, gap: 10, flexWrap:'wrap'}}>
-                          <PickerAdd
+                          {showAddVirtuesRewards && <PickerAdd
                             label="Add Virtue"
                             entries={sortByName(compendiums.virtues.entries ?? [])}
                             onAdd={(id)=>{
@@ -795,8 +937,8 @@ export default function HeroesPanel({ state, setState }: Props) {
                               if (!cur.includes(id)) updateHero(hero.id,{virtueIds:[id, ...cur]});
                             }}
                             onSeeMore={(id)=>openEntry('virtues', id)}
-                          />
-                          <PickerAdd
+                          />}
+                          {showAddVirtuesRewards && <PickerAdd
                             label="Add Reward"
                             entries={sortByName(compendiums.rewards.entries ?? [])}
                             onAdd={(id)=>{
@@ -804,7 +946,7 @@ export default function HeroesPanel({ state, setState }: Props) {
                               if (!cur.includes(id)) updateHero(hero.id,{rewardIds:[id, ...cur]});
                             }}
                             onSeeMore={(id)=>openEntry('rewards', id)}
-                          />
+                          />}
                         </div>
 
                         <div className="row" style={{marginTop: 8, gap: 12, flexWrap:'wrap'}}>
@@ -815,7 +957,7 @@ export default function HeroesPanel({ state, setState }: Props) {
                               const v:any = findEntryById(compendiums.virtues.entries ?? [], vid);
                               return (
                                 <div key={vid} className="pillRow">
-                                  <button className="btn btn-ghost" onClick={()=>openEntry('virtues', vid)}>{v?.name ?? vid}</button>
+                                  <div style={{flex:1}}>{v?.name ?? vid}</div><button className="btn btn-ghost" onClick={()=>openEntry('virtues', vid)}>See more</button>
                                   <button className="btn btn-ghost" onClick={()=>{
                                     const cur = hero.virtueIds ?? [];
                                     updateHero(hero.id, { virtueIds: cur.filter((x:string)=>x!==vid) });
@@ -832,7 +974,7 @@ export default function HeroesPanel({ state, setState }: Props) {
                               const r:any = findEntryById(compendiums.rewards.entries ?? [], rid);
                               return (
                                 <div key={rid} className="pillRow">
-                                  <button className="btn btn-ghost" onClick={()=>openEntry('rewards', rid)}>{r?.name ?? rid}</button>
+                                  <div style={{flex:1}}>{r?.name ?? rid}</div><button className="btn btn-ghost" onClick={()=>openEntry('rewards', rid)}>See more</button>
                                   <button className="btn btn-ghost" onClick={()=>{
                                     const cur = hero.rewardIds ?? [];
                                     updateHero(hero.id, { rewardIds: cur.filter((x:string)=>x!==rid) });
@@ -875,7 +1017,10 @@ export default function HeroesPanel({ state, setState }: Props) {
         })}
       </div>
 
-      <BottomSheet open={sheetOpen} title={sheetTitle} onClose={()=>setSheetOpen(false)}>
+      
+        </>
+      )}
+<BottomSheet open={sheetOpen} title={sheetTitle} onClose={()=>setSheetOpen(false)}>
         {sheetBody?.description ? <p style={{whiteSpace:'pre-wrap'}}>{sheetBody.description}</p> : <p className="muted">No description yet.</p>}
         {sheetBody?.flavor ? <p className="flavor">{sheetBody.flavor}</p> : null}
       </BottomSheet>
@@ -1077,7 +1222,7 @@ function AttackSection({ hero, derived }: { hero: any; derived: any }) {
 
       <div className="list">
         {weapons.map((w:any)=>{
-          const k = profKey(w.combatProficiency);
+          const k = profKey(w.combatProficiency ?? w.proficiency ?? w.category);
           const dice = k ? (hero.combatProficiencies?.[k] ?? 0) : 0;
           return (
             <div key={w.id} className="invRow" style={{alignItems:'center'}}>
@@ -1214,4 +1359,3 @@ function GearEquippedEditor({ hero, updateHero, onSeeMore }: { hero: any; update
     </div>
   );
 }
-
