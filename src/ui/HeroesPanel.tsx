@@ -26,7 +26,8 @@ export default function HeroesPanel({ state, setState }: Props) {
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sheetTitle, setSheetTitle] = useState('');
-  const [sheetBody, setSheetBody] = useState<{ description?: string; flavor?: string } | null>(null);
+  const [sheetPack, setSheetPack] = useState<'skills'|'features'|'cultures'|'callings'|'virtues'|'rewards'|'equipment'|'custom'|null>(null);
+  const [sheetBody, setSheetBody] = useState<any>(null);
 
   const campaigns = (state as any).campaigns ?? [];
   const activeCampaignId = (state as any).activeCampaignId ?? (campaigns[0]?.id ?? 'camp-1');
@@ -175,7 +176,7 @@ export default function HeroesPanel({ state, setState }: Props) {
       featureIds: [],
       striderMode: false,
       standardOfLiving: 'Common',
-      mount: { vigour: 1, label: 'Old horse / half-starved pony' },
+      mount: { vigour: 1, label: 'Old horse or half-starved pony' },
       attributes: { strength: 2, heart: 2, wits: 2 },
       endurance: { max: 20, current: 20, load: 0, fatigue: 0 },
       hope: { max: 8, current: 8 },
@@ -242,14 +243,60 @@ export default function HeroesPanel({ state, setState }: Props) {
   function openEntry(pack: 'skills'|'features'|'cultures'|'callings'|'virtues'|'rewards'|'equipment', id: string) {
     const entry = findEntryById((compendiums as any)[pack].entries ?? [], id);
     if (!entry) return;
+    setSheetPack(pack);
     setSheetTitle(entry.name);
-    setSheetBody({ description: entry.description, flavor: entry.flavor });
+    setSheetBody(entry);
+    setSheetOpen(true);
+  }
+
+
+  function openCustom(title: string, description: string) {
+    setSheetPack('custom');
+    setSheetTitle(title);
+    setSheetBody({ description });
     setSheetOpen(true);
   }
 
   const cultureOptions = sortByName(compendiums.cultures.entries ?? []);
   const callingOptions = sortByName(compendiums.callings.entries ?? []);
   const featureOptions = sortByName(compendiums.features.entries ?? []);
+
+  const autoFeatureIds = (hero: any): string[] => {
+    const ids: string[] = [];
+    // Cultural Blessings (as Features)
+    const cultureMap: Record<string, string[]> = {
+      'bardings': ['stout-hearted'],
+      'beornings': ['skin-changer'],
+      'hobbits': ['hobbit-sense', 'halflings'],
+      'elves of lindon': ['elven-skill', 'the-long-defeat'],
+      
+      "dwarves of durin's folk": ['redoubtable', 'naugrim'],
+      'rangers of the north': ['kings-of-men', 'allegiance-of-the-dunedain'],
+      'men of bree': ['bree-blood'],
+    };
+    const cultureEntry: any = hero?.cultureId ? findEntryById(compendiums.cultures.entries ?? [], hero.cultureId) : null;
+    const cName = String(cultureEntry?.name ?? '').toLowerCase();
+    for (const [k, arr] of Object.entries(cultureMap)) {
+      if (cName === k) ids.push(...arr);
+    }
+    // Calling additional Distinctive Feature
+    const callingEntry: any = hero?.callingId ? findEntryById(compendiums.callings.entries ?? [], hero.callingId) : null;
+    const addFeat = String(callingEntry?.additionalFeature ?? '').toLowerCase().trim();
+    const callingMap: Record<string, string> = {
+      'leadership': 'leadership',
+      'enemy-lore': 'enemy-lore',
+      'folk-lore': 'folk-lore',
+      'rhymes of lore': 'rhymes-of-lore',
+      'burglary': 'burglary',
+      'shadow-lore': 'shadow-lore',
+    };
+    if (addFeat && callingMap[addFeat]) ids.push(callingMap[addFeat]);
+    // Strider mode
+    if (hero?.striderMode) ids.push('strider');
+    return Array.from(new Set(ids));
+  };
+
+  const isLockedAutoFeature = (hero: any, fid: string): boolean => autoFeatureIds(hero).includes(fid);
 
   return (
     <div className="panel">
@@ -314,7 +361,7 @@ export default function HeroesPanel({ state, setState }: Props) {
       ) : (
         <>
 <div className="hint">
-        Tap a skill or feature name to open <b>See more</b> (bottom sheet).
+        Tap a skill or feature name to open <b>i</b> (bottom sheet).
       </div>
 
       {heroes.length === 0 && (
@@ -637,7 +684,7 @@ export default function HeroesPanel({ state, setState }: Props) {
                       <hr />
 
                       <div className="sectionTitle">Skills</div>
-                      <div className="small muted">⭐ = Favoured (from Culture selection). Tap name for See more.</div>
+                      <div className="small muted">⭐ = Favoured (from Culture selection). Tap name for i.</div>
                       {Object.keys(skillsByGroup).map(group => (
                         <details key={group} className="details" open={group==='Personality'}>
                           <summary>{group}</summary>
@@ -716,7 +763,7 @@ export default function HeroesPanel({ state, setState }: Props) {
                             <option value="">(none)</option>
                             {cultureOptions.map((c:any)=> <option key={c.id} value={c.id}>{c.name}</option>)}
                           </select>
-                          {hero.cultureId && <button className="btn btn-ghost" onClick={()=>openEntry('cultures', hero.cultureId)}>See more</button>}
+                          {hero.cultureId && <button className="btn btn-ghost" onClick={()=>openEntry('cultures', hero.cultureId)}>i</button>}
                           {hero.cultureId && (
                             <div className="row" style={{marginTop: 6, gap: 8, flexWrap: 'wrap'}}>
                               <button className="btn btn-ghost" onClick={()=>applyCultureAutofill(hero)}>Auto-fill Skills</button>
@@ -735,7 +782,7 @@ export default function HeroesPanel({ state, setState }: Props) {
                             <option value="">(none)</option>
                             {callingOptions.map((c:any)=> <option key={c.id} value={c.id}>{c.name}</option>)}
                           </select>
-                          {hero.callingId && <button className="btn btn-ghost" onClick={()=>openEntry('callings', hero.callingId)}>See more</button>}
+                          {hero.callingId && <button className="btn btn-ghost" onClick={()=>openEntry('callings', hero.callingId)}>i</button>}
                         </div>
                       </div>
 
@@ -746,7 +793,36 @@ export default function HeroesPanel({ state, setState }: Props) {
                         </label>
                       </div>
 
+                      
+
                       <div className="section">
+                        <div className="sectionTitle">Favoured Skills (from Calling)</div>
+                        {(() => {
+                          const c:any = hero.callingId ? findEntryById(compendiums.callings.entries ?? [], hero.callingId) : null;
+                          const options: string[] = Array.isArray(c?.favouredSkills) ? c.favouredSkills : [];
+                          if (!c || options.length === 0) return <div className="small muted">Select a Calling to choose Favoured Skills.</div>;
+                          const cur: string[] = Array.isArray((hero as any).callingFavouredSkillIds) ? (hero as any).callingFavouredSkillIds : [];
+                          return (
+                            <>
+                              <div className="pillGrid">
+                                {options.map((sid)=>{
+                                  const entry:any = findEntryById(compendiums.skills.entries ?? [], sid);
+                                  const label = entry?.name ?? sid;
+                                  const selected = cur.includes(sid);
+                                  return (
+                                    <div key={sid} className={"pill " + (selected ? 'on' : '')} onClick={() => {
+                                      const next = selected ? cur.filter(x=>x!==sid) : [...cur, sid].slice(0,2);
+                                      updateHero(hero.id, { callingFavouredSkillIds: next });
+                                    }}>{label}</div>
+                                  );
+                                })}
+                              </div>
+                              <div className="small muted" style={{marginTop:6}}>Pick up to 2. These will show as ⭐ in Skills.</div>
+                            </>
+                          );
+                        })()}
+                      </div>
+<div className="section">
                         <div className="sectionTitle">Culture Attribute Arrays</div>
                         {(() => {
                           const c:any = getCultureEntry(hero.cultureId);
@@ -797,9 +873,9 @@ export default function HeroesPanel({ state, setState }: Props) {
                             const order = ['Poor','Frugal','Common','Prosperous','Rich','Very Rich'];
                             const idx = order.indexOf(sol);
                             const mount = idx < order.indexOf('Common') ? undefined
-                              : (idx < order.indexOf('Prosperous') ? { label: 'Old horse / half-starved pony', vigour: 1 }
-                                : (idx < order.indexOf('Rich') ? { label: 'Decent pony or horse', vigour: 2 }
-                                  : { label: 'Fine horse', vigour: 3 }));
+                              : (idx < order.indexOf('Prosperous') ? { label: 'Old horse or half-starved pony', vigour: 1 }
+                                : (idx < order.indexOf('Rich') ? { label: 'Decent beast', vigour: 2 }
+                                  : { label: 'Fine beast', vigour: 3 }));
                             updateHero(hero.id,{standardOfLiving: sol, mount});
                           }}>
                             {['Poor','Frugal','Common','Prosperous','Rich','Very Rich'].map(sol=> <option key={sol} value={sol}>{sol}</option>) }
@@ -815,9 +891,9 @@ export default function HeroesPanel({ state, setState }: Props) {
                           const options: Array<{label:string; vigour:number; minSol:string}> = [
                             // Based on Ponies and Horses table (TOR 2e / Strider Mode notes)
                             { label: '(none)', vigour: 0, minSol: 'Poor' },
-                            { label: 'Old horse / half-starved pony', vigour: 1, minSol: 'Common' },
-                            { label: 'Decent pony or horse', vigour: 2, minSol: 'Prosperous' },
-                            { label: 'Fine horse', vigour: 3, minSol: 'Rich' },
+                            { label: 'Old horse or half-starved pony', vigour: 1, minSol: 'Common' },
+                            { label: 'Decent beast', vigour: 2, minSol: 'Prosperous' },
+                            { label: 'Fine beast', vigour: 3, minSol: 'Rich' },
                           ];
                           const order = ['Poor','Frugal','Common','Prosperous','Rich','Very Rich'];
                           const solIdx = order.indexOf(sol);
@@ -838,29 +914,29 @@ export default function HeroesPanel({ state, setState }: Props) {
                       </div>
 
                       <div className="section">
-                        <div className="sectionTitle">Favoured Skills (from Culture)</div>
+                        <div className="sectionTitle">Favoured Skill (from Culture)</div>
                         {(() => {
                           const c:any = getCultureEntry(hero.cultureId);
                           const candidates: string[] = Array.isArray(c?.favouredSkillCandidates) ? c.favouredSkillCandidates : [];
                           if (!c || candidates.length === 0) return <div className="small muted">No favoured skill candidates in this culture compendium entry.</div>;
-                          const cur: string[] = hero.favouredSkillIds ?? [];
+                          const cur = String((hero as any).cultureFavouredSkillId ?? '');
                           return (
                             <div className="pillGrid">
                               {candidates.map((sid)=>{
                                 const entry:any = findEntryById(compendiums.skills.entries ?? [], sid);
                                 const label = entry?.name ?? sid;
-                                const selected = cur.includes(sid);
+                                const selected = cur === sid;
                                 return (
                                   <div key={sid} className={"pill " + (selected ? 'on' : '')} onClick={()=>{
-                                    const next = selected ? cur.filter(x=>x!==sid) : [...cur, sid].slice(0,2);
-                                    updateHero(hero.id, { favouredSkillIds: next });
+                                    const next = selected ? undefined : sid;
+                                    updateHero(hero.id, { cultureFavouredSkillId: next });
                                   }}>{label}</div>
                                 );
                               })}
                             </div>
                           );
                         })()}
-                        <div className="small muted" style={{marginTop:6}}>Pick up to 2. These will show as ⭐ in Skills.</div>
+                        <div className="small muted" style={{marginTop:6}}>Pick 1. This will show as ⭐ in Skills.</div>
                       </div>
 
                       <div className="section">
@@ -885,7 +961,7 @@ export default function HeroesPanel({ state, setState }: Props) {
                                   className="pillInfo"
                                   onClick={(e)=>{ e.stopPropagation(); openEntry('features', f.id); }}
                                 >
-                                  See more
+                                  i
                                 </button>
                               </div>
                             );
@@ -896,28 +972,44 @@ export default function HeroesPanel({ state, setState }: Props) {
 
                       <div className="section">
                         <div className="sectionTitle">Features (chosen)</div>
-                        {(hero.featureIds ?? []).length === 0 ? <div className="small muted">None yet.</div> : null}
-                        {(hero.featureIds ?? []).map((fid:string)=>{
-                          const f:any = findEntryById(compendiums.features.entries ?? [], fid);
+                        {(() => {
+                          const base = Array.isArray(hero.featureIds) ? hero.featureIds : [];
+                          const auto = autoFeatureIds(hero);
+                          const all = Array.from(new Set([...auto, ...base]));
+                          if (all.length === 0) return <div className="small muted">None yet.</div>;
                           return (
-                            <div key={fid} className="pillRow">
-                              <div style={{flex:1}}>{f?.name ?? fid}</div>
-                              <button className="btn btn-ghost" onClick={()=>openEntry('features', fid)}>See more</button>
-                              <button className="btn btn-ghost" onClick={()=>{
-                                const cur = hero.featureIds ?? [];
-                                updateHero(hero.id, { featureIds: cur.filter((x:string)=>x!==fid) });
-                              }}>Remove</button>
-                            </div>
+                            <>
+                              {all.map((fid:string)=>{
+                                const f:any = findEntryById(compendiums.features.entries ?? [], fid);
+                                const locked = auto.includes(fid);
+                                return (
+                                  <div key={fid} className="pillRow">
+                                    <div style={{flex:1}}>{f?.name ?? fid}</div>
+                                    <button className="btn btn-ghost" onClick={()=>openEntry('features', fid)} aria-label="Info">i</button>
+                                    {!locked ? (
+                                      <button className="btn btn-ghost" onClick={()=>{
+                                        const cur = hero.featureIds ?? [];
+                                        updateHero(hero.id, { featureIds: cur.filter((x:string)=>x!==fid) });
+                                      }}>Remove</button>
+                                    ) : <span className="small muted">Auto</span>}
+                                  </div>
+                                );
+                              })}
+                              {(() => {
+                                const callingEntry: any = hero?.callingId ? findEntryById(compendiums.callings.entries ?? [], hero.callingId) : null;
+                                const sp = callingEntry?.shadowPath;
+                                if (!sp || !sp.name) return null;
+                                return (
+                                  <div className="pillRow">
+                                    <div style={{flex:1}}><b>SHADOW PATH</b> — {sp.name}</div>
+                                    <button className="btn btn-ghost" onClick={()=>openCustom('SHADOW PATH — ' + sp.name, sp.description ?? '')} aria-label="Info">i</button>
+                                    <span className="small muted">Auto</span>
+                                  </div>
+                                );
+                              })()}
+                            </>
                           );
-                        })}
-                        {hero.striderMode ? (
-                          <div className="pillRow">
-                            <div style={{flex:1}}><b>STRIDER</b></div>
-                            <button className="btn btn-ghost" onClick={()=>{
-                              openCustomSheet({ title: 'STRIDER', description: 'Wandering the wilds of Middle-earth alone hardens the spirit and sharpens the senses. Solo Player-heroes receive an extra Distinctive Feature: Strider. While journeying, the Player-hero is considered Inspired on skill rolls.' });
-                            }}>See more</button>
-                          </div>
-                        ) : null}
+                        })()}
                       </div>
 
                       <div className="section">
@@ -962,7 +1054,7 @@ export default function HeroesPanel({ state, setState }: Props) {
                               const v:any = findEntryById(compendiums.virtues.entries ?? [], vid);
                               return (
                                 <div key={vid} className="pillRow">
-                                  <div style={{flex:1}}>{v?.name ?? vid}</div><button className="btn btn-ghost" onClick={()=>openEntry('virtues', vid)}>See more</button>
+                                  <div style={{flex:1}}>{v?.name ?? vid}</div><button className="btn btn-ghost" onClick={()=>openEntry('virtues', vid)}>i</button>
                                   <button className="btn btn-ghost" onClick={()=>{
                                     const cur = hero.virtueIds ?? [];
                                     updateHero(hero.id, { virtueIds: cur.filter((x:string)=>x!==vid) });
@@ -979,7 +1071,7 @@ export default function HeroesPanel({ state, setState }: Props) {
                               const r:any = findEntryById(compendiums.rewards.entries ?? [], rid);
                               return (
                                 <div key={rid} className="pillRow">
-                                  <div style={{flex:1}}>{r?.name ?? rid}</div><button className="btn btn-ghost" onClick={()=>openEntry('rewards', rid)}>See more</button>
+                                  <div style={{flex:1}}>{r?.name ?? rid}</div><button className="btn btn-ghost" onClick={()=>openEntry('rewards', rid)}>i</button>
                                   <button className="btn btn-ghost" onClick={()=>{
                                     const cur = hero.rewardIds ?? [];
                                     updateHero(hero.id, { rewardIds: cur.filter((x:string)=>x!==rid) });
@@ -1026,8 +1118,136 @@ export default function HeroesPanel({ state, setState }: Props) {
         </>
       )}
 <BottomSheet open={sheetOpen} title={sheetTitle} onClose={()=>setSheetOpen(false)}>
-        {sheetBody?.description ? <p style={{whiteSpace:'pre-wrap'}}>{sheetBody.description}</p> : <p className="muted">No description yet.</p>}
-        {sheetBody?.flavor ? <p className="flavor">{sheetBody.flavor}</p> : null}
+        {(() => {
+          const body: any = sheetBody;
+          if (!body) return <p className="muted">No details.</p>;
+          const renderDesc = (d:any) => (d ? <p style={{whiteSpace:'pre-wrap'}}>{String(d)}</p> : <p className="muted">No description yet.</p>);
+          if (sheetPack === 'callings') {
+            const fav: string[] = Array.isArray(body.favouredSkills) ? body.favouredSkills : [];
+            const addFeat = body.additionalFeature ? String(body.additionalFeature) : '';
+            const sp = body.shadowPath;
+            return (
+              <div>
+                {renderDesc(body.description)}
+
+                <div className="section">
+                  <div className="sectionTitle">Favoured Skills</div>
+                  {fav.length ? (
+                    <ul>
+                      {fav.map((sid:string)=>{
+                        const s:any = findEntryById(compendiums.skills.entries ?? [], sid);
+                        return <li key={sid}>{s?.name ?? sid}</li>;
+                      })}
+                    </ul>
+                  ) : <div className="small muted">—</div>}
+                </div>
+
+                <div className="section">
+                  <div className="sectionTitle">Additional Distinctive Feature</div>
+                  {addFeat ? (
+                    <div className="row" style={{justifyContent:'space-between', alignItems:'center'}}>
+                      <div><b>{addFeat}</b></div>
+                      {(() => {
+                        const idMap: Record<string,string> = {
+                          'leadership':'leadership',
+                          'enemy-lore':'enemy-lore',
+                          'folk-lore':'folk-lore',
+                          'rhymes of lore':'rhymes-of-lore',
+                          'burglary':'burglary',
+                          'shadow-lore':'shadow-lore',
+                        };
+                        const k = addFeat.toLowerCase();
+                        const fid = idMap[k];
+                        return fid ? <button className="btn btn-ghost" onClick={()=>openEntry('features', fid)} aria-label="Info">i</button> : null;
+                      })()}
+                    </div>
+                  ) : <div className="small muted">—</div>}
+                </div>
+
+                <div className="section">
+                  <div className="sectionTitle">Shadow Path</div>
+                  {sp?.name ? (
+                    <div>
+                      <div><b>{sp.name}</b></div>
+                      {renderDesc(sp.description)}
+                    </div>
+                  ) : <div className="small muted">—</div>}
+                </div>
+
+                {body.flavor ? <p className="flavor">{body.flavor}</p> : null}
+              </div>
+            );
+          }
+
+          if (sheetPack === 'cultures') {
+            const sol = body.standardOfLiving;
+            const blessingIds = (() => {
+              // so instead map by culture name directly.
+              const cName = String(body.name ?? '').toLowerCase();
+              const map: Record<string,string[]> = {
+                'bardings': ['stout-hearted'],
+                'beornings': ['skin-changer'],
+                'hobbits': ['hobbit-sense','halflings'],
+                'elves of lindon': ['elven-skill','the-long-defeat'],
+                "dwarves of durin's folk": ['redoubtable','naugrim'],
+                'rangers of the north': ['kings-of-men','allegiance-of-the-dunedain'],
+                'men of bree': ['bree-blood'],
+              };
+              return map[cName] ?? [];
+            })();
+            return (
+              <div>
+                {renderDesc(body.description)}
+
+                <div className="section">
+                  <div className="sectionTitle">Cultural Blessing</div>
+                  {blessingIds.length ? (
+                    <div className="list">
+                      {blessingIds.map((fid:string)=>{
+                        const f:any = findEntryById(compendiums.features.entries ?? [], fid);
+                        return (
+                          <div key={fid} className="pillRow">
+                            <div style={{flex:1}}>{f?.name ?? fid}</div>
+                            <button className="btn btn-ghost" onClick={()=>openEntry('features', fid)} aria-label="Info">i</button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : <div className="small muted">—</div>}
+                </div>
+
+                {sol ? (
+                  <div className="section">
+                    <div className="sectionTitle">Standard of Living</div>
+                    <div>{sol}</div>
+                  </div>
+                ) : null}
+
+                {body.languages ? (
+                  <div className="section">
+                    <div className="sectionTitle">Languages</div>
+                    <div style={{whiteSpace:'pre-wrap'}}>{String(body.languages)}</div>
+                  </div>
+                ) : null}
+
+                {body.names ? (
+                  <div className="section">
+                    <div className="sectionTitle">Typical Names</div>
+                    <div style={{whiteSpace:'pre-wrap'}}>{String(body.names)}</div>
+                  </div>
+                ) : null}
+              </div>
+            );
+          }
+
+          // Default for skills/features/virtues/rewards/equipment/custom
+          return (
+            <div>
+              {renderDesc(body.description)}
+              {body.flavor ? <p className="flavor">{body.flavor}</p> : null}
+            </div>
+          );
+        })()}
       </BottomSheet>
     </div>
   );
@@ -1101,7 +1321,7 @@ function InventoryEditor({ hero, updateHero, onSeeMore }: { hero: any; updateHer
               {it.ref?.pack === 'tor2e-equipment' && it.ref?.id ? (
                 (() => {
                   const e:any = findEntryById(compendiums.equipment.entries ?? [], it.ref.id);
-                  if (!e) return <div className="muted" style={{fontSize: 12}}>See more</div>;
+                  if (!e) return <div className="muted" style={{fontSize: 12}}>i</div>;
                   const c = String(e.category ?? '');
                   if (c === 'Weapon') return <div className="muted" style={{fontSize: 12}}>DMG {e.damage ?? '—'} • INJ {e.injury ?? '—'} • Load {e.load ?? 0}</div>;
                   if (c === 'Armour' || c === 'Headgear') return <div className="muted" style={{fontSize: 12}}>Prot {e.protection ?? '—'} • Load {e.load ?? 0}</div>;
@@ -1280,7 +1500,7 @@ function PickerAdd({ label, entries, onAdd, onSeeMore }: { label: string; entrie
           {entries.map((e:any)=> <option key={e.id} value={e.id}>{e.name}</option>)}
         </select>
         <button className="btn" disabled={!pick} onClick={()=>{ if (!pick) return; onAdd(pick); setPick(''); }}>Add</button>
-        <button className="btn btn-ghost" disabled={!pick} onClick={()=>{ if (!pick) return; onSeeMore(pick); }}>See more</button>
+        <button className="btn btn-ghost" disabled={!pick} onClick={()=>{ if (!pick) return; onSeeMore(pick); }}>i</button>
       </div>
     </div>
   );
@@ -1312,7 +1532,7 @@ function GearEquippedEditor({ hero, updateHero, onSeeMore }: { hero: any; update
           {weapon ? (
             <div className="small" style={{marginTop:6}}>
               <b>Damage</b> {weapon.damage ?? '—'} • <b>Injury</b> {weapon.injury ?? '—'} • <b>Load</b> {weapon.load ?? 0}
-              <div><button className="btn btn-ghost" onClick={()=>onSeeMore('equipment', weapon.id)}>See more</button></div>
+              <div><button className="btn btn-ghost" onClick={()=>onSeeMore('equipment', weapon.id)}>i</button></div>
             </div>
           ) : <div className="small muted" style={{marginTop:6}}>Pick a weapon to see Damage/Injury/Load.</div>}
         </div>
@@ -1326,7 +1546,7 @@ function GearEquippedEditor({ hero, updateHero, onSeeMore }: { hero: any; update
           {shield ? (
             <div className="small" style={{marginTop:6}}>
               <b>Parry</b> {shield.parryModifier ?? '—'} • <b>Load</b> {shield.load ?? 0}
-              <div><button className="btn btn-ghost" onClick={()=>onSeeMore('equipment', shield.id)}>See more</button></div>
+              <div><button className="btn btn-ghost" onClick={()=>onSeeMore('equipment', shield.id)}>i</button></div>
             </div>
           ) : <div className="small muted" style={{marginTop:6}}>Pick a shield to see Parry/Load.</div>}
         </div>
@@ -1342,7 +1562,7 @@ function GearEquippedEditor({ hero, updateHero, onSeeMore }: { hero: any; update
           {armour ? (
             <div className="small" style={{marginTop:6}}>
               <b>Protection</b> {armour.protection ?? '—'} • <b>Load</b> {armour.load ?? 0}
-              <div><button className="btn btn-ghost" onClick={()=>onSeeMore('equipment', armour.id)}>See more</button></div>
+              <div><button className="btn btn-ghost" onClick={()=>onSeeMore('equipment', armour.id)}>i</button></div>
             </div>
           ) : <div className="small muted" style={{marginTop:6}}>Pick armour to see Protection/Load.</div>}
         </div>
@@ -1356,7 +1576,7 @@ function GearEquippedEditor({ hero, updateHero, onSeeMore }: { hero: any; update
           {helm ? (
             <div className="small" style={{marginTop:6}}>
               <b>Protection</b> {helm.protection ?? '—'} • <b>Load</b> {helm.load ?? 0}
-              <div><button className="btn btn-ghost" onClick={()=>onSeeMore('equipment', helm.id)}>See more</button></div>
+              <div><button className="btn btn-ghost" onClick={()=>onSeeMore('equipment', helm.id)}>i</button></div>
             </div>
           ) : <div className="small muted" style={{marginTop:6}}>Pick a helm to see Protection/Load.</div>}
         </div>

@@ -4,11 +4,26 @@
   "version": 2,
   "entries": [
     {
+      "id": "allegiance-of-the-dunedain",
+      "name": "ALLEGIANCE OF THE DÚNEDAIN",
+      "description": "Your allegiance lies with the Rangers of the North and their secret vigil over Eriador."
+    },
+    {
       "id": "bold",
       "name": "BOLD",
       "group": "Distinctive Features",
       "description": "You trust your capabilities to the point that you are not easily daunted, readily placing yourself in danger.",
       "flavor": ""
+    },
+    {
+      "id": "bree-blood",
+      "name": "BREE-BLOOD",
+      "description": "The folk of Bree are a rare mingling of Men and Hobbits, accustomed to strangers and old tales."
+    },
+    {
+      "id": "burglary",
+      "name": "BURGLARY",
+      "description": "You have a talent for stealthy intrusion and for finding ways past locks, bars, and guarded thresholds."
     },
     {
       "id": "cunning",
@@ -25,11 +40,14 @@
       "flavor": ""
     },
     {
-      "id": "faithful",
-      "name": "FAITHFUL",
-      "group": "Distinctive Features",
-      "description": "You are steadfastly devoted to those ideals or individuals you have chosen to follow, and your unwavering loyalty often supports you in your deeds.",
-      "flavor": ""
+      "id": "elven-skill",
+      "name": "ELVEN-SKILL",
+      "description": "The Elves of Lindon are gifted with arts and grace beyond the reach of mortals."
+    },
+    {
+      "id": "enemy-lore",
+      "name": "ENEMY-LORE",
+      "description": "Enemy-lore is not a single Distinctive Feature; you must select the type of enemies it applies to (Evil Men, Orcs, Spiders, Trolls, Wargs, or Undead). This feature gives you knowledge of the characteristics, habits, strengths, and weaknesses of your chosen enemy."
     },
     {
       "id": "fair",
@@ -46,6 +64,13 @@
       "flavor": ""
     },
     {
+      "id": "faithful",
+      "name": "FAITHFUL",
+      "group": "Distinctive Features",
+      "description": "You are steadfastly devoted to those ideals or individuals you have chosen to follow, and your unwavering loyalty often supports you in your deeds.",
+      "flavor": ""
+    },
+    {
       "id": "fierce",
       "name": "FIERCE",
       "group": "Distinctive Features",
@@ -53,11 +78,26 @@
       "flavor": ""
     },
     {
+      "id": "folk-lore",
+      "name": "FOLK-LORE",
+      "description": "You are well-versed in the ways of the Free Peoples, and can quickly learn what is customary and what is suspicious."
+    },
+    {
       "id": "generous",
       "name": "GENEROUS",
       "group": "Distinctive Features",
       "description": "You give with open hands and heart, always mindful of the needs of others.",
       "flavor": ""
+    },
+    {
+      "id": "halflings",
+      "name": "HALFLINGS",
+      "description": "Halflings are small and often overlooked, but their courage and resilience should not be underestimated."
+    },
+    {
+      "id": "hobbit-sense",
+      "name": "HOBBIT-SENSE",
+      "description": "Hobbits possess a surprising knack for staying out of trouble — and for sensing it coming."
     },
     {
       "id": "honourable",
@@ -81,6 +121,16 @@
       "flavor": ""
     },
     {
+      "id": "kings-of-men",
+      "name": "KINGS OF MEN",
+      "description": "The Dúnedain of the North are descended from the Kings of Men, and carry that legacy in their bearing and endurance."
+    },
+    {
+      "id": "leadership",
+      "name": "LEADERSHIP",
+      "description": "You possess the ability to direct others to action. When under pressure, other people naturally turn to you for guidance."
+    },
+    {
       "id": "lordly",
       "name": "LORDLY",
       "group": "Distinctive Features",
@@ -93,6 +143,11 @@
       "group": "Distinctive Features",
       "description": "Your spirit is not easily discouraged, and you can find light in the darkest of shadows.",
       "flavor": ""
+    },
+    {
+      "id": "naugrim",
+      "name": "NAUGRIM",
+      "description": "The Dwarves are called Naugrim, 'the Stunted People'. This reflects their hard life and their people's customs."
     },
     {
       "id": "patient",
@@ -109,6 +164,16 @@
       "flavor": ""
     },
     {
+      "id": "redoubtable",
+      "name": "REDOUBTABLE",
+      "description": "The Dwarves of Durin's Folk are renowned for their hardy spirit and stubborn resilience."
+    },
+    {
+      "id": "rhymes-of-lore",
+      "name": "RHYMES OF LORE",
+      "description": "You have learned much by song and rhyme, and can recall old tales and fragments of knowledge when needed."
+    },
+    {
       "id": "rustic",
       "name": "RUSTIC",
       "group": "Distinctive Features",
@@ -123,11 +188,31 @@
       "flavor": ""
     },
     {
+      "id": "shadow-lore",
+      "name": "SHADOW-LORE",
+      "description": "You have studied the Enemy and its servants, and can recognise signs of Shadow where others might miss them."
+    },
+    {
+      "id": "skin-changer",
+      "name": "SKIN-CHANGER",
+      "description": "Some Beornings carry the gift — or burden — of the Skin-changer."
+    },
+    {
       "id": "stern",
       "name": "STERN",
       "group": "Distinctive Features",
       "description": "You possess a severe nature and express it in your behaviour, body language, and speech.",
       "flavor": ""
+    },
+    {
+      "id": "stout-hearted",
+      "name": "STOUT-HEARTED",
+      "description": "Stories tell that the Bardings lived under the shadow of a great Dragon for decades.\n\nYour VALOUR rolls are Favoured."
+    },
+    {
+      "id": "strider",
+      "name": "STRIDER",
+      "description": "NEW DISTINCTIVE FEATURE: STRIDER\nWandering the wilds of Middle-earth\nalone hardens the spirit\nand sharpens the senses as you are forced to remain ever-watchful\nfor perils in the periphery. Solo Player-heroes\nreceive\nan extra Distinctive Feature: Strider. While journeying, the\nPlayer-hero\nis considered Inspired on skill rolls."
     },
     {
       "id": "subtle",
@@ -149,6 +234,11 @@
       "group": "Distinctive Features",
       "description": "You tower above most of your folk.",
       "flavor": ""
+    },
+    {
+      "id": "the-long-defeat",
+      "name": "THE LONG DEFEAT",
+      "description": "The Eldar know that their fate is to fight the Shadow through the ages — a struggle they name 'the Long Defeat'."
     },
     {
       "id": "true-hearted",

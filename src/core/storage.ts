@@ -99,7 +99,11 @@ export type Hero = {
   points?: { adventure: number; skill: number; fellowship: number };
 
   // Skills
-  favouredSkillIds?: string[]; // from culture candidates + user choice
+  // New (Dec 2025): explicit picks
+  cultureFavouredSkillId?: string;
+  callingFavouredSkillIds?: string[];
+  // Legacy combined list (kept for backward compatibility)
+  favouredSkillIds?: string[]; // older saves
 
   skillRatings?: Record<string, number>;   // 0-6
   // Legacy (kept for backward compatibility with older saves)
@@ -415,6 +419,8 @@ function ensureHeroDefaults(h: any): Hero {
       fellowship: typeof h?.points?.fellowship === 'number' ? h.points.fellowship : 0,
     },
 
+    cultureFavouredSkillId: (typeof h?.cultureFavouredSkillId === 'string' && h.cultureFavouredSkillId) ? String(h.cultureFavouredSkillId) : undefined,
+    callingFavouredSkillIds: Array.isArray(h?.callingFavouredSkillIds) ? h.callingFavouredSkillIds.map(String) : [],
     favouredSkillIds: Array.isArray(h?.favouredSkillIds) ? h.favouredSkillIds.map(String) : [],
     skillRatings: h?.skillRatings && typeof h.skillRatings === 'object' ? h.skillRatings : {},
     skillFavoured: h?.skillFavoured && typeof h.skillFavoured === 'object' ? h.skillFavoured : {},

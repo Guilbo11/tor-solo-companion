@@ -54,8 +54,10 @@ export function computeDerived(hero: any): Tor2eDerived {
   const heartTN = tnFromRating(heart);
   const witsTN = tnFromRating(wits);
 
-  // Favoured skills: new array + legacy map (union)
+  // Favoured skills: culture pick + calling picks + legacy (union)
   const fav = new Set<string>();
+  if (hero?.cultureFavouredSkillId) fav.add(String(hero.cultureFavouredSkillId));
+  for (const id of (hero?.callingFavouredSkillIds ?? [])) fav.add(String(id));
   for (const id of (hero?.favouredSkillIds ?? [])) fav.add(String(id));
   const legacy = hero?.skillFavoured ?? {};
   for (const [k, v] of Object.entries(legacy)) if (v) fav.add(String(k));
