@@ -891,7 +891,8 @@ export default function HeroesPanel({ state, setState }: Props) {
                             );
                           })}
                         </div>
-                      </div>
+                        )}
+	                      </div>
 
                       <div className="section">
                         <div className="sectionTitle">Features (chosen)</div>
