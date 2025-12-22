@@ -4,6 +4,9 @@ body { margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI
 a { color: #8ab4ff; }
 button, input, select, textarea { font: inherit; }
 .container { max-width: 1100px; margin: 0 auto; padding: 16px; }
+
+/* Campaign landing page (Pocketforge-like): no app header/tabs */
+.landingContainer { max-width: 1100px; margin: 0 auto; padding: 0; }
 .card { background: #111826; border: 1px solid #1f2a3a; border-radius: 16px; padding: 16px; }
 .row { display: flex; gap: 12px; flex-wrap: wrap; }
 .col { flex: 1; min-width: 260px; }

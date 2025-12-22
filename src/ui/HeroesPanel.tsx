@@ -9,13 +9,14 @@ import BottomSheet from './BottomSheet';
 type Props = {
   state: StoredState;
   setState: React.Dispatch<React.SetStateAction<StoredState>>;
+  onOpenCampaign?: (campaignId: string) => void;
 };
 
 function uid(prefix: string) {
   return prefix + '-' + Math.random().toString(36).slice(2, 10);
 }
 
-export default function HeroesPanel({ state, setState }: Props) {
+export default function HeroesPanel({ state, setState, onOpenCampaign }: Props) {
   const [expandedId, setExpandedId] = useState<string | null>(state.ui?.heroesExpandedId ?? null);
   const [activeId, setActiveId] = useState<string | null>(state.ui?.activeHeroId ?? null);
 
@@ -45,6 +46,85 @@ export default function HeroesPanel({ state, setState }: Props) {
 
   function getCultureEntry(cultureId?: string) {
     return findEntryById(compendiums.cultures.entries ?? [], cultureId);
+  }
+
+  const PROF_LABEL_TO_KEY: Record<string, 'axes'|'bows'|'spears'|'swords'> = {
+    'Axes': 'axes',
+    'Bows': 'bows',
+    'Spears': 'spears',
+    'Swords': 'swords',
+  };
+
+  function getCultureSkillMins(hero: any): Record<string, number> {
+    const c: any = getCultureEntry(hero.cultureId);
+    const mins: Record<string, number> = {};
+    const starting = c?.startingSkills ?? {};
+    for (const [sid, v] of Object.entries(starting)) mins[String(sid)] = Number(v) || 0;
+    return mins;
+  }
+
+  function getCultureCombatMins(hero: any): Record<'axes'|'bows'|'spears'|'swords', number> {
+    const mins: Record<'axes'|'bows'|'spears'|'swords', number> = { axes: 0, bows: 0, spears: 0, swords: 0 };
+    const c: any = getCultureEntry(hero.cultureId);
+    if (!c) return mins;
+
+    const cp = Array.isArray(c.combatProficiencies) ? c.combatProficiencies[0] : null;
+    if (cp?.or?.length && cp.rating) {
+      const chosen2: string | undefined = (hero as any).cultureCombatProf2;
+      const chosenKey = chosen2 ? PROF_LABEL_TO_KEY[chosen2] : undefined;
+      if (chosenKey) mins[chosenKey] = Math.max(mins[chosenKey], Number(cp.rating) || 0);
+    }
+
+    const choiceCount = Number(c.combatProficiencyChoice ?? 0);
+    if (choiceCount >= 1) {
+      const chosen1: string | undefined = (hero as any).cultureCombatProf1;
+      const chosenKey = chosen1 ? PROF_LABEL_TO_KEY[chosen1] : undefined;
+      if (chosenKey) mins[chosenKey] = Math.max(mins[chosenKey], 1);
+    }
+
+    return mins;
+  }
+
+  function clampToCultureMinimums(hero: any, patch: any): any {
+    const next = { ...hero, ...patch };
+    const skillMins = getCultureSkillMins(next);
+    const combatMins = getCultureCombatMins(next);
+
+    const nextSkillRatings = { ...(next.skillRatings ?? {}) };
+    for (const [sid, min] of Object.entries(skillMins)) {
+      const cur = Number(nextSkillRatings[sid] ?? 0);
+      if (cur < min) nextSkillRatings[sid] = min;
+    }
+
+    const nextCombat = { ...(next.combatProficiencies ?? {}) };
+    for (const k of Object.keys(combatMins) as Array<keyof typeof combatMins>) {
+      const cur = Number((nextCombat as any)[k] ?? 0);
+      const min = combatMins[k];
+      if (cur < min) (nextCombat as any)[k] = min;
+    }
+
+    return { ...patch, skillRatings: nextSkillRatings, combatProficiencies: nextCombat };
+  }
+
+  function unwrapText(input: any): string {
+    if (input == null) return '';
+    const t = String(input).replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    const lines = t.split('\n');
+    const paras: string[] = [];
+    let cur: string[] = [];
+    const flush = () => {
+      if (cur.length) {
+        paras.push(cur.join(' ').replace(/\s+/g, ' ').trim());
+        cur = [];
+      }
+    };
+    for (const raw of lines) {
+      const line = raw.trim();
+      if (!line) { flush(); continue; }
+      cur.push(line);
+    }
+    flush();
+    return paras.join('\n\n');
   }
 
   function applyCultureAutofill(hero: any) {
@@ -259,7 +339,14 @@ export default function HeroesPanel({ state, setState }: Props) {
 
   const cultureOptions = sortByName(compendiums.cultures.entries ?? []);
   const callingOptions = sortByName(compendiums.callings.entries ?? []);
-  const featureOptions = sortByName(compendiums.features.entries ?? []);
+  // Do not show Culture/Calling automatic features in the selectable list.
+  const excludedSelectableFeatureIds = new Set<string>([
+    'strider',
+    'redoubtable','naugrim','kings-of-men','stout-hearted','heart-of-the-wild',
+    'elven-skill','hardened-by-life','barterer','a-little-people',
+    'leadership','enemy-lore','folk-lore','rhymes-of-lore','burglary','shadow-lore',
+  ]);
+  const featureOptions = sortByName((compendiums.features.entries ?? []).filter((f:any)=> !excludedSelectableFeatureIds.has(f.id)));
 
   const autoFeatureIds = (hero: any): string[] => {
     const ids: string[] = [];
@@ -316,7 +403,6 @@ export default function HeroesPanel({ state, setState }: Props) {
               </div>
             </div>
             <div className="row" style={{gap:8, alignItems:'center'}}>
-              <button className="btn btn-ghost" onClick={addCampaign}>+ Campaign</button>
               <button className="btn" onClick={addHero}>+ Hero</button>
             </div>
           </>
@@ -342,6 +428,7 @@ export default function HeroesPanel({ state, setState }: Props) {
                     <div className="cardTopLeft" onClick={()=>{
                       setActiveCampaign(c.id);
                       setView('heroes');
+                      onOpenCampaign?.(c.id);
                     }}>
                       <div className="heroName">{c.name}</div>
                       <div className="sub">{count} hero{count===1?'':'es'}</div>
@@ -647,11 +734,12 @@ export default function HeroesPanel({ state, setState }: Props) {
                       <hr />
 
                       <div className="sectionTitle">Combat Proficiencies</div>
-                      <div className="small muted">Use + / – to adjust quickly.</div>
+                      <div className="small muted">Use + / – to adjust quickly. Minimums may be set by Culture.</div>
                       {(() => {
                         const pe = hero.previousExperience;
                         const committed = !!pe?.committed;
                         const profs = hero.combatProficiencies ?? {};
+                        const mins = getCultureCombatMins(hero);
                         const rows: Array<{ key: 'axes'|'bows'|'spears'|'swords'; label: string }> = [
                           { key: 'axes', label: 'Axes' },
                           { key: 'bows', label: 'Bows' },
@@ -663,14 +751,15 @@ export default function HeroesPanel({ state, setState }: Props) {
                           <div className="skillsList">
                             {rows.map(r => {
                               const cur = Number((profs as any)[r.key] ?? 0);
+                              const minByCulture = mins[r.key] ?? 0;
                               const committedVal = pe?.committedCombatProficiencies ? Number((pe.committedCombatProficiencies as any)[r.key] ?? 0) : undefined;
                               const extra = (typeof committedVal === 'number') ? Math.max(0, cur - committedVal) : 0;
                               return (
                                 <div key={r.key} className="skillRow">
                                   <div className="skillName">{r.label}</div>
-                                  <div className="skillMeta">{committedVal !== undefined ? `Committed ${committedVal}${extra ? ` (+${extra})` : ''}` : ''}</div>
+                                  <div className="skillMeta">{minByCulture ? `Min ${minByCulture} (Culture)${committedVal !== undefined ? ` · Committed ${committedVal}${extra ? ` (+${extra})` : ''}` : ''}` : (committedVal !== undefined ? `Committed ${committedVal}${extra ? ` (+${extra})` : ''}` : '')}</div>
                                   <div className="row" style={{gap:6}}>
-                                    <button className="btn btn-ghost" disabled={!canEdit || cur<=0} onClick={()=>updateHero(hero.id,{combatProficiencies:{...(profs as any),[r.key]:Math.max(0,cur-1)}})}>-</button>
+                                    <button className="btn btn-ghost" disabled={!canEdit || cur<=minByCulture} onClick={()=>updateHero(hero.id,{combatProficiencies:{...(profs as any),[r.key]:Math.max(minByCulture,cur-1)}})}>-</button>
                                     <div className="skillNum" style={{minWidth: 24, textAlign:'center'}}>{cur}</div>
                                     <button className="btn btn-ghost" disabled={!canEdit || cur>=6} onClick={()=>updateHero(hero.id,{combatProficiencies:{...(profs as any),[r.key]:Math.min(6,cur+1)}})}>+</button>
                                   </div>
@@ -684,39 +773,47 @@ export default function HeroesPanel({ state, setState }: Props) {
                       <hr />
 
                       <div className="sectionTitle">Skills</div>
-                      <div className="small muted">⭐ = Favoured (from Culture selection). Tap name for i.</div>
-                      {Object.keys(skillsByGroup).map(group => (
-                        <details key={group} className="details" open={group==='Personality'}>
-                          <summary>{group}</summary>
-                          <div className="skillsList">
-                            {skillsByGroup[group].map((s:any)=>{
-                              const rating = hero.skillRatings?.[s.id] ?? 0;
-                              const isFav = derived.favouredSkillSet.has(s.id);
-                              const pe = hero.previousExperience;
-                              const committed = !!pe?.committed;
-                              const committedVal = pe?.committedSkillRatings ? Number((pe.committedSkillRatings as any)[s.id] ?? 0) : undefined;
-                              const extra = (typeof committedVal === 'number') ? Math.max(0, rating - committedVal) : 0;
-                              return (
-                                <div key={s.id} className={"skillRow " + (isFav ? 'favoured' : '')}>
-                                  <div className="skillName" onClick={()=>openEntry('skills', s.id)}>
-                                    {isFav ? '⭐ ' : ''}{s.name}
-                                  </div>
-                                  {(() => {
-                                    const attr = getSkillAttribute(s.id);
-                                    const tn = getSkillTN(hero, s.id);
-                                    return <div className="skillMeta">{attr} · TN {tn}{committedVal !== undefined ? ` · Committed ${committedVal}${extra ? ` (+${extra})` : ''}` : ''}</div>;
-                                  })()}
-                                  <div className="row" style={{gap:6}}>
-                                    <button className="btn btn-ghost" disabled={committed || rating<=0} onClick={()=>updateHero(hero.id,{skillRatings:{...(hero.skillRatings??{}),[s.id]:Math.max(0, rating-1)}})}>-</button>
-                                    <div className="skillNum" style={{minWidth: 24, textAlign:'center'}}>{rating}</div>
-                                    <button className="btn btn-ghost" disabled={committed || rating>=6} onClick={()=>updateHero(hero.id,{skillRatings:{...(hero.skillRatings??{}),[s.id]:Math.min(6, rating+1)}})}>+</button>
-                                  </div>
+                      <div className="small muted">⭐ = Favoured (from Culture selection). Tap name for i. Minimums may be set by Culture.</div>
+                      {(() => {
+                        const mins = getCultureSkillMins(hero);
+                        return (
+                          <>
+                            {Object.keys(skillsByGroup).map(group => (
+                              <details key={group} className="details" open={group==='Personality'}>
+                                <summary>{group}</summary>
+                                <div className="skillsList">
+                                  {skillsByGroup[group].map((s:any)=>{
+                                    const rating = hero.skillRatings?.[s.id] ?? 0;
+                                    const minByCulture = mins[s.id] ?? 0;
+                                    const isFav = derived.favouredSkillSet.has(s.id);
+                                    const pe = hero.previousExperience;
+                                    const committed = !!pe?.committed;
+                                    const committedVal = pe?.committedSkillRatings ? Number((pe.committedSkillRatings as any)[s.id] ?? 0) : undefined;
+                                    const extra = (typeof committedVal === 'number') ? Math.max(0, rating - committedVal) : 0;
+                                    return (
+                                      <div key={s.id} className={"skillRow " + (isFav ? 'favoured' : '')}>
+                                        <div className="skillName" onClick={()=>openEntry('skills', s.id)}>
+                                          {isFav ? '⭐ ' : ''}{s.name}
+                                        </div>
+                                        {(() => {
+                                          const attr = getSkillAttribute(s.id);
+                                          const tn = getSkillTN(hero, s.id);
+                                          return <div className="skillMeta">{attr} · TN {tn}{minByCulture ? ` · Min ${minByCulture} (Culture)` : ''}{committedVal !== undefined ? ` · Committed ${committedVal}${extra ? ` (+${extra})` : ''}` : ''}</div>;
+                                        })()}
+                                        <div className="row" style={{gap:6}}>
+                                          <button className="btn btn-ghost" disabled={committed || rating<=minByCulture} onClick={()=>updateHero(hero.id,{skillRatings:{...(hero.skillRatings??{}),[s.id]:Math.max(minByCulture, rating-1)}})}>-</button>
+                                          <div className="skillNum" style={{minWidth: 24, textAlign:'center'}}>{rating}</div>
+                                          <button className="btn btn-ghost" disabled={committed || rating>=6} onClick={()=>updateHero(hero.id,{skillRatings:{...(hero.skillRatings??{}),[s.id]:Math.min(6, rating+1)}})}>+</button>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
                                 </div>
-                              );
-                            })}
-                          </div>
-                        </details>
-                      ))}
+                              </details>
+                            ))}
+                          </>
+                        );
+                      })()}
                     </div>
                   )}
 
@@ -940,6 +1037,64 @@ export default function HeroesPanel({ state, setState }: Props) {
                       </div>
 
                       <div className="section">
+                        <div className="sectionTitle">Combat Proficiencies (from Culture)</div>
+                        {(() => {
+                          const c:any = getCultureEntry(hero.cultureId);
+                          const cp = Array.isArray(c?.combatProficiencies) ? c.combatProficiencies[0] : null;
+                          if (!c || !cp || !Array.isArray(cp.or) || cp.or.length === 0) {
+                            return <div className="small muted">Select a Culture to set its combat proficiency minimums.</div>;
+                          }
+
+                          const orLabels: string[] = cp.or;
+                          const selected2: string = String((hero as any).cultureCombatProf2 ?? '');
+                          const choiceCount = Number(c.combatProficiencyChoice ?? 0);
+                          const selected1: string = String((hero as any).cultureCombatProf1 ?? '');
+
+                          const allLabels: string[] = ['Axes','Bows','Spears','Swords'];
+                          const secondaryLabels = allLabels.filter(l => l !== selected2);
+
+                          return (
+                            <div className="row" style={{gap:12, flexWrap:'wrap'}}>
+                              <div className="field" style={{minWidth: 220}}>
+                                <div className="label">Choose +{cp.rating} to</div>
+                                <select className="input" value={selected2} onChange={(e)=>{
+                                  const next2 = e.target.value;
+                                  // If +1 points to same category, reset it.
+                                  const next1 = (selected1 === next2) ? '' : selected1;
+                                  const patch = clampToCultureMinimums(hero, {
+                                    cultureCombatProf2: next2,
+                                    cultureCombatProf1: next1 || undefined,
+                                  });
+                                  updateHero(hero.id, patch);
+                                }}>
+                                  <option value="">(choose)</option>
+                                  {orLabels.map(l => <option key={l} value={l}>{l}</option>)}
+                                </select>
+                                <div className="small muted">Minimums depend on Culture.</div>
+                              </div>
+
+                              {choiceCount >= 1 ? (
+                                <div className="field" style={{minWidth: 220}}>
+                                  <div className="label">Choose +1 to</div>
+                                  <select className="input" value={selected1} onChange={(e)=>{
+                                    const next1 = e.target.value;
+                                    const patch = clampToCultureMinimums(hero, {
+                                      cultureCombatProf1: next1 || undefined,
+                                    });
+                                    updateHero(hero.id, patch);
+                                  }}>
+                                    <option value="">(choose)</option>
+                                    {secondaryLabels.map(l => <option key={l} value={l}>{l}</option>)}
+                                  </select>
+                                  <div className="small muted">Must be different from the +{cp.rating} choice.</div>
+                                </div>
+                              ) : null}
+                            </div>
+                          );
+                        })()}
+                      </div>
+
+                      <div className="section">
                         <div className="sectionTitle">Distinctive Features</div>
                         <div className="row" style={{justifyContent:'space-between', alignItems:'center'}}>
                           <div className="small muted">Selectable list</div>
@@ -1121,7 +1276,7 @@ export default function HeroesPanel({ state, setState }: Props) {
         {(() => {
           const body: any = sheetBody;
           if (!body) return <p className="muted">No details.</p>;
-          const renderDesc = (d:any) => (d ? <p style={{whiteSpace:'pre-wrap'}}>{String(d)}</p> : <p className="muted">No description yet.</p>);
+          const renderDesc = (d:any) => (d ? <p style={{whiteSpace:'pre-wrap'}}>{unwrapText(d)}</p> : <p className="muted">No description yet.</p>);
           if (sheetPack === 'callings') {
             const fav: string[] = Array.isArray(body.favouredSkills) ? body.favouredSkills : [];
             const addFeat = body.additionalFeature ? String(body.additionalFeature) : '';

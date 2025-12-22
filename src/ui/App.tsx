@@ -18,6 +18,10 @@ export default function App() {
   const [tab, setTab] = useState<Tab>('Campaigns');
   const [diceSheetOpen, setDiceSheetOpen] = useState(false);
 
+  // When on the Campaigns tab, render a clean landing page (no app header/tabs/dice)
+  // like Pocketforge. Campaign management only happens there.
+  const isCampaignLanding = tab === 'Campaigns';
+
   const tabs: Tab[] = ['Campaigns','Fellowship','Dice','Oracles','Map','Journal','Settings'];
 
   const set: React.Dispatch<React.SetStateAction<StoredState>> = (next) => {
@@ -73,23 +77,30 @@ export default function App() {
   }, [state]);
 
   return (
-    <div className="container">
-      {header}
-      <div className="tabs">
-        {tabs.map(t => (
-          <div key={t} className={'tab ' + (tab === t ? 'active' : '')} onClick={() => setTab(t)}>{t}</div>
-        ))}
-      </div>
+    <div className={isCampaignLanding ? 'landingContainer' : 'container'}>
+      {!isCampaignLanding ? header : null}
+      {!isCampaignLanding ? (
+        <div className="tabs">
+          {tabs.map(t => (
+            <div key={t} className={'tab ' + (tab === t ? 'active' : '')} onClick={() => setTab(t)}>{t}</div>
+          ))}
+        </div>
+      ) : null}
 
-      {tab === 'Campaigns' && <HeroesPanel state={state} setState={set} />}
+      {tab === 'Campaigns' && <HeroesPanel state={state} setState={set} onOpenCampaign={() => setTab('Fellowship')} />}
       {tab === 'Fellowship' && <FellowshipPanel state={state} setState={set} />}
       {tab === 'Dice' && <DicePanel />}
       {tab === 'Oracles' && <OraclesPanel state={state} setState={set} />}
       {tab === 'Map' && <MapPanel state={state} setState={set} />}
       {tab === 'Journal' && <JournalPanel state={state} setState={set} />}
       {tab === 'Settings' && <SettingsPanel state={state} setState={set} />}
-      <FloatingDieButton onClick={() => setDiceSheetOpen(true)} />
-      <FloatingDiceSheet open={diceSheetOpen} onClose={() => setDiceSheetOpen(false)} />
+
+      {!isCampaignLanding ? (
+        <>
+          <FloatingDieButton onClick={() => setDiceSheetOpen(true)} />
+          <FloatingDiceSheet open={diceSheetOpen} onClose={() => setDiceSheetOpen(false)} />
+        </>
+      ) : null}
     </div>
   );
 }
