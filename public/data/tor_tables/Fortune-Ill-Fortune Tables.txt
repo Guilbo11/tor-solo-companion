@@ -1,0 +1,90 @@
+Fortune Table
+
+ACTION RESOLUTION
+As a solo player, you must decide when rolls are necessary,
+a task that usually falls to the Loremaster.
+It might seem
+counterintuitive
+to challenge your own Player-hero’s
+success,
+but consider that each roll of the dice in The One Ring presents
+equal opportunity for triumph and despair.
+Roll when risk is involved — when the possibility of failure
+affects the narrative. For further guidance, see “When to
+Roll” on page 16 of The One Ring core rules.
+SETTING THE TARGET NUMBER
+Using the alternative presented in The One Ring core rules
+(page 18), solo players should set the Target Number (TN)
+by subtracting their Attributes from 18 instead of 20. This will
+make your Player-hero
+more capable and self-reliant
+when
+they must face the challenges of Middle-earth
+alone.
+READING THE FEAT DIE
+When you are taking action, and want to give the challenge
+additional focus in a dramatic moment, use a result that
+includes the Gandalf Rune or Eye of Sauron icon to
+represent circumstances and events beyond the control of
+your Player-hero.
+♦ Rolling the rune means a successful action was
+bolstered by fortune, such as unexpected aid, advantageous
+terrain, or a foe’s folly. To help inspire a random
+result, roll on the Fortune Table.
+♦ Rolling a failure with the icon means a failure was
+complicated by ill-fortune,
+such as a broken weapon,
+difficult terrain, or enemy reinforcements. To help
+inspire a random result, roll on the Ill-Fortune
+Table.
+Keep in mind that you’re free to gloss over a or result.
+Just consider the nature of the success or failure in the context
+of the situation, and move on. For worthy challenges and
+key actions, the Fortune and Ill-Fortune
+tables can help reveal
+new complications, twists, and unexpected boons.
+
+FORTUNE TABLE
+FEAT DIE RESULT
+Sauron The Eye of the Enemy focuses elsewhere.
+Decrease Eye Awareness by 1.
+1 You may bypass a threat without attracting
+notice
+2 You gain the attention of a potential ally
+3 An enemy inadvertently reveals their position
+4 You gain favoured ground
+5 Enemies run afoul of danger
+6 You locate or learn of a useful item
+7 Your success instils new hope or renewed
+resolve
+8 You find a moment of comfort or safety
+9 You learn or realize something which gives
+helpful insight into your mission
+10 You encounter an opportunity suited to your
+nature or abilities
+Gandalf An unexpected ally appears or sends aid
+
+ILL-FORTUNE
+TABLE
+FEAT DIE RESULT
+Sauron Your actions catch the Eye of the Enemy.
+Increase Eye Awareness by 2.
+1 You draw unwanted attention
+2 Your actions are observed by someone of
+ill-intent
+3 Unexpected enemies emerge or are sighted
+4 You are hindered by difficult terrain or an unfavourable
+environment
+5 You find yourself ill-equipped
+for the
+circumstances
+6 A favoured weapon or item is lost, broken, or
+sacrificed
+7 You are plagued by troubling visions or
+thoughts
+8 An old injury or stress resurfaces
+9 You learn or realize something which adds a
+new complication to your mission
+10 You face a test which is contrary to your nature
+or abilities
+Gandalf An ally becomes a hindrance or liability

@@ -1,0 +1,37 @@
+{
+  "pack": "tor2e-rewards",
+  "type": "reward",
+  "version": 2,
+  "entries": [
+    {
+      "id": "improved-armour",
+      "name": "Improved Armour",
+      "description": "Raise the Protection of an armour by 1."
+    },
+    {
+      "id": "close-fitting",
+      "name": "Close-fitting",
+      "description": "Lower an armour's Load by 1."
+    },
+    {
+      "id": "accurate-weapon",
+      "name": "Accurate (weapon)",
+      "description": "Attack rolls score a Piercing Blow on a 10+."
+    },
+    {
+      "id": "fell-weapon",
+      "name": "Fell (weapon)",
+      "description": "Add +1 to damage of a weapon."
+    },
+    {
+      "id": "keen-weapon",
+      "name": "Keen (weapon)",
+      "description": "Attack rolls score a Piercing Blow on a 9+."
+    },
+    {
+      "id": "reinforced-shield",
+      "name": "Reinforced (shield)",
+      "description": "Raise a shield’s Parry bonus by +1."
+    }
+  ]
+}

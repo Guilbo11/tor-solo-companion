@@ -1,0 +1,530 @@
+Cultures
+
+Utiliser la même liste de noms selon les cultures lorsque nous allons créer les NPC et qu'on cliquera sur le bouton "Nom aléatoire". Le bouton sera cliquable seulement après avoir sélectionné la culture du NPC.
+
+Mettre des cases à cocher pour indiquer les skills qui peuvent être "favored" selon la culture?
+
+BARDINGS
+
+CULTURAL BLESSING — STOUT-HEARTED
+Stories tell that the Bardings lived under the shadow of a
+great Dragon for decades.
+Your VALOUR rolls are Favoured.
+
+STANDARD OF LIVING — PROSPEROUS
+Thanks to its successful trading connections the city of Dale
+prospers. Those among the Bardings who choose a life of
+adventure are usually members of less affluent families —
+yet, their wealth is still superior to that of most of the denizens
+of Eriador.
+
+attributes
+Choose one set of Attributes, or roll a Success die:
+ROLL STRENGTH HEART WITS
+1 5 7 2
+2 4 7 3
+3 5 6 3
+4 4 6 4
+5 5 5 4
+6 6 6 2
+
+DERIVED STATS
+Calculate the following scores based on your chosen Attribute
+ratings:
+Endurance STRENGTH + 20
+Hope HEART + 8
+Parry WITS + 12
+SKILLS
+Copy the listed Skill ranks onto the character sheet; then,
+choose one Skill among the two underlined and mark it as
+Favoured.
+AWE 1 ENHEARTEN 2 PERSUADE 3
+ATHLETICS 1 TRAVEL 1 STEALTH 0
+AWARENESS 0 INSIGHT 2 SCAN 1
+HUNTING 2 HEALING 0 EXPLORE 1
+SONG 1 COURTESY 2 RIDDLE 0
+CRAFT 1 BATTLE 2 LORE 1
+
+(Enhearten et athletics sont underlined)
+
+COMBAT PROFICIENCIES
+Copy the following Combat Proficiency ranks onto the character
+sheet, selecting a preferred Proficiency when offered
+a choice.
+Bows OR Swords 2
+Choose one Combat Proficiency 1
+
+DISTINCTIVE FEATURES
+Choose two Distinctive Features among those listed: Bold,
+Eager, Fair, Fierce, Generous, Proud, Tall, Wilful.
+
+LANGUAGES AND TYPICAL NAMES
+All Bardings speak Dalish, a language that can be described
+as a very old form of the Common Speech. As far as their
+names are concerned, they are usually composed of one or
+two elements (for example, Dag — Day, or Lif-stan
+— Life
+Stone). Like most Northmen, Bardings often name their children
+after a renowned ancestor or relative, or choose a name
+beginning with the same sound or sharing one element with
+that of the father (whose name is often given with their first
+name when introduced formally — for example, Lifstan, son
+of Leiknir, or Ingrith, daughter of Ingolf).
+MALE NAMES
+Aegir, Arn, Brandulf, Domarr, Egil, Erland, Farald,
+Finn, Gautarr, Hafgrim, Hjalmar, Ingolf, Jofur,
+Kolbeinn, Leiknir, Lomund, Munan, Nari, Nefstan,
+Ottarr, Ragnarr, Reinald, Sigmarr, Steinarr, Thorald,
+Torwald, Ulfarr, Unnarr, Vandil, Varinn.
+FEMALE NAMES
+Aldis, Asfrid, Bera, Bergdis, Dagmar, Eilif, Erna,
+Frida, Geira, Gudrun, Halla, Hild, Ingirun, Ingrith,
+Lif, Linhild, Kelda, Runa, Saldis, Sigga, Sigrun,
+Thora, Thordis, Thorhild, Ulfhild, Ulfrun, Una,
+Valdis, Vigdis, Walda.
+
+
+Dwarves of
+durin’s folk
+
+CULTURAL BLESSING — REDOUBTABLE
+Dwarves make light of burdens, especially when it comes to
+wearing armour.
+You halve the Load rating of any armour you’re wearing
+(rounding fractions up), including helms (but not
+shields).
+Gimli the dwarf alone wore openly a short shirt of steel-rings,
+for
+dwarves make light of burdens…
+
+NAUGRIM
+Dwarves are shorter than Men, but their work as miners and
+smiths endows them with powerful arms and shoulders. Yet,
+they still favour shorter weapons over longer ones.
+Dwarven adventurers cannot use the following pieces
+of war gear: great bow, great spear, and great shield.
+
+STANDARD OF LIVING — PROSPEROUS
+With the fabulous Dragon-hoard
+of Erebor reclaimed and
+their kingdom restored, the Dwarves are much richer today
+than in the past.
+
+attributes
+Choose one set of Attributes, or roll a Success die:
+ROLL STRENGTH HEART WITS
+1 7 2 5
+2 7 3 4
+3 6 3 5
+4 6 4 4
+5 5 4 5
+6 6 2 6
+
+DERIVED STATS
+Calculate the following scores based on your chosen Attribute
+ratings:
+Endurance STRENGTH + 22
+Hope HEART + 8
+Parry WITS + 10
+
+SKILLS
+Copy the listed Skill ranks onto the character sheet; then,
+choose one Skill among the two underlined and mark it as
+Favoured.
+AWE 2 ENHEARTEN 0 PERSUADE 0
+ATHLETICS 1 TRAVEL 3 STEALTH 0
+AWARENESS 0 INSIGHT 0 SCAN 3
+HUNTING 0 HEALING 0 EXPLORE 2
+SONG 1 COURTESY 1 RIDDLE 2
+CRAFT 2 BATTLE 1 LORE 1
+
+(Travel et Craft sont underlined)
+
+COMBAT PROFICIENCIES
+Copy the following Combat Proficiency ranks onto the character
+sheet, selecting a preferred Proficiency when offered
+a choice.
+Axes OR Swords 2
+Choose one Combat Proficiency 1
+
+DISTINCTIVE FEATURES
+Choose two Distinctive Features among those listed: Cunning,
+Fierce, Lordly, Proud, Secretive, Stern, Wary, Wilful.
+
+LANGUAGES AND TYPICAL NAMES
+All Dwarves speak the Common Tongue, but preserve a knowledge
+of a secret Dwarvish language. They receive a true name
+at birth that they do not reveal to members of other folks,
+and adopt another name in the tradition of their neighbours.
+This custom has been in use for so long that a number of
+names have become traditionally associated with Dwarves,
+and are used almost exclusively by them. Dwarves of renown
+are sometimes given an honorific title, celebrating an exceptional
+deed or distinctive quality (for example, Thorin Oakenshield
+or Dáin Ironfoot).
+MALE NAMES
+Ai, Anar, Beli, Bláin, Borin, Burin, Bruni, Farin, Flói,
+Frár, Frerin, Frór, Ginar, Gróin, Grór, Hanar, Hepti,
+Iari, Lófar, Lóni, Náli, Nár, Niping, Nói, Núr, Nýrád,
+Ónar, Póri, Regin, Svior, Veig, Vidar.
+FEMALE NAMES
+Adís, Afrid, Agda, Bersa, Birna, Dagrún, Dís, Drífa,
+Edda, Elin, Fenja, Frida, Geira, Gísla, Hadda, Hón,
+Ida, Ilmr, Jóra, Kára, Kóna, Líf, Línhild, Már, Mist,
+Nál, Oda, Ósk, Rán, Rinda, Sefa, Syn, Tóra, Trana,
+Úlfrún, Vírún, Yrr.
+
+
+Elves of Lindon
+
+CULTURAL BLESSING — ELVEN-SKILL
+By virtue of their birthright, Elves are capable of reaching
+levels of finesse unattainable by mortals.
+If you are not Miserable, you can spend 1 point of
+Hope to achieve a Magical success on a roll when using
+a Skill in which you possess at least one rank.
+“Keen are the eyes of the Elves,” he said. “Nay! The riders are little
+more than five leagues distant,” said Legolas.
+
+THE LONG DEFEAT
+The Elves find it hard to forget the taint of the Shadow once
+it has left its mark on their spirit.
+When it is time to remove accumulated Shadow during
+the Fellowship
+Phase, you can only remove a maximum
+of 1 point (see Spiritual Recovery, page 119).
+
+STANDARD OF LIVING — FRUGAL
+The Fair Folk live in harmony with Middle-earth
+and have little or
+no use for those things that others consider precious. They lack
+nothing, and craft beautiful things using the richest materials,
+but they don’t profit from their wealth the way other folks do.
+
+attributes
+Choose one set of Attributes, or roll a Success die:
+ROLL STRENGTH HEART WITS
+1 5 2 7
+2 4 3 7
+3 5 3 6
+4 4 4 6
+5 5 4 5
+6 6 2 6
+
+DERIVED STATS
+Calculate the following scores based on your chosen Attribute
+ratings:
+Endurance STRENGTH + 20
+Hope HEART + 8
+Parry WITS + 12
+
+SKILLS
+Copy the listed Skill ranks onto the character sheet; then, choose
+one Skill among the two underlined and mark it as Favoured.
+AWE 2 ENHEARTEN 1 PERSUADE 0
+ATHLETICS 2 TRAVEL 0 STEALTH 3
+AWARENESS 2 INSIGHT 0 SCAN 0
+HUNTING 0 HEALING 1 EXPLORE 0
+SONG 2 COURTESY 0 RIDDLE 0
+CRAFT 2 BATTLE 0 LORE 3
+
+(Song et lore sont underlined)
+
+COMBAT PROFICIENCIES
+Copy the following Combat Proficiency ranks onto the character
+sheet, selecting a preferred Proficiency when offered
+a choice.
+Bows OR Spears 2
+Choose one Combat Proficiency 1
+
+DISTINCTIVE FEATURES
+Choose two Distinctive Features among those listed: Fair,
+Keen-eyed,
+Lordly, Merry, Patient, Subtle, Swift, Wary.
+
+LANGUAGES AND TYPICAL NAMES
+In addition to the Common Speech, all Elves speak their
+own, fair tongue — the Sindarin speech. For the most part,
+the Elves of Lindon bear names fashioned in that language.
+MALE NAMES
+Amras, Aredhel, Beleganor, Belegon, Calanhir,
+Carmagor, Dagorhir, Durandir, Edrahil, Ellahir,
+Fincalan, Fuindor, Galdagor, Galdor, Hallas,
+Hirimlad, Ithildir, Lascalan, Linaith, Mablin,
+Malanor, Nauros, Orgalad, Pelegorn, Sargon.
+FEMALE NAMES
+Anórel, Aranel, Arbereth, Baraniel, Calanril,
+Celebrindal, Celenneth, Elanor, Elwing, Eraniel,
+Fimbrethil, Gloredhel, Idril, Irilde, Laurelin,
+Lôrwend, Lothíriel, Meneloth, Moriel, Narieth,
+Narniel, Nimloth, Nimrodel, Níniel, Tarandîs.
+
+
+Hobbits of the shire
+
+CULTURAL BLESSING — HOBBIT-SENSE
+Hobbits have learned their place in the world a long time ago,
+and they display a robust capacity for insight that many folks
+mistake for lack of courage. No visions or wild fantasies can
+tempt them, as they do not seek power or control over others.
+Your WISDOM rolls are Favoured, and you gain (1d) on
+all Shadow Tests made to resist the effects of Greed.
+… they have a fund of wisdom and wise sayings that men have mostly
+never heard or have forgotten long ago.
+
+HALFLINGS
+Due to their reduced size, Hobbits cannot use larger weapons
+effectively. The weapons available to Hobbits are:
+Axe, bow, club, cudgel, dagger, short sword, short spear,
+spear. Additionally, Hobbits cannot use a great shield.
+
+STANDARD OF LIVING — COMMON
+Hobbits live in peace, their land is well-tilled
+and their borders
+protected, but theirs is an isolated island in the middle of a
+desolate region, and trading is an uncommon occurrence.
+
+attributes
+Choose one set of Attributes, or roll a Success die:
+ROLL STRENGTH HEART WITS
+1 3 6 5
+2 3 7 4
+3 2 7 5
+4 4 6 4
+5 4 5 5
+6 2 6 6
+
+DERIVED STATS
+Calculate the following scores based on your chosen Attribute
+ratings:
+Endurance STRENGTH + 18
+Hope HEART + 10
+Parry WITS + 12
+
+SKILLS
+Copy the listed Skill ranks onto the character sheet; then, choose
+one Skill among the two underlined and mark it as Favoured.
+AWE 0 ENHEARTEN 0 PERSUADE 2
+ATHLETICS 0 TRAVEL 0 STEALTH 3
+AWARENESS 2 INSIGHT 2 SCAN 0
+HUNTING 0 HEALING 1 EXPLORE 0
+SONG 2 COURTESY 2 RIDDLE 3
+CRAFT 1 BATTLE 0 LORE 0
+
+(stealth et courtesy sont underlined)
+
+COMBAT PROFICIENCIES
+Copy the following Combat Proficiency ranks onto the character
+sheet, selecting a preferred Proficiency when offered a choice.
+Bows OR Swords 2
+Choose one Combat Proficiency 1
+
+DISTINCTIVE FEATURES
+Choose two Distinctive Features among those listed: Eager,
+Fair-spoken,
+Faithful, Honourable, Inquisitive, Keen-eyed,
+Merry, Rustic.
+
+LANGUAGES AND TYPICAL NAMES
+Hobbits speak only the Common Speech, preserving the use
+of a few words and names of their own forgotten tongue.
+Names are composed of a first name and a family name. First
+names for men are usually simple and short, with women
+being often given names of flowers or precious stones, but
+among the older families a custom survives of giving more
+heroic and high-sounding
+names, whose origin can be traced
+back to a time before the Shire.
+MALE NAMES
+Andwise, Berilac, Bungo, Cottar, Doderic, Dudo,
+Erling, Fastred, Ferumbras, Folco, Gorhendad,
+Griffo, Halfred, Hamson, Ilberic, Isembold, Isengar,
+Longo, Marmadas, Marroc, Mungo, Odo, Orgulas,
+Otho, Posco, Reginard, Robin, Rudigar, Sadoc,
+Saradas, Tobold, Tolman.
+FEMALE NAMES
+Adaldrida, Amaranth, Asphodel, Belba, Bell,
+Berylla, Camellia, Daisy, Eglantine, Estella, Gilly,
+Hanna, Lily, Malva, Marigold, May, Melilot,
+Menegilda, Mentha, Mirabella, Myrtle, Pearl,
+Peony, Pervinca, Pimpernel, Primrose, Primula,
+Prisca, Rosamunda, Ruby, Salvia.
+FAMILY NAMES
+Baggins, Boffin, Bolger, Bracegirdle, Brandybuck,
+Brown, Brownlock, Bunce, Burrows, Cotton,
+Gamgee, Gardner, Goldworthy, Goodbody,
+Goodchild, Grubb, Headstrong, Hornblower,
+Maggot, Noakes, North-tooks,
+Proudfoot,
+Puddifoot, Roper, Rumble, Sackville, Smallburrow,
+Took, Twofoot, Whitfoot.
+
+
+Men of bree
+
+CULTURAL BLESSING — BREE-BLOOD
+Due to the position of their homeland, the Men of Bree enjoy
+better relationships with Hobbits, Dwarves, Elves, and other
+inhabitants of the world about them than is considered usual.
+Each Man of Bree in the Company increases the
+Fellowship
+Rating by 1 point.
+The Men of Bree were brown-haired,
+broad, and rather short, cheerful
+and independent: they belonged to nobody but themselves…
+
+STANDARD OF LIVING — COMMON
+Bree-land
+is not as wealthy as it once was, but these days the
+inhabitants of the four villages are no more rustic than their
+neighbours in the Shire, and no less well-off.
+
+attributes
+Choose one set of Attributes, or roll a Success die:
+ROLL STRENGTH HEART WITS
+1 2 5 7
+2 3 4 7
+3 3 5 6
+4 4 4 6
+5 4 5 5
+6 2 6 6
+
+DERIVED STATS
+Calculate the following scores based on your chosen Attribute
+ratings:
+Endurance STRENGTH + 20
+Hope HEART + 10
+Parry WITS + 10
+
+SKILLS
+Copy the listed Skill ranks onto the character sheet; then, choose
+one Skill among the two underlined and mark it as Favoured.
+AWE 0 ENHEARTEN 2 PERSUADE 2
+ATHLETICS 1 TRAVEL 1 STEALTH 1
+AWARENESS 1 INSIGHT 2 SCAN 1
+HUNTING 1 HEALING 0 EXPLORE 1
+SONG 1 COURTESY 3 RIDDLE 2
+CRAFT 2 BATTLE 0 LORE 0
+
+(insight et riddle sont underlined)
+
+COMBAT PROFICIENCIES
+Copy the following Combat Proficiency ranks onto the character
+sheet, selecting a preferred Proficiency when offered a choice.
+Axes OR Spears 2
+Choose one Combat Proficiency 1
+
+DISTINCTIVE FEATURES
+Choose two Distinctive Features among those listed: Cunning,
+Fair-spoken,
+Faithful, Generous, Inquisitive, Patient,
+Rustic, True-hearted.
+
+LANGUAGES AND TYPICAL NAMES
+The Men of Bree have forgotten their ancient, native speech,
+and speak the Common Tongue, albeit slightly altered in a
+local dialect. They use names that to foreign ears sound similar
+to those used by Hobbits in the Shire (Hobbits beg to
+differ, of course).
+MALE NAMES
+Alfred, Artie, Bill, Bob, Carl, Ed, Fred, Giles, Herb,
+Larry, Nob, Oswald, Percy, Perry, Sid, Tom, Harry.
+FEMALE NAMES
+Daisy, Emma, Etta, Fay, Fern, Flora, Gert, Holly, Lily,
+Myrtle, Poppy, Rose, Sage, Tilly, Violet.
+FAMILY NAMES
+Appledore, Asterfire, Bellsap, Briarcleave,
+Butterbur, Cherryborn, Chesterstout, Droverwind,
+Ferny, Foxglow, Goatleaf, Hardybough,
+Heathertoes, Hedgedon, Kettlegrass, Lilyhawk,
+Mossburn, Mugworts, Oakstout, Pickthorn,
+Pollenroad, Rushlight, Shrubrose, Sweetroot,
+Thistlewool, Wayward.
+
+
+
+Rangers
+of the north
+
+CULTURAL BLESSING — KINGS OF MEN
+Some say that the lordship of the folk of Arnor is a thing of
+the past. Yet, the Rangers of the North have inherited the
+sinews of those Men who wrested the Ring from the burning
+hand of Sauron.
+Add 1 point to one Attribute of your choice.
+They were fair of face and tall, and the span of their lives was thrice
+that of the Men of Middle-earth.
+
+ALLEGIANCE OF THE DÚNEDAIN
+The Rangers are devoted to fighting Sauron and his minions
+by an ancient tradition of war and strife. This obligation
+makes it harder for them to put their spirit at ease even when
+enjoying a respite from adventuring.
+During the Fellowship
+phase (not Yule) you recover a
+maximum number of Hope points equal to half your
+HEART score (rounding fractions up).
+
+STANDARD OF LIVING — FRUGAL
+Rangers rarely wear or carry anything whose worth cannot be
+measured in a practical way. Their gear or garments are never
+considered precious for the gleam of stone or gold, but for
+their capability to endure long journeys and strenuous fights.
+
+attributes
+Choose one set of Attributes, or roll a Success die:
+ROLL STRENGTH HEART WITS
+1 7 5 2
+2 7 4 3
+3 6 5 3
+4 6 4 4
+5 5 5 4
+6 6 6 2
+
+DERIVED STATS
+Calculate the following scores based on your chosen Attribute
+ratings:
+Endurance STRENGTH + 20
+Hope HEART + 6
+Parry WITS + 14
+
+SKILLS
+Copy the listed Skill ranks onto the character sheet; then,
+choose one Skill among the two underlined and mark it as
+Favoured.
+AWE 1 ENHEARTEN 0 PERSUADE 0
+ATHLETICS 2 TRAVEL 2 STEALTH 2
+AWARENESS 2 INSIGHT 0 SCAN 1
+HUNTING 2 HEALING 2 EXPLORE 2
+SONG 0 COURTESY 0 RIDDLE 0
+CRAFT 0 BATTLE 2 LORE 2
+
+(Hunting et Lore son underlined)
+
+COMBAT PROFICIENCIES
+Copy the following Combat Proficiency ranks onto the character
+sheet, selecting a preferred Proficiency when offered a choice.
+Spears OR Swords 2
+Choose one Combat Proficiency 1
+
+DISTINCTIVE FEATURES
+Choose two Distinctive Features among those listed: Bold,
+Honourable, Secretive, Stern, Subtle, Swift, Tall, True-hearted.
+LANGUAGES AND TYPICAL NAMES
+The native language of the Dúnedain is the Westron, or
+Common Speech. Some still learn the Sindarin Elven-tongue,
+as it is handed down from generation to generation. They
+retain an ancient tradition of naming their children using
+that fair speech.
+MALE NAMES
+Adrahil, Amlaith, Arvegil, Baranor, Belecthor,
+Bergil, Celepharn, Cirion, Damrod, Dírhael,
+Duinhir, Egalmoth, Eradan, Findemir, Forlong,
+Golasdan, Hallas, Hirluin, Ingold, Iorlas, Malvegil,
+Ohtar, Orodreth, Tarannon, Targon.
+FEMALE NAMES
+Anwen, Arbereth, Berúthiel, Baraniel, Calanril,
+Celenneth, Elnîth, Eraniel, Finduilas, Gilraen,
+Gilraeth, Gloredhel, Idril, Ioreth, Ivorwen,
+Lôrwend, Lothíriel, Luindîs, Meneloth, Moriel,
+Morwen, Narieth, Narniel, Orothêl, Tarandîs.
