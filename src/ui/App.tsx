@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { defaultState, loadState, saveState, StoredState } from '../core/storage';
 import { exportToTorc, importFromTorc } from '../core/torc';
 import DicePanel from './DicePanel';
@@ -11,18 +11,21 @@ import FellowshipPanel from './FellowshipPanel';
 import FloatingDieButton from './FloatingDieButton';
 import FloatingDiceSheet from './FloatingDiceSheet';
 
-type Tab = 'Campaigns'|'Fellowship'|'Dice'|'Oracles'|'Map'|'Journal'|'Settings';
+type Tab = 'Heroes'|'Fellowship'|'Dice'|'Oracles'|'Map'|'Journal'|'Settings';
+
+type AppMode = 'landing' | 'main';
 
 export default function App() {
   const [state, setState] = useState<StoredState>(() => loadState());
-  const [tab, setTab] = useState<Tab>('Campaigns');
+  const [mode, setMode] = useState<AppMode>('landing');
+  const [tab, setTab] = useState<Tab>('Fellowship');
   const [diceSheetOpen, setDiceSheetOpen] = useState(false);
 
-  // When on the Campaigns tab, render a clean landing page (no app header/tabs/dice)
+  // When on the landing page, render a clean page (no app header/tabs/dice)
   // like Pocketforge. Campaign management only happens there.
-  const isCampaignLanding = tab === 'Campaigns';
+  const isCampaignLanding = mode === 'landing';
 
-  const tabs: Tab[] = ['Campaigns','Fellowship','Dice','Oracles','Map','Journal','Settings'];
+  const tabs: Tab[] = ['Heroes','Fellowship','Dice','Oracles','Map','Journal','Settings'];
 
   const set: React.Dispatch<React.SetStateAction<StoredState>> = (next) => {
     setState((prev) => {
@@ -87,13 +90,35 @@ export default function App() {
         </div>
       ) : null}
 
-      {tab === 'Campaigns' && <HeroesPanel state={state} setState={set} onOpenCampaign={() => setTab('Fellowship')} />}
+      {isCampaignLanding ? (
+        <HeroesPanel
+          state={state}
+          setState={set}
+          mode="landing"
+          onOpenCampaign={() => {
+            // Once you leave the landing page, the campaign is managed from within the app.
+            // The Campaigns button/tab is intentionally hidden in "main" mode.
+            setMode('main');
+            setTab('Heroes');
+          }}
+        />
+      ) : null}
+
+      {!isCampaignLanding && tab === 'Heroes' && <HeroesPanel state={state} setState={set} mode="main" />}
       {tab === 'Fellowship' && <FellowshipPanel state={state} setState={set} />}
       {tab === 'Dice' && <DicePanel />}
       {tab === 'Oracles' && <OraclesPanel state={state} setState={set} />}
       {tab === 'Map' && <MapPanel state={state} setState={set} />}
       {tab === 'Journal' && <JournalPanel state={state} setState={set} />}
-      {tab === 'Settings' && <SettingsPanel state={state} setState={set} />}
+      {tab === 'Settings' && (
+        <SettingsPanel
+          state={state}
+          setState={set}
+          onBackToCampaigns={() => {
+            setMode('landing');
+          }}
+        />
+      )}
 
       {!isCampaignLanding ? (
         <>

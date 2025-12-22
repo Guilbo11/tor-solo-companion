@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Likelihood, StoredState } from '../core/storage';
 
-export default function SettingsPanel({ state, setState }: { state: StoredState; setState: (s: StoredState) => void }) {
+export default function SettingsPanel({ state, setState, onBackToCampaigns }: { state: StoredState; setState: React.Dispatch<React.SetStateAction<StoredState>>; onBackToCampaigns?: () => void }) {
   const [draft, setDraft] = useState(() => ({ ...state.oracle.likelihood }));
 
   const update = (l: Likelihood, field: 'yes'|'maybe', val: number) => {
@@ -28,6 +28,17 @@ export default function SettingsPanel({ state, setState }: { state: StoredState;
         Configure oracle likelihood thresholds to match Strider Mode exactly (as written in your PDF).
       </div>
 
+      {onBackToCampaigns ? (
+        <>
+          <hr />
+          <div className="h2">Campaigns</div>
+          <div className="muted small">Return to the campaign landing page to create/rename/delete campaigns.</div>
+          <div className="row" style={{ marginTop: 12 }}>
+            <button className="btn" onClick={onBackToCampaigns}>Back to Campaigns</button>
+          </div>
+        </>
+      ) : null}
+
       <hr />
       <div className="h2">Oracle thresholds (1–100 roll)</div>
       <div className="row" style={{ flexDirection: 'column', gap: 10 }}>
@@ -49,6 +60,9 @@ export default function SettingsPanel({ state, setState }: { state: StoredState;
 
       <div className="row" style={{ marginTop: 12 }}>
         <button className="btn" onClick={save}>Save</button>
+        {onBackToCampaigns ? (
+          <button className="btn btn-ghost" onClick={onBackToCampaigns}>Back to Campaigns</button>
+        ) : null}
       </div>
 
       <hr />

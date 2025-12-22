@@ -10,13 +10,14 @@ type Props = {
   state: StoredState;
   setState: React.Dispatch<React.SetStateAction<StoredState>>;
   onOpenCampaign?: (campaignId: string) => void;
+  mode?: 'landing'|'main';
 };
 
 function uid(prefix: string) {
   return prefix + '-' + Math.random().toString(36).slice(2, 10);
 }
 
-export default function HeroesPanel({ state, setState, onOpenCampaign }: Props) {
+export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'main' }: Props) {
   const [expandedId, setExpandedId] = useState<string | null>(state.ui?.heroesExpandedId ?? null);
   const [activeId, setActiveId] = useState<string | null>(state.ui?.activeHeroId ?? null);
 
@@ -32,7 +33,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign }: Props) 
 
   const campaigns = (state as any).campaigns ?? [];
   const activeCampaignId = (state as any).activeCampaignId ?? (campaigns[0]?.id ?? 'camp-1');
-  const [view, setView] = useState<'campaigns'|'heroes'>('campaigns');
+  const [view, setView] = useState<'campaigns'|'heroes'>(mode === 'landing' ? 'campaigns' : 'heroes');
   const heroesAll = (state as any).heroes ?? [];
   const heroes = heroesAll.filter((h:any)=> (h.campaignId ?? activeCampaignId) === activeCampaignId);
 
@@ -396,7 +397,9 @@ export default function HeroesPanel({ state, setState, onOpenCampaign }: Props) 
         ) : (
           <>
             <div className="row" style={{alignItems:'center', gap:8}}>
-              <button className="btn btn-ghost" onClick={()=>setView('campaigns')}>← Back</button>
+              {mode === 'landing' ? (
+                <button className="btn btn-ghost" onClick={()=>setView('campaigns')}>← Back</button>
+              ) : null}
               <div>
                 <div className="panelTitle" style={{margin:0}}>Campaign</div>
                 <div className="small muted">{(campaigns.find((c:any)=>c.id===activeCampaignId)?.name ?? '—')}</div>
@@ -708,9 +711,10 @@ export default function HeroesPanel({ state, setState, onOpenCampaign }: Props) 
                         const commit = () => {
                           updateHero(hero.id, {
                             previousExperience: {
-                              ...pe,
-                              committedSkillRatings: { ...(hero.skillRatings ?? {}) },
-                              committedCombatProficiencies: { axes: hero.combatProficiencies?.axes ?? 0, bows: hero.combatProficiencies?.bows ?? 0, spears: hero.combatProficiencies?.spears ?? 0, swords: hero.combatProficiencies?.swords ?? 0 },
+                              // The baseline is captured *after* Culture/Calling choices.
+                              // Increases made after this point consume the Previous Experience budget.
+                              baselineSkillRatings: { ...(hero.skillRatings ?? {}) },
+                              baselineCombatProficiencies: { axes: hero.combatProficiencies?.axes ?? 0, bows: hero.combatProficiencies?.bows ?? 0, spears: hero.combatProficiencies?.spears ?? 0, swords: hero.combatProficiencies?.swords ?? 0 },
                               committed: true,
                             }
                           });
@@ -720,12 +724,12 @@ export default function HeroesPanel({ state, setState, onOpenCampaign }: Props) 
                           <>
                             <div className="row" style={{gap: 10, flexWrap:'wrap'}}>
                               <div className="small">Budget: <b>{budget}</b> · Spent: <b>{spent}</b> · Remaining: <b>{remaining}</b></div>
-                              <span className="muted small">(Skills up to XXXX, Proficiencies up to XXX for Previous Experience)</span>
+                              <span className="muted small">(Previous Experience: Skills up to <b>4</b>, Proficiencies up to <b>3</b>)</span>
                             </div>
                             <div className="row" style={{gap: 8, marginTop: 8, flexWrap:'wrap'}}>
                               <button className="btn btn-ghost" onClick={resetBaseline}>Reset baseline</button>
                               <button className="btn" disabled={committed} onClick={commit}>Commit</button>
-                              {committed ? <span className="small muted">Committed. Future increases are treated as progression.</span> : null}
+                              {!committed ? <span className="small muted">Click <b>Commit</b> once your Culture/Calling choices are final. Then you can spend Previous Experience.</span> : <span className="small muted">Committed. You can now spend Previous Experience (budget enforced).</span>}
                             </div>
                           </>
                         );
@@ -746,22 +750,66 @@ export default function HeroesPanel({ state, setState, onOpenCampaign }: Props) 
                           { key: 'spears', label: 'Spears' },
                           { key: 'swords', label: 'Swords' },
                         ];
-                        const canEdit = !committed;
+                        const skillCost = (toLevel: number) => {
+                          if (toLevel <= 1) return 1;
+                          if (toLevel === 2) return 2;
+                          if (toLevel === 3) return 3;
+                          if (toLevel === 4) return 5;
+                          return 0;
+                        };
+                        const profCost = (toLevel: number) => {
+                          if (toLevel <= 1) return 2;
+                          if (toLevel === 2) return 4;
+                          if (toLevel === 3) return 6;
+                          return 0;
+                        };
+                        const budget = hero.striderMode ? 15 : 10;
+                        const computeSpent = () => {
+                          if (!committed) return 0;
+                          let spent = 0;
+                          const curSkills = hero.skillRatings ?? {};
+                          const baseSkills = pe?.baselineSkillRatings ?? {};
+                          for (const [sid, cur] of Object.entries(curSkills)) {
+                            const b = Number((baseSkills as any)[sid] ?? 0);
+                            const c = Number(cur ?? 0);
+                            for (let lvl = b + 1; lvl <= Math.min(4, c); lvl++) spent += skillCost(lvl);
+                          }
+                          const curP = hero.combatProficiencies ?? {};
+                          const baseP = pe?.baselineCombatProficiencies ?? { axes: 0, bows: 0, spears: 0, swords: 0 };
+                          (['axes','bows','spears','swords'] as const).forEach(k => {
+                            const b = Number((baseP as any)[k] ?? 0);
+                            const c = Number((curP as any)[k] ?? 0);
+                            for (let lvl = b + 1; lvl <= Math.min(3, c); lvl++) spent += profCost(lvl);
+                          });
+                          return spent;
+                        };
+                        const spent = computeSpent();
+                        const remaining = Math.max(0, budget - spent);
+
+                        const canEdit = committed;
                         return (
                           <div className="skillsList">
                             {rows.map(r => {
                               const cur = Number((profs as any)[r.key] ?? 0);
                               const minByCulture = mins[r.key] ?? 0;
-                              const committedVal = pe?.committedCombatProficiencies ? Number((pe.committedCombatProficiencies as any)[r.key] ?? 0) : undefined;
-                              const extra = (typeof committedVal === 'number') ? Math.max(0, cur - committedVal) : 0;
+                              const baselineVal = pe?.baselineCombatProficiencies ? Number((pe.baselineCombatProficiencies as any)[r.key] ?? 0) : undefined;
+                              const extra = (typeof baselineVal === 'number') ? Math.max(0, cur - baselineVal) : 0;
+
+                              // Previous Experience cap
+                              const maxAllowed = canEdit ? Math.max(minByCulture, 3) : cur;
+
+                              // Budget enforcement for +
+                              const nextLevel = Math.min(maxAllowed, cur + 1);
+                              const incCost = (canEdit && typeof baselineVal === 'number' && nextLevel > baselineVal && nextLevel <= 3) ? profCost(nextLevel) : 0;
+                              const canIncByBudget = !canEdit ? false : (incCost <= remaining);
                               return (
                                 <div key={r.key} className="skillRow">
                                   <div className="skillName">{r.label}</div>
-                                  <div className="skillMeta">{minByCulture ? `Min ${minByCulture} (Culture)${committedVal !== undefined ? ` · Committed ${committedVal}${extra ? ` (+${extra})` : ''}` : ''}` : (committedVal !== undefined ? `Committed ${committedVal}${extra ? ` (+${extra})` : ''}` : '')}</div>
+                                  <div className="skillMeta">{minByCulture ? `Min ${minByCulture} (Culture)${baselineVal !== undefined ? ` · Baseline ${baselineVal}${extra ? ` (+${extra})` : ''}` : ''}` : (baselineVal !== undefined ? `Baseline ${baselineVal}${extra ? ` (+${extra})` : ''}` : '')}</div>
                                   <div className="row" style={{gap:6}}>
                                     <button className="btn btn-ghost" disabled={!canEdit || cur<=minByCulture} onClick={()=>updateHero(hero.id,{combatProficiencies:{...(profs as any),[r.key]:Math.max(minByCulture,cur-1)}})}>-</button>
                                     <div className="skillNum" style={{minWidth: 24, textAlign:'center'}}>{cur}</div>
-                                    <button className="btn btn-ghost" disabled={!canEdit || cur>=6} onClick={()=>updateHero(hero.id,{combatProficiencies:{...(profs as any),[r.key]:Math.min(6,cur+1)}})}>+</button>
+                                    <button className="btn btn-ghost" disabled={!canEdit || cur>=maxAllowed || !canIncByBudget} onClick={()=>updateHero(hero.id,{combatProficiencies:{...(profs as any),[r.key]:Math.min(maxAllowed,cur+1)}})}>+</button>
                                   </div>
                                 </div>
                               );
@@ -788,8 +836,50 @@ export default function HeroesPanel({ state, setState, onOpenCampaign }: Props) 
                                     const isFav = derived.favouredSkillSet.has(s.id);
                                     const pe = hero.previousExperience;
                                     const committed = !!pe?.committed;
-                                    const committedVal = pe?.committedSkillRatings ? Number((pe.committedSkillRatings as any)[s.id] ?? 0) : undefined;
-                                    const extra = (typeof committedVal === 'number') ? Math.max(0, rating - committedVal) : 0;
+                                    const baselineVal = pe?.baselineSkillRatings ? Number((pe.baselineSkillRatings as any)[s.id] ?? 0) : undefined;
+                                    const extra = (typeof baselineVal === 'number') ? Math.max(0, rating - baselineVal) : 0;
+
+                                    const skillCost = (toLevel: number) => {
+                                      if (toLevel <= 1) return 1;
+                                      if (toLevel === 2) return 2;
+                                      if (toLevel === 3) return 3;
+                                      if (toLevel === 4) return 5;
+                                      return 0;
+                                    };
+                                    const profCost = (toLevel: number) => {
+                                      if (toLevel <= 1) return 2;
+                                      if (toLevel === 2) return 4;
+                                      if (toLevel === 3) return 6;
+                                      return 0;
+                                    };
+                                    const budget = hero.striderMode ? 15 : 10;
+                                    const computeSpent = () => {
+                                      if (!committed) return 0;
+                                      let spent = 0;
+                                      const curSkills = hero.skillRatings ?? {};
+                                      const baseSkills = pe?.baselineSkillRatings ?? {};
+                                      for (const [sid, cur] of Object.entries(curSkills)) {
+                                        const b = Number((baseSkills as any)[sid] ?? 0);
+                                        const c = Number(cur ?? 0);
+                                        for (let lvl = b + 1; lvl <= Math.min(4, c); lvl++) spent += skillCost(lvl);
+                                      }
+                                      const curP = hero.combatProficiencies ?? {};
+                                      const baseP = pe?.baselineCombatProficiencies ?? { axes: 0, bows: 0, spears: 0, swords: 0 };
+                                      (['axes','bows','spears','swords'] as const).forEach(k => {
+                                        const b = Number((baseP as any)[k] ?? 0);
+                                        const c = Number((curP as any)[k] ?? 0);
+                                        for (let lvl = b + 1; lvl <= Math.min(3, c); lvl++) spent += profCost(lvl);
+                                      });
+                                      return spent;
+                                    };
+                                    const spent = computeSpent();
+                                    const remaining = Math.max(0, budget - spent);
+
+                                    const canEdit = committed;
+                                    const maxAllowed = canEdit ? Math.max(minByCulture, 4) : rating;
+                                    const nextLevel = Math.min(maxAllowed, rating + 1);
+                                    const incCost = (canEdit && typeof baselineVal === 'number' && nextLevel > baselineVal && nextLevel <= 4) ? skillCost(nextLevel) : 0;
+                                    const canIncByBudget = !canEdit ? false : (incCost <= remaining);
                                     return (
                                       <div key={s.id} className={"skillRow " + (isFav ? 'favoured' : '')}>
                                         <div className="skillName" onClick={()=>openEntry('skills', s.id)}>
@@ -798,12 +888,12 @@ export default function HeroesPanel({ state, setState, onOpenCampaign }: Props) 
                                         {(() => {
                                           const attr = getSkillAttribute(s.id);
                                           const tn = getSkillTN(hero, s.id);
-                                          return <div className="skillMeta">{attr} · TN {tn}{minByCulture ? ` · Min ${minByCulture} (Culture)` : ''}{committedVal !== undefined ? ` · Committed ${committedVal}${extra ? ` (+${extra})` : ''}` : ''}</div>;
+                                          return <div className="skillMeta">{attr} · TN {tn}{minByCulture ? ` · Min ${minByCulture} (Culture)` : ''}{baselineVal !== undefined ? ` · Baseline ${baselineVal}${extra ? ` (+${extra})` : ''}` : ''}</div>;
                                         })()}
                                         <div className="row" style={{gap:6}}>
-                                          <button className="btn btn-ghost" disabled={committed || rating<=minByCulture} onClick={()=>updateHero(hero.id,{skillRatings:{...(hero.skillRatings??{}),[s.id]:Math.max(minByCulture, rating-1)}})}>-</button>
+                                          <button className="btn btn-ghost" disabled={!canEdit || rating<=minByCulture} onClick={()=>updateHero(hero.id,{skillRatings:{...(hero.skillRatings??{}),[s.id]:Math.max(minByCulture, rating-1)}})}>-</button>
                                           <div className="skillNum" style={{minWidth: 24, textAlign:'center'}}>{rating}</div>
-                                          <button className="btn btn-ghost" disabled={committed || rating>=6} onClick={()=>updateHero(hero.id,{skillRatings:{...(hero.skillRatings??{}),[s.id]:Math.min(6, rating+1)}})}>+</button>
+                                          <button className="btn btn-ghost" disabled={!canEdit || rating>=maxAllowed || !canIncByBudget} onClick={()=>updateHero(hero.id,{skillRatings:{...(hero.skillRatings??{}),[s.id]:Math.min(maxAllowed, rating+1)}})}>+</button>
                                         </div>
                                       </div>
                                     );
