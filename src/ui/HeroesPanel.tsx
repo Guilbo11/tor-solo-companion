@@ -881,9 +881,14 @@ export default function HeroesPanel({ state, setState }: Props) {
                                 updateHero(hero.id,{featureIds: next});
                               }}>
                                 <span className="pillName">{f.name}</span>
-                                  <button className="pillInfo" onClick={(e)=>{ e.stopPropagation(); openEntry('features', f.id); }}>See more</button>
+                                <button
+                                  className="pillInfo"
+                                  onClick={(e)=>{ e.stopPropagation(); openEntry('features', f.id); }}
+                                >
+                                  See more
+                                </button>
                               </div>
-                        )});
+                            );
                           })}
                         </div>
                       </div>
