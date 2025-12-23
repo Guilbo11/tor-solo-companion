@@ -37,6 +37,9 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
   const heroesAll = (state as any).heroes ?? [];
   const heroes = heroesAll.filter((h:any)=> (h.campaignId ?? activeCampaignId) === activeCampaignId);
 
+  // TN base: normal TOR uses 20; Strider Mode (Fellowship) uses 18.
+  const tnBase = (state as any)?.fellowship?.mode === 'strider' ? 18 : 20;
+
   const skillsByGroup = useMemo(() => {
     const groups: Record<string, any[]> = { Personality: [], Movement: [], Perception: [], Survival: [], Custom: [], Vocation: [] };
     const entries = compendiums.skills.entries ?? [];
@@ -430,6 +433,12 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                   <div className="cardTop">
                     <div className="cardTopLeft" onClick={()=>{
                       setActiveCampaign(c.id);
+                      if (mode === 'landing') {
+                        // Landing page should only manage campaigns.
+                        // Opening a campaign transitions to the main app.
+                        onOpenCampaign?.(c.id);
+                        return;
+                      }
                       setView('heroes');
                       onOpenCampaign?.(c.id);
                     }}>
@@ -465,7 +474,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
 
           const culture = findEntryById(compendiums.cultures.entries ?? [], hero.cultureId)?.name || (hero.cultureId ? hero.cultureId : '—');
           const calling = findEntryById(compendiums.callings.entries ?? [], hero.callingId)?.name || (hero.callingId ? hero.callingId : '—');
-          const derived = computeDerived(hero);
+          const derived = computeDerived(hero, tnBase);
           const activeTab = heroTab[hero.id] ?? 'Sheet';
 
           return (
@@ -675,6 +684,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                         };
 
                         const computeSpent = () => {
+                          if (!pe?.committed) return 0;
                           let spent = 0;
                           const curSkills = hero.skillRatings ?? {};
                           const baseSkills = pe.baselineSkillRatings ?? {};
@@ -887,7 +897,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                                         </div>
                                         {(() => {
                                           const attr = getSkillAttribute(s.id);
-                                          const tn = getSkillTN(hero, s.id);
+                                          const tn = getSkillTN(hero, s.id, tnBase);
                                           return <div className="skillMeta">{attr} · TN {tn}{minByCulture ? ` · Min ${minByCulture} (Culture)` : ''}{baselineVal !== undefined ? ` · Baseline ${baselineVal}${extra ? ` (+${extra})` : ''}` : ''}</div>;
                                         })()}
                                         <div className="row" style={{gap:6}}>

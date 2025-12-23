@@ -42,8 +42,8 @@ export function getAttributeRating(hero: any, attr: SkillAttribute): number {
   return Number(a.wits ?? 2);
 }
 
-export function getSkillTN(hero: any, skillId: string): number {
+export function getSkillTN(hero: any, skillId: string, tnBase: number = 20): number {
   const attr = getSkillAttribute(skillId);
   const rating = getAttributeRating(hero, attr);
-  return tnFromRating(rating);
+  return tnFromRating(rating, tnBase);
 }

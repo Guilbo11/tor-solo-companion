@@ -19,8 +19,8 @@ function clamp(n: number, lo: number, hi: number) {
   return Math.max(lo, Math.min(hi, n));
 }
 
-export function tnFromRating(rating: number) {
-  return 20 - clamp(rating, 1, 10);
+export function tnFromRating(rating: number, tnBase: number = 20) {
+  return tnBase - clamp(rating, 1, 10);
 }
 
 export function parseProtectionDice(value: any): number {
@@ -45,14 +45,14 @@ export function parseParryModifier(value: any): number {
   return sign * Number(m[2]);
 }
 
-export function computeDerived(hero: any): Tor2eDerived {
+export function computeDerived(hero: any, tnBase: number = 20): Tor2eDerived {
   const strength = hero?.attributes?.strength ?? 2;
   const heart = hero?.attributes?.heart ?? 2;
   const wits = hero?.attributes?.wits ?? 2;
 
-  const strengthTN = tnFromRating(strength);
-  const heartTN = tnFromRating(heart);
-  const witsTN = tnFromRating(wits);
+  const strengthTN = tnFromRating(strength, tnBase);
+  const heartTN = tnFromRating(heart, tnBase);
+  const witsTN = tnFromRating(wits, tnBase);
 
   // Favoured skills: culture pick + calling picks + legacy (union)
   const fav = new Set<string>();

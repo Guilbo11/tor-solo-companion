@@ -18,7 +18,7 @@ type AppMode = 'landing' | 'main';
 export default function App() {
   const [state, setState] = useState<StoredState>(() => loadState());
   const [mode, setMode] = useState<AppMode>('landing');
-  const [tab, setTab] = useState<Tab>('Fellowship');
+  const [tab, setTab] = useState<Tab>('Heroes');
   const [diceSheetOpen, setDiceSheetOpen] = useState(false);
 
   // When on the landing page, render a clean page (no app header/tabs/dice)
@@ -104,20 +104,24 @@ export default function App() {
         />
       ) : null}
 
-      {!isCampaignLanding && tab === 'Heroes' && <HeroesPanel state={state} setState={set} mode="main" />}
-      {tab === 'Fellowship' && <FellowshipPanel state={state} setState={set} />}
-      {tab === 'Dice' && <DicePanel />}
-      {tab === 'Oracles' && <OraclesPanel state={state} setState={set} />}
-      {tab === 'Map' && <MapPanel state={state} setState={set} />}
-      {tab === 'Journal' && <JournalPanel state={state} setState={set} />}
-      {tab === 'Settings' && (
-        <SettingsPanel
-          state={state}
-          setState={set}
-          onBackToCampaigns={() => {
-            setMode('landing');
-          }}
-        />
+      {!isCampaignLanding && (
+        <>
+          {tab === 'Heroes' && <HeroesPanel state={state} setState={set} mode="main" />}
+          {tab === 'Fellowship' && <FellowshipPanel state={state} setState={set} />}
+          {tab === 'Dice' && <DicePanel />}
+          {tab === 'Oracles' && <OraclesPanel state={state} setState={set} />}
+          {tab === 'Map' && <MapPanel state={state} setState={set} />}
+          {tab === 'Journal' && <JournalPanel state={state} setState={set} />}
+          {tab === 'Settings' && (
+            <SettingsPanel
+              state={state}
+              setState={set}
+              onBackToCampaigns={() => {
+                setMode('landing');
+              }}
+            />
+          )}
+        </>
       )}
 
       {!isCampaignLanding ? (
