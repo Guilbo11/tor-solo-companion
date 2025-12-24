@@ -7,7 +7,7 @@
       "id": "captain",
       "name": "Captain",
       "group": "Callings",
-      "description": "He stood up, and seemed suddenly to grow taller. In his eyes gleamed\na light, keen and commanding.\nWhen the world is on the brink of ruin, it is the duty of all\nindividuals of worth to rise and take the lead, whatever the\nrisk. You have chosen to put your judgement to the service of\nothers, to guide them in this dark hour. But you don’t want\nothers to heed your commands out of fear or obedience —\nyou want them to follow you because they trust you.",
+      "description": "He stood up, and seemed suddenly to grow taller. In his eyes gleamed\na light, keen and commanding.\nWhen the world is on the brink of ruin, it is the duty of all\nindividuals of worth to rise and take the lead, whatever the\nrisk. You have chosen to put your judgement to the service of\nothers, to guide them in this dark hour. But you don\u2019t want\nothers to heed your commands out of fear or obedience \u2014\nyou want them to follow you because they trust you.",
       "flavor": "",
       "favouredSkills": [
         "BATTLE",
@@ -21,7 +21,7 @@
       "id": "champion",
       "name": "Champion",
       "group": "Callings",
-      "description": "“War must be, while we defend our lives against a destroyer who\nwould devour all…”\nYou deem that there is but one way to oppose the return of\nthe Shadow, and that it is to conquer it by strength of arms.\nYou are recognised as a warrior among your folk, a valiant\nfighter, onward into battle. For you, the road to adventure\nleads straight to wherever your foes prowl or hide.",
+      "description": "\u201cWar must be, while we defend our lives against a destroyer who\nwould devour all\u2026\u201d\nYou deem that there is but one way to oppose the return of\nthe Shadow, and that it is to conquer it by strength of arms.\nYou are recognised as a warrior among your folk, a valiant\nfighter, onward into battle. For you, the road to adventure\nleads straight to wherever your foes prowl or hide.",
       "flavor": "",
       "favouredSkills": [
         "ATHLETICS",
@@ -35,9 +35,13 @@
       "id": "messenger",
       "name": "Messenger",
       "group": "Callings",
-      "description": "“Elrond is sending Elves, and they will get in touch with the Rangers,\nand maybe with Thranduil’s folk in Mirkwood.”\nThe Wise hold that evil days lie ahead, and that to keep hope,\nall who fight the Enemy must be as one. Yet, many miles and\ncenturies of isolation separate the Free Peoples, and estrangement\nbreeds mistrust. You have decided that it is your duty to\ntravel to distant lands, carrying tidings and warning people\nof the coming danger.",
+      "description": "\u201cElrond is sending Elves, and they will get in touch with the Rangers,\nand maybe with Thranduil\u2019s folk in Mirkwood.\u201d\nThe Wise hold that evil days lie ahead, and that to keep hope,\nall who fight the Enemy must be as one. Yet, many miles and\ncenturies of isolation separate the Free Peoples, and estrangement\nbreeds mistrust. You have decided that it is your duty to\ntravel to distant lands, carrying tidings and warning people\nof the coming danger.",
       "flavor": "",
-      "favouredSkills": [],
+      "favouredSkills": [
+        "COURTESY",
+        "SONG",
+        "TRAVEL"
+      ],
       "additionalFeature": "Folk-Lore",
       "shadowPath": "Wandering-Madness"
     },
@@ -45,9 +49,13 @@
       "id": "scholar",
       "name": "Scholar",
       "group": "Callings",
-      "description": "“Speak no secrets! Here is a scholar in the Ancient Tongue.”\nFor you, knowledge makes the wild world a less threatening\nplace. Yellowed maps in lost books replace a fear of the\nunknown with curiosity and wonder, songs composed in\nages past strengthen the weariest of hearts. A love of learning\nguides your every step, and illuminates the way for you\nand those who listen to your advice.",
+      "description": "\u201cSpeak no secrets! Here is a scholar in the Ancient Tongue.\u201d\nFor you, knowledge makes the wild world a less threatening\nplace. Yellowed maps in lost books replace a fear of the\nunknown with curiosity and wonder, songs composed in\nages past strengthen the weariest of hearts. A love of learning\nguides your every step, and illuminates the way for you\nand those who listen to your advice.",
       "flavor": "",
-      "favouredSkills": [],
+      "favouredSkills": [
+        "CRAFT",
+        "LORE",
+        "RIDDLE"
+      ],
       "additionalFeature": "Rhymes",
       "shadowPath": "Lure Of Secrets"
     },
@@ -57,7 +65,11 @@
       "group": "Callings",
       "description": "Far over the Misty Mountains cold, To dungeons deep and caverns\nold. We must away ere break of day, To seek the pale enchanted gold.\nThe world has seen the passing of the glory of many Dwarven\nkings and Elven lords, and their heritage is now buried\nin Orc-infested\ndungeons. Hoards of stolen gold and jewels,\nguarded by fell beasts, beckon all who dare to find them.\nYou seek to recover what is lost, even when it means braving\nunspeakable dangers.",
       "flavor": "",
-      "favouredSkills": [],
+      "favouredSkills": [
+        "EXPLORE",
+        "SCAN",
+        "STEALTH"
+      ],
       "additionalFeature": "Burglary",
       "shadowPath": "Dragon-Sickness"
     },
@@ -65,7 +77,7 @@
       "id": "warden",
       "name": "Warden",
       "group": "Callings",
-      "description": "“Travellers scowl at us, and countrymen give us scornful names.”\nIn this age of the world, when shadows grow deeper with every\npassing year, you have sworn to defend all who cannot defend\nthemselves. Often, your choice forces you to forsake civilised\nareas, to better guard their inhabitants from what lurks right\noutside their fences. This has made you a stranger in the eyes\nof the common folk, a threatening figure like those you are\nprotecting them from.",
+      "description": "\u201cTravellers scowl at us, and countrymen give us scornful names.\u201d\nIn this age of the world, when shadows grow deeper with every\npassing year, you have sworn to defend all who cannot defend\nthemselves. Often, your choice forces you to forsake civilised\nareas, to better guard their inhabitants from what lurks right\noutside their fences. This has made you a stranger in the eyes\nof the common folk, a threatening figure like those you are\nprotecting them from.",
       "flavor": "",
       "favouredSkills": [
         "AWARENESS",
