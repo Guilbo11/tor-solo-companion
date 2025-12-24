@@ -129,6 +129,17 @@ export type Hero = {
     dropped?: boolean;
   }[];
   notes?: string;
+
+  // Creation wizard / locked fields
+  creationComplete?: boolean;
+  gender?: 'Masculine'|'Feminine'|'Other';
+  callingFavouredSkillIds?: string[];
+  cultureFavouredSkillId?: string;
+  cultureDistinctiveFeatureIds?: string[];
+  callingDistinctiveFeatureId?: string;
+  shadowPathId?: string;
+  previousExperienceCommitted?: boolean;
+
 };
 
 

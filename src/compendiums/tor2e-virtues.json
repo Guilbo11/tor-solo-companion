@@ -32,6 +32,276 @@
       "id": "prowess",
       "name": "Prowess",
       "description": "Reduce one Attribute TN by 1."
+    },
+    {
+      "id": "bardings-cram",
+      "name": "Cram",
+      "description": "You have been taught the ancient recipe of cram, a biscuitish\ncake that keeps good indefinitely, made by your folk for\nlong journeys. Albeit certainly not entertaining (and in fact,\nmostly a chewing exercise), it is doubtlessly sustaining and\nvery nutritious.\n♦ Each time you gain Fatigue from a Journey Event, you\ngain 1 point less.\n♦ Additionally, when you take a Short Rest, you and all\nmembers of the Company regain an extra amount of\nlost Endurance equal to your WISDOM rating.\n\n…they rested for a while and had such a breakfast as they could,\nchiefly cram and water.",
+      "cultureId": "bardings",
+      "virtueType": "cultural"
+    },
+    {
+      "id": "bardings-dragon-slayer",
+      "name": "Dragon-Slayer",
+      "description": "The legend of Bard the Bowman has inspired many young men\nand women from Dale, so much so that they long to prove\ntheir worth with the killing of a great monster. As many have\nbefore you, you have long pondered on the ways to deal with\nlarge creatures, hoping one day to gain renown defeating them.\n♦ When you are fighting creatures with Might 2 or more,\nall your attack rolls are Favoured.",
+      "flavor": "“I am Bard, and by my hand was the dragon slain and your treasure\ndelivered.”",
+      "cultureId": "bardings",
+      "virtueType": "cultural"
+    },
+    {
+      "id": "bardings-dwarf-friend",
+      "name": "Dwarf-Friend",
+      "description": "The days of the Dragon have forged a strong alliance between\nthe Bardings and the Dwarves of Erebor.\n♦ If your Fellowship\nfocus is a Dwarf, whoever among\nyou is fighting in a Defensive stance may attempt the\nProtect Companion combat task to benefit the other\nas a secondary action.\n♦ Additionally, Dwarves are always considered to be Friendly\ntowards you during the Interaction stage of a council.",
+      "flavor": "“Nowhere are there any men so friendly to us as the Men of Dale.”",
+      "cultureId": "bardings",
+      "virtueType": "cultural"
+    },
+    {
+      "id": "bardings-fierce-shot",
+      "name": "Fierce Shot",
+      "description": "The Black Arrow that brought down Smaug the Dragon may have\nbeen fated to do so, but the hand that sent it flying so fiercely was\nexceedingly strong. When you throw a spear or bend your bow,\nyou make sure that your grip is steady and your aim true.\n♦ When you score a Piercing Blow on a ranged attack,\nthe PROTECTION roll of the target is Ill-favoured.\n\nThe great bow twanged… the arrow… smote and vanished, barb,\nshaft and feather…",
+      "cultureId": "bardings",
+      "virtueType": "cultural"
+    },
+    {
+      "id": "bardings-high-destiny",
+      "name": "High Destiny",
+      "description": "Stories tell that those who belong to the bloodline of Dale\nare destined for greatness, a fact proven true by your King\nand his story. Do you share the same destiny of those of the\nline of Girion?\n♦ Raise your maximum Endurance rating by 1. The\nfirst time that you receive a Wound that would normally\nkill you — a deadly wound — you are saved\nby some miraculous circumstance that leaves you\nWounded but alive, and you immediately raise your\nmaximum Hope rating by 1 point. Then, your destiny\nis completed (you can do this only once).",
+      "flavor": "“Bard is not lost!” he cried. “He dived from Esgaroth, when the enemy\nwas slain. I am Bard, of the line of Girion …”",
+      "cultureId": "bardings",
+      "virtueType": "cultural"
+    },
+    {
+      "id": "bardings-the-language-of-birds",
+      "name": "The Language Of Birds",
+      "description": "Stories told in the North speak of how Dalemen can become\nso wise as to comprehend the speech of birds, and so by\nunderstanding their song be forewarned of\nimpending threats, or be able to spot a weakness\nin their enemies’ defences.\n♦ You can communicate with any bird with\nappropriate Skill rolls, usually using COURTESY,\nPERSUADE, or SONG, to receive tidings,\ndeliver messages, and so on.\n♦ Additionally, when you are outside, once during\neach Combat, Council or Journey, you can\nchoose to become Inspired on any one roll.",
+      "flavor": "“…it was only an old thrush. Unafraid it perched by his ear\nand it brought him news. Marvelling he found he could understand\nits tongue…”",
+      "cultureId": "bardings",
+      "virtueType": "cultural"
+    },
+    {
+      "id": "dwarves-of-durins-folk-baruk-khazad",
+      "name": "Baruk Khazâd!",
+      "description": "The secret tongue of the Dwarves is guarded as a treasure\nof the past, yet their battle-cry\nis well-known\nand feared by\ntheir chief foes.\n♦ Once per combat, when you fight in a Forward stance\nyou can make your attack roll Favoured and attempt\nthe Intimidate Foe combat task as a secondary action.\n“Baruk Khazâd! Khazâd ai-mênu!”\nAn axe swung and swept back.\n\nTwo Orcs fell headless. The rest fled.",
+      "cultureId": "dwarves-of-durins-folk",
+      "virtueType": "cultural"
+    },
+    {
+      "id": "dwarves-of-durins-folk-broken-spells",
+      "name": "Broken Spells",
+      "description": "In ancient times, the Dwarves made mighty spells. You have\nbeen taught fragments of old enchantments that retain some\npower to this day.\n♦ Choose three Skills in which you possess at least one\nrank and mark them with a dot (or rune!) on your\ncharacter sheet. Whenever you use any one of the\nthree marked Skills, you can spend 1 Hope to achieve\na Magical success.\n…they spoke fragments of broken spells of opening…",
+      "cultureId": "dwarves-of-durins-folk",
+      "virtueType": "cultural"
+    },
+    {
+      "id": "dwarves-of-durins-folk-dark-for-dark-business",
+      "name": "Dark For Dark Business",
+      "description": "Your kind is not troubled by mere darkness in itself, as most\nof the members of other cultures are. On the contrary, you\nhave grown to like the dark better than the light, finding\nyourself at ease in its cold embrace.\n♦ When you are in the dark (at night, or underground)\nyou are Inspired on all your rolls.",
+      "flavor": "“We like the dark,” said the dwarves. “Dark for dark business! There\nare many hours before dawn.”",
+      "cultureId": "dwarves-of-durins-folk",
+      "virtueType": "cultural"
+    },
+    {
+      "id": "dwarves-of-durins-folk-durin-s-way",
+      "name": "Durin’S Way",
+      "description": "The Dwarves have fought many wars in deep places beneath\nthe earth. You have been taught how to best defend yourself\nwhile fighting underground. As a result, you know how\nto exploit corners, darkness, and other natural obstacles to\nyour advantage.\n♦ Add +2 to your Parry rating when fighting underground,\nor in otherwise cramped quarters, like inside a building.\nThat was the beginning of the War of the Dwarves and the Orcs,\nwhich was long and deadly, and fought for the most part in deep\nplaces beneath the earth.",
+      "cultureId": "dwarves-of-durins-folk",
+      "virtueType": "cultural"
+    },
+    {
+      "id": "dwarves-of-durins-folk-stone-hard",
+      "name": "Stone-Hard",
+      "description": "The Dwarves were made to be strong and to endure, for they\ncame unto the world when a great evil ruled Middle-earth.\nAs long as your spirit supports your strength, you can resist\nany hurt of the body more hardily than most.\n♦ Raise your maximum Endurance rating by 1. All your\nPROTECTION rolls are Favoured, as long as you are not\nMiserable.\n\nThey are (…) secretive, laborious, retentive of the memory of injuries\n(and of benefits) …",
+      "cultureId": "dwarves-of-durins-folk",
+      "virtueType": "cultural"
+    },
+    {
+      "id": "dwarves-of-durins-folk-untameable-spirit",
+      "name": "Untameable Spirit",
+      "description": "Dwarves were made from their beginning to resist any form\nof domination. You have strengthened your resolve against\nall but the most subtle of the weapons of the Enemy.\n♦ Raise your maximum Hope rating by 1 point. You gain\n(1d) on all Shadow Tests made to resist the effects of\nSorcery.\n\nThough they could be slain or broken, they could not be reduced to\nshadows enslaved to another will…",
+      "cultureId": "dwarves-of-durins-folk",
+      "virtueType": "cultural"
+    },
+    {
+      "id": "elves-of-lindon-against-the-unseen",
+      "name": "Against The Unseen",
+      "description": "Elves can perceive creatures that dwell in the wraith-world,\nbe they spirits or ghosts, even when they are normally invisible\nto the eyes of the living and appear only as a chilling\nwhisper of voices. You have learnt to strengthen your heart\nagainst such terrors.\n♦ All your Shadow Tests due to Dread are Favoured, and\nyou additionally gain (1d) on those rolls forced upon\nyou by an evil spirit or ghost (including creatures possessed\nby one).",
+      "flavor": "“I also will come,” said Legolas, “for I do not fear the Dead.”",
+      "cultureId": "elves-of-lindon",
+      "virtueType": "cultural"
+    },
+    {
+      "id": "elves-of-lindon-deadly-archery",
+      "name": "Deadly Archery",
+      "description": "Elves possess a natural talent for hitting the mark when using\ntheir bows. You have honed this talent almost to perfection,\nand your arrows find their target with uncanny precision.\n♦ When using a Bow (not a Great Bow) and fighting in\nRearward Stance, you may attempt the Prepare Shot\ncombat task as a secondary action.\n\n…their small knives… would have been of no use against the arrows\nof the Elves that could hit a bird’s eye in the dark.",
+      "cultureId": "elves-of-lindon",
+      "virtueType": "cultural"
+    },
+    {
+      "id": "elves-of-lindon-elbereth-gilthoniel",
+      "name": "Elbereth Gilthoniel!",
+      "description": "The name of Elbereth, the Queen of the Stars, is revered by\nall the Eldar still dwelling in Middle-earth.\nYou have resorted to calling on her name in moments of great need, asking the\nKindler to bestow her grace upon you. Raise your maximum Hope rating by 1 point. During\nthe Adventuring Phase you can become Inspired on a\nnumber of rolls equal to your WISDOM rating.",
+      "flavor": "“Elbereth Gilthoniel!” sighed Legolas as he looked up.",
+      "cultureId": "elves-of-lindon",
+      "virtueType": "cultural"
+    },
+    {
+      "id": "elves-of-lindon-elvish-dreams",
+      "name": "Elvish Dreams",
+      "description": "The spirit of Elves is so strong that their bodies recover swiftly\nfrom many ills and injuries. As your WISDOM has grown you\nhave felt less and less the need to lie down to get better.\nInstead, you can recover from your exertions while awake,\nfinding repose in the secret way of your folk.\n♦ You don’t need to sleep, as long as you can engage\nin simple, repetitive activities. When you take a\nShort Rest you are considered to have had a Prolonged\nRest instead.\n\n…he could sleep, if sleep it could be called by Men, resting his mind\nin the strange paths of elvish dreams, even as he walked open-eyed\nin the light of this world.",
+      "cultureId": "elves-of-lindon",
+      "virtueType": "cultural"
+    },
+    {
+      "id": "elves-of-lindon-gleam-of-wrath",
+      "name": "Gleam Of Wrath",
+      "description": "Your folk have seen many defeats, and many fruitless victories\nin their wars against the Shadow. The deadly rage that your\nkindred harbour for the Enemy infuses your weapons with a\ngleam of chill flame.\n♦ On a successful attack roll your adversary additionally\nloses one point of Hate or Resolve, plus one point for\neach Success icon ( ).\nThe Elves were the first to charge. Their hatred for the Goblins is\ncold and bitter.",
+      "cultureId": "elves-of-lindon",
+      "virtueType": "cultural"
+    },
+    {
+      "id": "elves-of-lindon-memory-of-ancient-days",
+      "name": "Memory Of Ancient Days",
+      "description": "Long centuries and uncounted generations of Men seem but\na little while to the Elves. Your memories go back to a time\nbefore Eriador became desolate, and your knowledge of the\nland is returning to you now that you are traveling again outside\nthe boundaries of your realm.\n♦ When you are targeted by a Journey Event while you are\nin a Wild Land, roll on the Journey Events table as if\nyou were in a Border Land, and as if you were in a Wild\nLand if you are in a Dark Land. Moreover, in addition\nto your chosen role you are always allowed to cover the\nScout role.",
+      "flavor": "“But it is not your own Shire,” said Gildor. “Others dwelt here\nbefore hobbits were; and others will dwell here again when hobbits\nare no more.”",
+      "cultureId": "elves-of-lindon",
+      "virtueType": "cultural"
+    },
+    {
+      "id": "hobbits-of-the-shire-art-of-disappearing",
+      "name": "Art Of Disappearing",
+      "description": "Hobbits are said to have little or no magic about them, but the way\nthey can choose to disappear quickly and quietly can be described\nby others only as supernatural. You have learnt to choose exactly\nthe right moment to turn away from the attention of others, sometimes\nunconsciously anticipating the need to disappear.\n♦ If a location or a situation offers even the smallest opportunity\nto hide or sneak silently away, make a STEALTH roll:\nif you succeed, you simply disappear.\nIf anyone expects you to be there, it will seem as if you have\nvanished into thin air. You can choose to reveal yourself at\nany moment by simply stepping out into the open from your\nhiding place.\n\nThey possessed from the first the art of disappearing swiftly and silently,\nwhen large folk whom they do not wish to meet came blundering by…",
+      "cultureId": "hobbits-of-the-shire",
+      "virtueType": "cultural"
+    },
+    {
+      "id": "hobbits-of-the-shire-brave-at-a-pinch",
+      "name": "Brave At A Pinch",
+      "description": "One of the Wise once said that you have to put a Hobbit in a\ntight place before you find out what is in them. You prefer to\navoid finding yourself in one, but you are also sure you would\nbe able to take good care of yourself in the circumstances.\n♦ As long as you are Miserable, Weary, or Wounded, you\nare Inspired on all your rolls.",
+      "flavor": "“…he is one of the best, one of the best — as fierce as a dragon in\na pinch.”",
+      "cultureId": "hobbits-of-the-shire",
+      "virtueType": "cultural"
+    },
+    {
+      "id": "hobbits-of-the-shire-small-folk",
+      "name": "Small Folk",
+      "description": "Hobbits are a little people, but their resourcefulness far\nexceeds their stature. You have learnt how to exploit your\nsmall size to your advantage in a fight.\n♦ When you are engaged in close combat with a creature\nbigger than you (very often!) you add +2 to your Parry\nrating. Additionally, you can assume a Rearward stance\nin combat even if there is only one other Company\nmember fighting in a Close Combat stance.\n\nFor they are a little people, smaller than Dwarves…",
+      "cultureId": "hobbits-of-the-shire",
+      "virtueType": "cultural"
+    },
+    {
+      "id": "hobbits-of-the-shire-sure-at-the-mark",
+      "name": "Sure At The Mark",
+      "description": "Hobbits are nimble and keen-eyed,\nqualities that make them\ngood archers. You have honed this natural talent to perfection,\nso much so that you just need to stoop for a stone to\nfind yourself armed with a deadly weapon.\n♦ All your ranged attacks are Favoured. If you attack by\nthrowing a stone, the roll produces a Piercing Blow on\na result of , with an Injury rating of 12.\n\nThey shot well with the bow, for they were keen-eyed\nand sure at the mark. Not only with bows and arrows.",
+      "cultureId": "hobbits-of-the-shire",
+      "virtueType": "cultural"
+    },
+    {
+      "id": "hobbits-of-the-shire-three-is-company",
+      "name": "Three Is Company",
+      "description": "The Wise say that it is sometimes best to trust to friendship\nthan to great wisdom. This is particularly true for Hobbits,\nas everyone knows that it is hardly possible to separate them\nfrom their friends. You have given your trust to your fellow\nCompany members, and a true friendship has grown from\nthe bond unifying you.\n♦ Raise your Company’s Fellowship\nrating by 1 point.\nAdditionally, you may select a second Fellowship\nFocus.",
+      "flavor": "“We hobbits ought to stick together, and we will. I shall go, unless\nthey chain me up.”",
+      "cultureId": "hobbits-of-the-shire",
+      "virtueType": "cultural"
+    },
+    {
+      "id": "hobbits-of-the-shire-tough-as-old-tree-roots",
+      "name": "Tough As Old Tree-Roots",
+      "description": "They say that Hobbits are difficult to dismay or kill, and that\nthey recover their health at a prodigious pace if allowed to\nenjoy some peace and quiet. You have discovered that you\nrecover wonderfully from falls and bruises (at the cost of\nsome considerable pain).\n♦ When you are Wounded and must roll to determine the\nseverity of your injury, you roll two Feat Dice instead of\none and choose the better of the two results. In addition,\ndouble your STRENGTH score when calculating the\nnumber of Endurance points you recover when resting.",
+      "flavor": "“They are a remarkable race,” said the Warden, nodding his head.\n“Very tough in the fibre, I deem.”",
+      "cultureId": "hobbits-of-the-shire",
+      "virtueType": "cultural"
+    },
+    {
+      "id": "men-of-bree-bree-pony",
+      "name": "Bree-Pony",
+      "description": "Bree-ponies\nare very similar to their owners, the Bree-folk — they don’t seem to have anything special compared to their\npeers in other parts of Middle-earth, and yet some of them\ndisplay uncommon courage and exceptional memory. You\nhave acquired an unusually brave and intelligent beast that\nfollows you everywhere.\n♦ Raise your maximum Hope rating by 1 point. Additionally,\nyour pony has a Vigour rating of 4 (regardless\nof your Standard of Living).\nYour pony never leaves your side. If you are forced to abandon\nit, for example to enter an underground passage, you\ncan choose to find the pony where you left it when you return,\nor to have it find its way back to Bree.\n\nBill the pony was with them, and as before he had a good deal of\nbaggage, but he trotted along beside Sam and seemed well content.",
+      "cultureId": "men-of-bree",
+      "virtueType": "cultural"
+    },
+    {
+      "id": "men-of-bree-defiance",
+      "name": "Defiance",
+      "description": "Many realms have risen and fallen in the Lone-lands\nof Eriador\nsince the Elder Days. Only ruins remain to mark their boundaries.\nYet, the Bree-men\nhave endured, revealing an unexpected\nreserve of strength and vigour in the face of adversity.\n♦ Raise your maximum Endurance rating by 1. At the\nend of each Combat scene, if you are not Wounded or\nMiserable, you recover a number of Endurance points\nequal to your HEART or WISDOM score.\n\nFew had survived the turmoils of the Elder Days; but when the\nKings returned again over the Great Sea they had found the Bree-men\nstill there…",
+      "cultureId": "men-of-bree",
+      "virtueType": "cultural"
+    },
+    {
+      "id": "men-of-bree-desperate-courage",
+      "name": "Desperate Courage",
+      "description": "You have lived all your life on the edge of the Wild, but\nthe worst news that has come to Bree in your time concerned\nonly brigands or packs of hungry wolves. You don’t\nknow yet what the likes of you can do against the Shadow\nin the East, but you are sure you will stand against it, no\nmatter the cost.\n♦ When you choose to spend Hope on a roll, you can\nchoose to also gain 1 Shadow to be Inspired for that roll.",
+      "flavor": "“Are you still willing to help me?” “I am,” said Mr. Butterbur. “More\nthan ever.”",
+      "cultureId": "men-of-bree",
+      "virtueType": "cultural"
+    },
+    {
+      "id": "men-of-bree-friendly-and-familiar",
+      "name": "Friendly And Familiar",
+      "description": "Since you started your adventures, you have realised that\nyour folk’s custom of trading with foreigners may help you in\nyour endeavours. Your nice manners and friendly demeanor\neasily gain the sympathies of those you meet, and your ability\nto inquire about the doings of strangers, without letting\ncuriosity get the better of you, provide you with many\nopportunities to learn from those you meet along the way.\n♦ Raise by 1 the maximum number of Skill rolls that you\nmay attempt in the course of a council. Additionally,\nthe folk encountered are always considered Friendly\ntowards you.\n\n…they were more friendly and familiar with Hobbits, Dwarves, Elves,\nand other inhabitants of the world about them than was (or is)\nusual with Big People.",
+      "cultureId": "men-of-bree",
+      "virtueType": "cultural"
+    },
+    {
+      "id": "men-of-bree-strange-as-news-from-bree",
+      "name": "Strange As News From Bree",
+      "description": "It is indeed true that the affairs of the four villages are the\nchief concern of the Bree-folk,\nbut the most inquisitive\namong the inhabitants are always ready to gather what tidings\ncome from distant lands. You have learnt that listening\nto the strange tales that travellers often talk about can prove\nto be very precious.\n♦ During each Fellowship Phase, you receive a rumour\nfrom the Loremaster. In addition, if you are in the Bree-land,\nyou gain (1d) on all INSIGHT and RIDDLE rolls.\n\nStrange as News from Bree was still a saying in the Eastfarthing,\ndescending from those days, when news from North, South, and East\ncould be heard in the inn…",
+      "cultureId": "men-of-bree",
+      "virtueType": "cultural"
+    },
+    {
+      "id": "men-of-bree-the-art-of-smoking",
+      "name": "The Art Of Smoking",
+      "description": "You have mastered the art of smoking pipe-weed,\nand you always carry your pipe with you, as well as a bag of tobacco,\nfor using it grants you patience and clarity of mind.\n♦ Whenever you regain one or more points of Hope,\nyou recover one additional Hope point (regardless of\nwhether it’s the Adventuring or Fellowship\nPhase).\n\nAnd certainly it was from Bree that the art of smoking the genuine\nweed spread in the recent centuries…",
+      "cultureId": "men-of-bree",
+      "virtueType": "cultural"
+    },
+    {
+      "id": "rangers-of-the-north-endurance-of-the-ranger",
+      "name": "Endurance Of The Ranger",
+      "description": "They say that a Ranger with a clear trail to follow can never be\nweary. You hope the saying will prove true, as it will be your\nfate to often travel in haste, to seek distant lands on urgent\nerrands or to relentlessly hunt your enemies.\n♦ Raise your maximum Endurance rating by 1 point. If\nyou wear a suit of Leather armour (with no helm) or\nno armour at all, and carry no shield, you never gain\nFatigue during a journey.",
+      "flavor": "“Hardy is the race of Elendil!”",
+      "cultureId": "rangers-of-the-north",
+      "virtueType": "cultural"
+    },
+    {
+      "id": "rangers-of-the-north-foresight-of-their-kindred",
+      "name": "Foresight Of Their Kindred",
+      "description": "The Rangers of the North still possess a measure of the foresight\nthat their ancestors possessed in full. In the Twilight of\nthe Third Age, this gift manifests as a sense of watchfulness,\nand of fear, arising to warn a Ranger of a danger that has not\nyet come to pass.\n♦ During an Adventuring Phase, you may invoke your gift\nof foresight a number of times equal to your WISDOM\nrating, to bestow it upon yourself or on another member\nof the Company. This gift can be spent at any moment\nto reroll all the dice involved in any one roll, whether\nmade by the Player-hero\nor an adversary targeting them.",
+      "flavor": "“And I say to you: if you pass the doors of Moria, beware!”",
+      "cultureId": "rangers-of-the-north",
+      "virtueType": "cultural"
+    },
+    {
+      "id": "rangers-of-the-north-heir-of-arnor",
+      "name": "Heir Of Arnor",
+      "description": "The days of your folk have darkened, and not many of you\nremain; but ever the memory of the Kings is passed from\ngeneration to generation. An artefact going back to the\ndays of Lost Arnor has been in possession of your family\nin line unbroken. Now you have been deemed worthy to\nbecome its keeper.\n♦ With the help of the Loremaster, use the rules on page\n161 to create either a Marvellous Artefact, or a Famous\nWeapon possessing a single Enchanted Reward and up\nto 2 normal Rewards.",
+      "flavor": "“Here is the ring of Barahir,’’ he said, ‘‘the token of our kinship from\nafar; and here also are the shards of Narsil. \"",
+      "cultureId": "rangers-of-the-north",
+      "virtueType": "cultural"
+    },
+    {
+      "id": "rangers-of-the-north-royalty-revealed",
+      "name": "Royalty Revealed",
+      "description": "Your kin belongs to a bloodline of kings, but they have\nlearnt to hide from their enemies in the twilight years of\ntheir kingdom. Should you choose to reveal your heritage,\nyour noble bearing will cause your allies to cast away their\ndoubts. You reveal yourself by shouting an ancestral battle-cry,\nor unsheathing a weapon of high lineage, or by showing\na device or coat of arms.\n♦ Once per combat, when you fight in an Open stance\nyou may attempt the Rally Comrades combat task as\na secondary action. Additionally, all members of the\nCompany (you included) are Inspired on all their rolls\nin the following round.",
+      "flavor": "Aragorn threw back his cloak. The elven-sheath\nglittered as he grasped it, and the bright blade of Andúril shone like a sudden\nflame as he swept it out. “Elendil!” he cried.",
+      "cultureId": "rangers-of-the-north",
+      "virtueType": "cultural"
+    },
+    {
+      "id": "rangers-of-the-north-strength-of-will",
+      "name": "Strength Of Will",
+      "description": "You have been raised in a land dotted with desolate ruins\nand burial mounds. You have heard the dead whisper with\ncold voices out of lonely barrows, while ghostly lights dance\non haunted hills. When your will strengthens your heart,\nthere is hardly anything in this world that can dismay you.\n♦ You gain (1d) on all Shadow Tests made to resist the\neffects of Dread.",
+      "flavor": "“Does he feel no fear?” muttered the Dwarf.",
+      "cultureId": "rangers-of-the-north",
+      "virtueType": "cultural"
+    },
+    {
+      "id": "rangers-of-the-north-ways-of-the-wild",
+      "name": "Ways Of The Wild",
+      "description": "The Rangers of the North roam ceaselessly, hunting for\nwicked things and guarding all frontiers. For you the Wild\nhas become as familiar as the road that leads home is familiar\nto Hobbits, and the land itself may reveal useful tidings.\n♦ Whenever you are making a roll using EXPLORE,\nHUNTING, or TRAVEL, you can spend 1 Hope to\nachieve a Magical success. Additionally, you are always\nallowed to cover more than one role during a journey.",
+      "flavor": "“Where sight fails the earth may bring us rumour,’ said Aragorn.\n‘The land must groan under their hated feet.”",
+      "cultureId": "rangers-of-the-north",
+      "virtueType": "cultural"
     }
   ]
 }

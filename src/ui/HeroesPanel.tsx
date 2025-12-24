@@ -22,7 +22,10 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
   const [activeId, setActiveId] = useState<string | null>(state.ui?.activeHeroId ?? null);
 
   // Mobile-first inner tabs (PocketForge-ish)
-  const [heroTab, setHeroTab] = useState<Record<string, 'Sheet'|'Skills'|'Gear'|'More'>>({});
+  const [heroTab, setHeroTab] = useState<Record<string, 'Sheet'|'Skills'|'Gear'|'Experience'>>({});
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createStep, setCreateStep] = useState(0);
+  const [draftHero, setDraftHero] = useState<any | null>(null);
   const [showFeatChoices, setShowFeatChoices] = useState(true);
   const [showAddVirtuesRewards, setShowAddVirtuesRewards] = useState(true);
 
@@ -38,7 +41,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
   const heroes = heroesAll.filter((h:any)=> (h.campaignId ?? activeCampaignId) === activeCampaignId);
 
   // TN base: normal TOR uses 20; Strider Mode (Fellowship) uses 18.
-  const tnBase = (state as any)?.fellowship?.mode === 'strider' ? 18 : 20;
+  const tnBase = 20; // default; per-hero TN base is derived from hero.striderMode
 
   const skillsByGroup = useMemo(() => {
     const groups: Record<string, any[]> = { Personality: [], Movement: [], Perception: [], Survival: [], Custom: [], Vocation: [] };
@@ -50,6 +53,16 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
 
   function getCultureEntry(cultureId?: string) {
     return findEntryById(compendiums.cultures.entries ?? [], cultureId);
+  }
+
+  function virtueChoices(hero: any) {
+    const cultureId = hero?.cultureId;
+    const wisdom = Number(hero?.points?.wisdom ?? 0);
+    return sortByName((compendiums.virtues.entries ?? []).filter((v:any)=>{
+      if (!v?.virtueType) return true;
+      if (v.virtueType === 'cultural') return wisdom >= 2 && v.cultureId === cultureId;
+      return false;
+    }));
   }
 
   const PROF_LABEL_TO_KEY: Record<string, 'axes'|'bows'|'spears'|'swords'> = {
@@ -248,52 +261,43 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
   }
   function addHero() {
     const now = new Date().toISOString();
-    const newHero = {
+    const baseHero: any = {
       id: uid('hero'),
       campaignId: activeCampaignId,
       name: 'New Hero',
       createdAt: now,
       updatedAt: now,
-      tnDefault: 20,
+      creationComplete: false,
+      striderMode: false,
+      gender: 'Other',
+      // baseline TN base is handled per-hero (20 normal, 18 strider)
+      attributes: { strength: 2, heart: 2, wits: 2 },
+      endurance: { max: 22, current: 22 },
+      hope: { max: 10, current: 10 },
+      shadow: { points: 0, shadowScars: 0 },
+      points: { adventure: 0, skill: 0, fellowship: 0, valour: 1, wisdom: 1 },
       cultureId: '',
       callingId: '',
       featureIds: [],
-      striderMode: false,
-      standardOfLiving: 'Common',
-      mount: { vigour: 1, label: 'Old horse or half-starved pony' },
-      attributes: { strength: 2, heart: 2, wits: 2 },
-      endurance: { max: 20, current: 20, load: 0, fatigue: 0 },
-      hope: { max: 8, current: 8 },
-      shadow: { points: 0, scars: 0 },
-      conditions: { miserable: false, weary: false, wounded: false },
-      injury: '',
-      valour: 0,
-      wisdom: 0,
-      points: { adventure: 0, skill: 0, fellowship: 0 },
-      favouredSkillIds: [],
+      skillRatings: Object.fromEntries((compendiums.skills.entries ?? []).map((s: any) => [s.id, 0])),
+      skillFavoured: {},
       combatProficiencies: { axes: 0, bows: 0, spears: 0, swords: 0 },
-      equipped: { weaponId: 'unarmed' },
-      parry: { base: 0, other: 0 },
-      protectionOther: 0,
       usefulItems: [],
+      inventory: [],
+      virtueIds: [],
+      rewardIds: [],
+      notes: '',
+      // Previous Experience baseline will be set after Culture/Calling choices,
+      // so culture/calling freebies never consume the PE budget.
       previousExperience: {
         baselineSkillRatings: Object.fromEntries((compendiums.skills.entries ?? []).map((s: any) => [s.id, 0])),
         baselineCombatProficiencies: { axes: 0, bows: 0, spears: 0, swords: 0 },
         committed: false,
       },
-      skillRatings: Object.fromEntries((compendiums.skills.entries ?? []).map((s: any) => [s.id, 0])),
-      skillFavoured: {},
-      virtueIds: [],
-      rewardIds: [],
-      inventory: [],
-      notes: '',
     };
-    const next: StoredState = { ...state, heroes: [newHero, ...heroes] };
-    setState(next);
-    saveState(next);
-    setExpandedId(newHero.id);
-    setActiveId(newHero.id);
-    persistUI(newHero.id, newHero.id, next);
+    setDraftHero(baseHero);
+    setCreateStep(0);
+    setCreateOpen(true);
   }
 
   function updateHero(id: string, patch: any) {
@@ -474,7 +478,8 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
 
           const culture = findEntryById(compendiums.cultures.entries ?? [], hero.cultureId)?.name || (hero.cultureId ? hero.cultureId : '—');
           const calling = findEntryById(compendiums.callings.entries ?? [], hero.callingId)?.name || (hero.callingId ? hero.callingId : '—');
-          const derived = computeDerived(hero, tnBase);
+          const tnBaseHero = hero.striderMode ? 18 : 20;
+                  const derived = computeDerived(hero, tnBaseHero);
           const activeTab = heroTab[hero.id] ?? 'Sheet';
 
           return (
@@ -504,7 +509,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
               {isExpanded && (
                 <div className="cardBody">
                   <div className="innerTabs">
-                    {(['Sheet','Skills','Gear','More'] as const).map(t => (
+                    {(['Sheet','Skills','Gear','Experience'] as const).map(t => (
                       <button
                         key={t}
                         className={"innerTab " + (activeTab===t ? 'active' : '')}
@@ -897,7 +902,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                                         </div>
                                         {(() => {
                                           const attr = getSkillAttribute(s.id);
-                                          const tn = getSkillTN(hero, s.id, tnBase);
+                                          const tn = getSkillTN(hero, s.id, tnBaseHero);
                                           return <div className="skillMeta">{attr} · TN {tn}{minByCulture ? ` · Min ${minByCulture} (Culture)` : ''}{baselineVal !== undefined ? ` · Baseline ${baselineVal}${extra ? ` (+${extra})` : ''}` : ''}</div>;
                                         })()}
                                         <div className="row" style={{gap:6}}>
@@ -937,12 +942,12 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                     </>
                   )}
 
-                  {activeTab === 'More' && (
+                  {activeTab === 'Experience' && (
                     <>
                       <div className="row">
                         <div className="field">
                           <div className="label">Culture</div>
-                          <select className="input" value={hero.cultureId ?? ''} onChange={(e)=>{
+                          <select className="input" value={hero.cultureId ?? ''} disabled={hero.creationComplete} onChange={(e)=>{
                             const newId = e.target.value;
                             const c:any = getCultureEntry(newId);
                             const sol = c?.standardOfLiving ?? hero.standardOfLiving;
@@ -975,7 +980,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
 
                         <div className="field">
                           <div className="label">Calling</div>
-                          <select className="input" value={hero.callingId ?? ''} onChange={(e)=>updateHero(hero.id,{callingId:e.target.value})}>
+                          <select className="input" value={hero.callingId ?? ''} disabled={hero.creationComplete} onChange={(e)=>updateHero(hero.id,{callingId:e.target.value})}>
                             <option value="">(none)</option>
                             {callingOptions.map((c:any)=> <option key={c.id} value={c.id}>{c.name}</option>)}
                           </select>
@@ -1283,7 +1288,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                         <div className="row" style={{marginTop: 10, gap: 10, flexWrap:'wrap'}}>
                           {showAddVirtuesRewards && <PickerAdd
                             label="Add Virtue"
-                            entries={sortByName(compendiums.virtues.entries ?? [])}
+                            entries={virtueChoices(hero)}
                             onAdd={(id)=>{
                               const cur: string[] = hero.virtueIds ?? [];
                               if (!cur.includes(id)) updateHero(hero.id,{virtueIds:[id, ...cur]});
@@ -1372,6 +1377,389 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
       
         </>
       )}
+
+      <BottomSheet open={createOpen} title={`Create Hero (${createStep+1}/15)`} onClose={()=>{ setCreateOpen(false); setDraftHero(null); }}>
+        {draftHero ? (
+          <div>
+            <div className="small muted" style={{marginBottom:8}}>
+              Fields marked with <b>*</b> will be locked after creation.
+            </div>
+
+            {createStep===0 && (
+              <div>
+                <div className="label">* Mode of play</div>
+                <select className="input" value={draftHero.striderMode ? 'strider' : 'fellowship'} onChange={(e)=>{
+                  const v = e.target.value === 'strider';
+                  setDraftHero((h:any)=>({ ...h, striderMode: v }));
+                }}>
+                  <option value="fellowship">Fellowship</option>
+                  <option value="strider">Strider</option>
+                </select>
+                <div className="small muted" style={{marginTop:6}}>Strider uses TN base 18 (instead of 20) and has 15 Previous Experience points.</div>
+              </div>
+            )}
+
+            {createStep===1 && (
+              <div>
+                <div className="label">* Culture</div>
+                <select className="input" value={draftHero.cultureId ?? ''} onChange={(e)=>{
+                  const cid = e.target.value;
+                  const c:any = findEntryById(compendiums.cultures.entries ?? [], cid);
+                  setDraftHero((h:any)=>{
+                    const next:any = { ...h, cultureId: cid };
+                    // Apply culture starting skills
+                    const cur = { ...(next.skillRatings ?? {}) };
+                    const starting = c?.startingSkills ?? {};
+                    for (const k of Object.keys(starting)) {
+                      cur[k] = Math.max(Number(cur[k] ?? 0), Number(starting[k] ?? 0));
+                    }
+                    next.skillRatings = cur;
+                    // Standard of living
+                    next.standardOfLiving = c?.standardOfLiving ?? next.standardOfLiving;
+                    // Reset culture-related picks
+                    next.cultureFavouredSkillId = '';
+                    next.cultureDistinctiveFeatureIds = [];
+                    next.cultureCombatProf2 = undefined;
+                    next.cultureCombatProf1 = undefined;
+                    return next;
+                  });
+                }}>
+                  <option value="">(choose)</option>
+                  {sortByName(compendiums.cultures.entries ?? []).map((c:any)=>(
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+                {draftHero.cultureId ? (
+                  <div className="small muted" style={{marginTop:6}}>
+                    Standard of Living: <b>{String(getCultureEntry(draftHero.cultureId)?.standardOfLiving ?? '—')}</b>
+                  </div>
+                ) : null}
+              </div>
+            )}
+
+            {createStep===2 && (
+              <div>
+                <div className="label">* Culture starting attribute array</div>
+                {(() => {
+                  const c:any = draftHero.cultureId ? getCultureEntry(draftHero.cultureId) : null;
+                  const rolls = Array.isArray(c?.attributeRolls) ? c.attributeRolls : [];
+                  if (!c || rolls.length===0) return <div className="small muted">Select a Culture first.</div>;
+                  const chosen = Number(draftHero.attributeRollChoice ?? 1);
+                  return (
+                    <div className="pillGrid">
+                      {rolls.map((r:any)=> {
+                        const selected = Number(r.roll)===chosen;
+                        return (
+                          <div key={r.roll} className={"pill " + (selected ? 'on' : '')} onClick={()=>{
+                            const strength = Number(r.strength); const heart = Number(r.heart); const wits = Number(r.wits);
+                            const endMax = strength + Number(c?.derived?.enduranceBonus ?? 20);
+                            const hopeMax = heart + Number(c?.derived?.hopeBonus ?? 8);
+                            setDraftHero((h:any)=>({
+                              ...h,
+                              attributeRollChoice: Number(r.roll),
+                              attributes: { ...(h.attributes ?? {}), strength, heart, wits },
+                              endurance: { ...(h.endurance ?? {}), max: endMax, current: endMax },
+                              hope: { ...(h.hope ?? {}), max: hopeMax, current: hopeMax },
+                            }));
+                          }}>
+                            <div><b>{r.roll}</b>: STR {r.strength} / HEA {r.heart} / WIT {r.wits}</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+                <div className="small muted" style={{marginTop:6}}>After creation you may edit attributes and resources, but not the chosen starting array.</div>
+              </div>
+            )}
+
+            {createStep===3 && (
+              <div>
+                <div className="label">* Culture Favoured skill</div>
+                {(() => {
+                  const c:any = draftHero.cultureId ? getCultureEntry(draftHero.cultureId) : null;
+                  const opts: string[] = Array.isArray(c?.favouredSkillCandidates) ? c.favouredSkillCandidates : [];
+                  if (!c || opts.length===0) return <div className="small muted">Select a Culture first.</div>;
+                  const cur = String(draftHero.cultureFavouredSkillId ?? '');
+                  return (
+                    <select className="input" value={cur} onChange={(e)=>{
+                      const sid = e.target.value;
+                      setDraftHero((h:any)=>({ ...h, cultureFavouredSkillId: sid, skillFavoured: { ...(h.skillFavoured ?? {}), [sid]: true } }));
+                    }}>
+                      <option value="">(choose)</option>
+                      {opts.map((sid)=>{
+                        const s:any = findEntryById(compendiums.skills.entries ?? [], sid);
+                        return <option key={sid} value={sid}>{s?.name ?? sid}</option>;
+                      })}
+                    </select>
+                  );
+                })()}
+              </div>
+            )}
+
+            {createStep===4 && (
+              <div>
+                <div className="label">* Culture Combat proficiencies</div>
+                {(() => {
+                  const c:any = draftHero.cultureId ? getCultureEntry(draftHero.cultureId) : null;
+                  const blocks: any[] = Array.isArray(c?.combatProficiencies) ? c.combatProficiencies : [];
+                  if (!c || blocks.length===0) return <div className="small muted">Select a Culture first.</div>;
+                  const or = blocks.find(b=>Array.isArray(b.or))?.or ?? ['Axes','Bows','Spears','Swords'];
+                  const selected2 = String(draftHero.cultureCombatProf2 ?? '');
+                  const selected1 = String(draftHero.cultureCombatProf1 ?? '');
+                  return (
+                    <div className="row" style={{gap:10, flexWrap:'wrap'}}>
+                      <div className="field" style={{flex:1}}>
+                        <div className="label">+2</div>
+                        <select className="input" value={selected2} onChange={(e)=>{
+                          const v = e.target.value;
+                          setDraftHero((h:any)=>{
+                            const next:any = { ...h, cultureCombatProf2: v, cultureCombatProf1: (h.cultureCombatProf1===v? '' : h.cultureCombatProf1) };
+                            const profs = { ...(next.combatProficiencies ?? {}) };
+                            const key = PROF_LABEL_TO_KEY[v] ?? null;
+                            if (key) profs[key] = Math.max(Number(profs[key] ?? 0), 2);
+                            next.combatProficiencies = profs;
+                            return next;
+                          });
+                        }}>
+                          <option value="">(choose)</option>
+                          {or.map((l:string)=><option key={l} value={l}>{l}</option>)}
+                        </select>
+                      </div>
+                      <div className="field" style={{flex:1}}>
+                        <div className="label">+1</div>
+                        <select className="input" value={selected1} onChange={(e)=>{
+                          const v = e.target.value;
+                          setDraftHero((h:any)=>{
+                            const next:any = { ...h, cultureCombatProf1: v };
+                            const profs = { ...(next.combatProficiencies ?? {}) };
+                            const key = PROF_LABEL_TO_KEY[v] ?? null;
+                            if (key) profs[key] = Math.max(Number(profs[key] ?? 0), 1);
+                            next.combatProficiencies = profs;
+                            return next;
+                          });
+                        }}>
+                          <option value="">(choose)</option>
+                          {or.filter((l:string)=>l!==selected2).map((l:string)=><option key={l} value={l}>{l}</option>)}
+                        </select>
+                      </div>
+                    </div>
+                  );
+                })()}
+                <div className="small muted" style={{marginTop:6}}>These bonuses set minimum proficiency ratings and won’t spend Previous Experience.</div>
+              </div>
+            )}
+
+            {createStep===5 && (
+              <div>
+                <div className="label">* Culture Distinctive features (choose 2)</div>
+                {(() => {
+                  const c:any = draftHero.cultureId ? getCultureEntry(draftHero.cultureId) : null;
+                  const opts: string[] = Array.isArray(c?.suggestedFeatures) ? c.suggestedFeatures : [];
+                  if (!c || opts.length===0) return <div className="small muted">Select a Culture first.</div>;
+                  const cur: string[] = Array.isArray(draftHero.cultureDistinctiveFeatureIds) ? draftHero.cultureDistinctiveFeatureIds : [];
+                  return (
+                    <div className="pillGrid">
+                      {opts.map((fid)=>{
+                        const selected = cur.includes(fid);
+                        return (
+                          <div key={fid} className={"pill " + (selected ? 'on' : '')} onClick={()=>{
+                            setDraftHero((h:any)=>{
+                              const prev: string[] = Array.isArray(h.cultureDistinctiveFeatureIds) ? h.cultureDistinctiveFeatureIds : [];
+                              let next = prev;
+                              if (prev.includes(fid)) next = prev.filter(x=>x!==fid);
+                              else if (prev.length < 2) next = [...prev, fid];
+                              else next = [...prev.slice(0,1), fid];
+                              return { ...h, cultureDistinctiveFeatureIds: next };
+                            });
+                          }}>
+                            {fid}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+
+            {createStep===6 && (
+              <div>
+                <div className="label">* Calling</div>
+                <select className="input" value={draftHero.callingId ?? ''} onChange={(e)=>{
+                  const id = e.target.value;
+                  setDraftHero((h:any)=>({ ...h, callingId: id, callingFavouredSkillIds: [], callingDistinctiveFeatureId: undefined, shadowPathId: undefined }));
+                }}>
+                  <option value="">(choose)</option>
+                  {sortByName(compendiums.callings.entries ?? []).map((c:any)=>(
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+                {draftHero.callingId ? (
+                  <div className="small muted" style={{marginTop:6}}>
+                    Shadow Path will be set from the Calling.
+                  </div>
+                ) : null}
+              </div>
+            )}
+
+            {createStep===7 && (
+              <div>
+                <div className="label">* Calling Favoured skills (choose 2)</div>
+                {(() => {
+                  const c:any = draftHero.callingId ? findEntryById(compendiums.callings.entries ?? [], draftHero.callingId) : null;
+                  const options: string[] = Array.isArray(c?.favouredSkills) ? c.favouredSkills : [];
+                  if (!c || options.length===0) return <div className="small muted">Select a Calling first.</div>;
+                  const cur: string[] = Array.isArray(draftHero.callingFavouredSkillIds) ? draftHero.callingFavouredSkillIds : [];
+                  const toSkillId = (label: string) => {
+                    const needle = String(label).toLowerCase();
+                    const s:any = (compendiums.skills.entries ?? []).find((x:any)=>String(x.name??'').toLowerCase()===needle || String(x.id??'').toLowerCase()===needle);
+                    return s?.id ?? needle;
+                  };
+                  return (
+                    <div className="pillGrid">
+                      {options.map((lab)=>{
+                        const sid = toSkillId(lab);
+                        const selected = cur.includes(sid);
+                        return (
+                          <div key={sid} className={"pill " + (selected ? 'on' : '')} onClick={()=>{
+                            setDraftHero((h:any)=>{
+                              const prev: string[] = Array.isArray(h.callingFavouredSkillIds) ? h.callingFavouredSkillIds : [];
+                              let next = prev;
+                              if (prev.includes(sid)) next = prev.filter(x=>x!==sid);
+                              else if (prev.length < 2) next = [...prev, sid];
+                              else next = [...prev.slice(0,1), sid];
+                              return { ...h, callingFavouredSkillIds: next, skillFavoured: { ...(h.skillFavoured ?? {}), [sid]: true } };
+                            });
+                          }}>
+                            {String(lab).toLowerCase().replace(/^\w/, (m)=>m.toUpperCase())}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+
+            {createStep===8 && (
+              <div>
+                <div className="label">* Previous experience</div>
+                <div className="small muted">Budget: <b>{draftHero.striderMode ? 15 : 10}</b> points.</div>
+                <div className="small muted" style={{marginBottom:8}}>
+                  Culture/Calling bonuses are free and do not spend this budget.
+                </div>
+                <PreviousExperienceEditor hero={draftHero} setHero={setDraftHero} />
+              </div>
+            )}
+
+            {createStep===9 && (
+              <div>
+                <div className="label">Starting gear</div>
+                <StartingGearEditor hero={draftHero} setHero={setDraftHero} />
+              </div>
+            )}
+
+            {createStep===10 && (
+              <div>
+                <div className="label">Useful items</div>
+                <div className="small muted" style={{marginBottom:8}}>Choices depend on Standard of Living.</div>
+                <UsefulItemsEditor hero={draftHero} updateHero={(patch:any)=>setDraftHero((h:any)=>({ ...h, ...patch }))} />
+              </div>
+            )}
+
+            {createStep===11 && (
+              <div>
+                <div className="label">Ponies and horses</div>
+                <MountsEditor hero={draftHero} setHero={setDraftHero} />
+              </div>
+            )}
+
+            {createStep===12 && (
+              <div>
+                <div className="label">Starting reward and virtue</div>
+                <StartingRewardVirtueEditor hero={draftHero} setHero={setDraftHero} onSeeMore={openEntry} />
+              </div>
+            )}
+
+            {createStep===13 && (
+              <div>
+                <div className="label">Gender</div>
+                <select className="input" value={draftHero.gender ?? 'Other'} onChange={(e)=>setDraftHero((h:any)=>({ ...h, gender: e.target.value }))}>
+                  <option value="Masculine">Masculine</option>
+                  <option value="Feminine">Feminine</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            )}
+
+            {createStep===14 && (
+              <div>
+                <div className="label">Hero name</div>
+                <input className="input" value={draftHero.name ?? ''} onChange={(e)=>setDraftHero((h:any)=>({ ...h, name: e.target.value }))} />
+                <div className="row" style={{gap:8, marginTop:8}}>
+                  <button className="btn" onClick={()=>{
+                    const c:any = getCultureEntry(draftHero.cultureId);
+                    const male: string[] = Array.isArray(c?.names?.male) ? c.names.male : [];
+                    const female: string[] = Array.isArray(c?.names?.female) ? c.names.female : [];
+                    const g = String(draftHero.gender ?? 'Other');
+                    const pool = g==='Masculine' ? male : g==='Feminine' ? female : [...male,...female];
+                    const pick = pool.length ? pool[Math.floor(Math.random()*pool.length)] : rollNameFallback(c?.name ?? c?.id);
+                    setDraftHero((h:any)=>({ ...h, name: pick }));
+                  }}>Random</button>
+                </div>
+              </div>
+            )}
+
+            <div className="row" style={{gap:8, marginTop:14, justifyContent:'space-between'}}>
+              <button className="btn btn-ghost" disabled={createStep===0} onClick={()=>setCreateStep((s:number)=>Math.max(0,s-1))}>Back</button>
+              {createStep < 14 ? (
+                <button className="btn" onClick={()=>{
+                  // Step boundary checks (light)
+                  const h:any = draftHero;
+                  if (createStep===1 && !h.cultureId) return alert('Choose a Culture.');
+                  if (createStep===2 && !h.cultureId) return alert('Choose a Culture first.');
+                  if (createStep===3 && !h.cultureFavouredSkillId) return alert('Choose the Culture favoured skill.');
+                  if (createStep===4 && !h.cultureCombatProf2) return alert('Choose the +2 Combat Proficiency.');
+                  if (createStep===5 && (Array.isArray(h.cultureDistinctiveFeatureIds) ? h.cultureDistinctiveFeatureIds.length : 0) < 2) return alert('Choose 2 Distinctive Features.');
+                  if (createStep===6 && !h.callingId) return alert('Choose a Calling.');
+                  if (createStep===7 && (Array.isArray(h.callingFavouredSkillIds) ? h.callingFavouredSkillIds.length : 0) < 2) return alert('Choose 2 Calling favoured skills.');
+                  // ensure PE baselines set before PE step
+                  if (createStep===7) {
+                    setDraftHero((prev:any)=>({ ...prev, previousExperience: { ...(prev.previousExperience ?? {}), baselineSkillRatings: { ...(prev.skillRatings ?? {}) }, baselineCombatProficiencies: { ...(prev.combatProficiencies ?? {}) }, committed: false } }));
+                  }
+                  setCreateStep((s:number)=>Math.min(14,s+1));
+                }}>Next</button>
+              ) : (
+                <button className="btn" onClick={()=>{
+                  const h:any = draftHero;
+                  if (!h.name || !String(h.name).trim()) return alert('Enter a name.');
+                  // Finalize features (cultural blessing + calling extra)
+                  let featureIds: string[] = Array.isArray(h.featureIds) ? [...h.featureIds] : [];
+                  const auto = autoFeatureIds(h);
+                  for (const id of auto) if (!featureIds.includes(id)) featureIds.push(id);
+                  // Distinctive Features choices become Features
+                  const chosenFeatures: string[] = [
+                    ...(Array.isArray(h.cultureDistinctiveFeatureIds) ? h.cultureDistinctiveFeatureIds : []),
+                    ...(h.callingDistinctiveFeatureId ? [h.callingDistinctiveFeatureId] : []),
+                  ];
+                  for (const fid of chosenFeatures) if (fid && !featureIds.includes(fid)) featureIds.push(fid);
+                  const finalized = { ...h, featureIds, creationComplete: true };
+                  const next: StoredState = { ...state, heroes: [finalized, ...heroes] };
+                  setState(next);
+                  saveState(next);
+                  setExpandedId(finalized.id);
+                  setActiveId(finalized.id);
+                  persistUI(finalized.id, finalized.id, next);
+                  setCreateOpen(false);
+                  setDraftHero(null);
+                }}>Finish</button>
+              )}
+            </div>
+          </div>
+        ) : null}
+      </BottomSheet>
+
 <BottomSheet open={sheetOpen} title={sheetTitle} onClose={()=>setSheetOpen(false)}>
         {(() => {
           const body: any = sheetBody;
@@ -1836,6 +2224,312 @@ function GearEquippedEditor({ hero, updateHero, onSeeMore }: { hero: any; update
           ) : <div className="small muted" style={{marginTop:6}}>Pick a helm to see Protection/Load.</div>}
         </div>
       </div>
+    </div>
+  );
+}
+
+
+function clone(obj: any) {
+  return JSON.parse(JSON.stringify(obj ?? {}));
+}
+
+// --- Creation wizard editors ---
+
+function PreviousExperienceEditor({ hero, setHero }: { hero: any; setHero: (fn:any)=>void }) {
+  const pe = hero.previousExperience ?? {};
+  const committed = !!pe.committed;
+  const budget = hero.striderMode ? 15 : 10;
+
+  const skillCost = (toLevel: number) => {
+    if (toLevel <= 1) return 1;
+    if (toLevel === 2) return 2;
+    if (toLevel === 3) return 3;
+    if (toLevel === 4) return 4;
+    if (toLevel === 5) return 5;
+    return 0;
+  };
+  const profCost = (toLevel: number) => {
+    if (toLevel <= 1) return 2;
+    if (toLevel === 2) return 4;
+    if (toLevel === 3) return 6;
+    return 0;
+  };
+
+  const baselineSkills = pe.baselineSkillRatings ?? {};
+  const baselineProfs = pe.baselineCombatProficiencies ?? {};
+
+  const computeSpent = () => {
+    if (!committed) return 0;
+    let spent = 0;
+    const curSkills = hero.skillRatings ?? {};
+    for (const sid of Object.keys(curSkills)) {
+      const cur = Number(curSkills[sid] ?? 0);
+      const base = Number(baselineSkills[sid] ?? 0);
+      for (let lvl = base + 1; lvl <= cur; lvl++) spent += skillCost(lvl);
+    }
+    const curProfs = hero.combatProficiencies ?? {};
+    for (const key of ['axes','bows','spears','swords']) {
+      const cur = Number(curProfs[key] ?? 0);
+      const base = Number(baselineProfs[key] ?? 0);
+      for (let lvl = base + 1; lvl <= cur; lvl++) spent += profCost(lvl);
+    }
+    return spent;
+  };
+
+  const spent = computeSpent();
+  const remaining = budget - spent;
+
+  const setCommitted = (v: boolean) => {
+    setHero((h:any)=>({ ...h, previousExperience: { ...(h.previousExperience ?? {}), committed: v } }));
+  };
+
+  const skills = sortByName(compendiums.skills.entries ?? []);
+  const profRows = [
+    { key: 'axes', label: 'Axes' },
+    { key: 'bows', label: 'Bows' },
+    { key: 'spears', label: 'Spears' },
+    { key: 'swords', label: 'Swords' },
+  ];
+
+  return (
+    <div>
+      <div className="row" style={{gap:10, alignItems:'center', flexWrap:'wrap'}}>
+        <div className="small"><b>Remaining</b> {remaining} / {budget}</div>
+        {!committed ? (
+          <button className="btn" onClick={()=>setCommitted(true)}>Commit</button>
+        ) : (
+          <button className="btn btn-ghost" onClick={()=>setCommitted(false)}>Uncommit</button>
+        )}
+        <span className="small muted">When committed, increases beyond the baseline spend points.</span>
+      </div>
+
+      <div className="miniCard" style={{marginTop:10}}>
+        <div className="miniTitle">Skills (cap 4)</div>
+        <div className="grid2" style={{marginTop:8}}>
+          {skills.map((s:any)=>{
+            const cur = Number((hero.skillRatings ?? {})[s.id] ?? 0);
+            const base = Number(baselineSkills[s.id] ?? 0);
+            const maxAllowed = 4;
+            const nextLevel = Math.min(maxAllowed, cur + 1);
+            const incCost = (committed && nextLevel > base) ? skillCost(nextLevel) : 0;
+            const canInc = !committed || incCost <= remaining;
+            return (
+              <div key={s.id} className="skillRow">
+                <div className="skillName">{s.name}</div>
+                <div className="row" style={{gap:6}}>
+                  <button className="btn btn-ghost" onClick={()=>{
+                    setHero((h:any)=>{
+                      const next = { ...h, skillRatings: { ...(h.skillRatings ?? {}), [s.id]: Math.max(0, cur-1) } };
+                      return next;
+                    });
+                  }}>-</button>
+                  <div className="skillNum" style={{minWidth:24, textAlign:'center'}}>{cur}</div>
+                  <button className="btn btn-ghost" disabled={!canInc || cur>=maxAllowed} onClick={()=>{
+                    setHero((h:any)=>{
+                      const next = { ...h, skillRatings: { ...(h.skillRatings ?? {}), [s.id]: Math.min(maxAllowed, cur+1) } };
+                      return next;
+                    });
+                  }}>+</button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="miniCard" style={{marginTop:10}}>
+        <div className="miniTitle">Combat Proficiencies (cap 3)</div>
+        <div className="grid2" style={{marginTop:8}}>
+          {profRows.map((r:any)=>{
+            const cur = Number((hero.combatProficiencies ?? {})[r.key] ?? 0);
+            const base = Number(baselineProfs[r.key] ?? 0);
+            const maxAllowed = 3;
+            const nextLevel = Math.min(maxAllowed, cur + 1);
+            const incCost = (committed && nextLevel > base) ? profCost(nextLevel) : 0;
+            const canInc = !committed || incCost <= remaining;
+            return (
+              <div key={r.key} className="skillRow">
+                <div className="skillName">{r.label}</div>
+                <div className="row" style={{gap:6}}>
+                  <button className="btn btn-ghost" onClick={()=>{
+                    setHero((h:any)=>({ ...h, combatProficiencies: { ...(h.combatProficiencies ?? {}), [r.key]: Math.max(0, cur-1) } }));
+                  }}>-</button>
+                  <div className="skillNum" style={{minWidth:24, textAlign:'center'}}>{cur}</div>
+                  <button className="btn btn-ghost" disabled={!canInc || cur>=maxAllowed} onClick={()=>{
+                    setHero((h:any)=>({ ...h, combatProficiencies: { ...(h.combatProficiencies ?? {}), [r.key]: Math.min(maxAllowed, cur+1) } }));
+                  }}>+</button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StartingGearEditor({ hero, setHero }: { hero: any; setHero: (fn:any)=>void }) {
+  const weapons = (compendiums.equipment.entries ?? []).filter((e:any)=>e.category==='Weapon');
+  const armours = (compendiums.equipment.entries ?? []).filter((e:any)=>e.category==='Armour');
+  const helms = (compendiums.equipment.entries ?? []).filter((e:any)=>e.category==='Headgear');
+  const shields = (compendiums.equipment.entries ?? []).filter((e:any)=>e.category==='Shield');
+
+  const curInv = Array.isArray(hero.inventory) ? hero.inventory : [];
+  const ensureItem = (refId: string) => {
+    if (curInv.some((it:any)=>it?.ref?.id===refId)) return;
+    const entry:any = findEntryById(compendiums.equipment.entries ?? [], refId);
+    if (!entry) return;
+    setHero((h:any)=>({ ...h, inventory: [{ id: uid('it'), name: entry.name, qty: 1, ref: { pack:'tor2e-equipment', id: entry.id }, equipped: false, dropped: false }, ...(h.inventory ?? [])] }));
+  };
+
+  const profs = hero.combatProficiencies ?? {};
+  const profKeys: any[] = [
+    { key:'axes', label:'Axes' },
+    { key:'bows', label:'Bows' },
+    { key:'spears', label:'Spears' },
+    { key:'swords', label:'Swords' },
+  ];
+  return (
+    <div>
+      <div className="small muted">Pick one weapon for each combat proficiency with a rating.</div>
+      {profKeys.filter(p=>Number(profs[p.key] ?? 0) > 0).map((p:any)=>{
+        const opts = weapons.filter((w:any)=>String(w.proficiency ?? '').toLowerCase().includes(p.label.toLowerCase()));
+        return (
+          <div key={p.key} className="field" style={{marginTop:10}}>
+            <div className="label">{p.label} weapon</div>
+            <select className="input" onChange={(e)=>{ const id = e.target.value; if (id) ensureItem(id); }}>
+              <option value="">(choose to add)</option>
+              {sortByName(opts).map((w:any)=> <option key={w.id} value={w.id}>{w.name}</option>)}
+            </select>
+          </div>
+        );
+      })}
+      <div className="row" style={{gap:10, flexWrap:'wrap', marginTop:12}}>
+        <div className="field" style={{flex:1}}>
+          <div className="label">Armour</div>
+          <select className="input" onChange={(e)=>{ const id = e.target.value; if (id) ensureItem(id); }}>
+            <option value="">(optional)</option>
+            {sortByName(armours).map((a:any)=> <option key={a.id} value={a.id}>{a.name}</option>)}
+          </select>
+        </div>
+        <div className="field" style={{flex:1}}>
+          <div className="label">Helm</div>
+          <select className="input" onChange={(e)=>{ const id = e.target.value; if (id) ensureItem(id); }}>
+            <option value="">(optional)</option>
+            {sortByName(helms).map((a:any)=> <option key={a.id} value={a.id}>{a.name}</option>)}
+          </select>
+        </div>
+      </div>
+      <div className="field" style={{marginTop:10}}>
+        <div className="label">Shield</div>
+        <select className="input" onChange={(e)=>{ const id = e.target.value; if (id) ensureItem(id); }}>
+          <option value="">(optional)</option>
+          {sortByName(shields).map((a:any)=> <option key={a.id} value={a.id}>{a.name}</option>)}
+        </select>
+      </div>
+      <div className="small muted" style={{marginTop:10}}>You can equip items later in the Gear tab.</div>
+    </div>
+  );
+}
+
+function MountsEditor({ hero, setHero }: { hero: any; setHero: (fn:any)=>void }) {
+  const opts = [
+    { id:'pony', name:'Pony' },
+    { id:'horse', name:'Horse' },
+  ];
+  const cur = Array.isArray(hero.mounts) ? hero.mounts : [];
+  return (
+    <div>
+      <div className="small muted">Optional. Add a mount to your inventory for tracking.</div>
+      <div className="row" style={{gap:8, flexWrap:'wrap', marginTop:10}}>
+        {opts.map((o)=>(
+          <button key={o.id} className="btn" onClick={()=>{
+            setHero((h:any)=>{
+              const inv = Array.isArray(h.inventory) ? h.inventory : [];
+              if (inv.some((it:any)=>String(it.name??'').toLowerCase()===o.name.toLowerCase())) return h;
+              return { ...h, inventory: [{ id: uid('it'), name: o.name, qty: 1, load: 0, equipped:false, dropped:false }, ...inv] };
+            });
+          }}>Add {o.name}</button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
+function StartingRewardVirtueEditor({ hero, setHero, onSeeMore }: { hero:any; setHero:(fn:any)=>void; onSeeMore:(pack:any,id:string)=>void }) {
+  const virtues = sortByName((compendiums.virtues.entries ?? []).filter((v:any)=>!v.virtueType));
+  const rewards = sortByName(compendiums.rewards.entries ?? []);
+  const curVirtueIds: string[] = Array.isArray(hero.virtueIds) ? hero.virtueIds : [];
+  const curRewardIds: string[] = Array.isArray(hero.rewardIds) ? hero.rewardIds : [];
+  const selectedVirtue = curVirtueIds[0] ?? '';
+  const selectedReward = curRewardIds[0] ?? '';
+
+  const inv = Array.isArray(hero.inventory) ? hero.inventory : [];
+  const equipable = inv.filter((it:any)=>it?.ref?.pack==='tor2e-equipment' && it?.ref?.id);
+  const attached: any = hero.rewardAttached ?? {};
+  const attachedItemId = selectedReward ? (attached[selectedReward] ?? '') : '';
+
+  const rewardToOverride = (rewardId: string) => {
+    switch (rewardId) {
+      case 'improved-armour': return { protectionDelta: 1, notesAppend: 'Improved Armour (+1 PRO)' };
+      case 'close-fitting': return { loadDelta: -1, notesAppend: 'Close-fitting (-1 Load)' };
+      case 'accurate-weapon': return { piercingThreshold: 10, notesAppend: 'Accurate (PB 10+)' };
+      case 'fell-weapon': return { damageDelta: 1, notesAppend: 'Fell (+1 DMG)' };
+      case 'keen-weapon': return { piercingThreshold: 9, notesAppend: 'Keen (PB 9+)' };
+      case 'grievous-weapon': return { injuryOverride: '16', notesAppend: 'Grievous (INJ 16)' };
+      default: return {};
+    }
+  };
+
+  const applyAttachment = (rewardId: string, itemId: string) => {
+    setHero((h:any)=>{
+      const inv2 = Array.isArray(h.inventory) ? [...h.inventory] : [];
+      const idx = inv2.findIndex((it:any)=>it?.id===itemId);
+      if (idx>=0) {
+        inv2[idx] = { ...inv2[idx], override: { ...(inv2[idx].override ?? {}), ...rewardToOverride(rewardId) } };
+      }
+      const ra = { ...(h.rewardAttached ?? {}), [rewardId]: itemId };
+      return { ...h, inventory: inv2, rewardAttached: ra };
+    });
+  };
+
+  return (
+    <div>
+      <div className="field">
+        <div className="label">Virtue (choose 1)</div>
+        <select className="input" value={selectedVirtue} onChange={(e)=>setHero((h:any)=>({ ...h, virtueIds: e.target.value ? [e.target.value] : [] }))}>
+          <option value="">(choose)</option>
+          {virtues.map((v:any)=><option key={v.id} value={v.id}>{v.name}</option>)}
+        </select>
+        {selectedVirtue ? <button className="btn btn-ghost" onClick={()=>onSeeMore('virtues', selectedVirtue)}>i</button> : null}
+      </div>
+
+      <div className="field" style={{marginTop:10}}>
+        <div className="label">Reward (choose 1)</div>
+        <select className="input" value={selectedReward} onChange={(e)=>setHero((h:any)=>({ ...h, rewardIds: e.target.value ? [e.target.value] : [], rewardAttached: {} }))}>
+          <option value="">(choose)</option>
+          {rewards.map((r:any)=><option key={r.id} value={r.id}>{r.name}</option>)}
+        </select>
+        {selectedReward ? <button className="btn btn-ghost" onClick={()=>onSeeMore('rewards', selectedReward)}>i</button> : null}
+      </div>
+
+      {selectedReward ? (
+        <div className="field" style={{marginTop:10}}>
+          <div className="label">Attach Reward to an item (permanent)</div>
+          <select className="input" value={attachedItemId} onChange={(e)=>{
+            const itemId = e.target.value;
+            if (!itemId) return;
+            applyAttachment(selectedReward, itemId);
+          }}>
+            <option value="">(choose an equipped item)</option>
+            {equipable.map((it:any)=>(
+              <option key={it.id} value={it.id}>{it.name}</option>
+            ))}
+          </select>
+          <div className="small muted" style={{marginTop:6}}>This stores the reward on the chosen item and applies its modifier to derived stats.</div>
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -93,7 +93,27 @@ export function computeDerived(hero: any, tnBase: number = 20): Tor2eDerived {
   const inv = Array.isArray(hero?.inventory) ? hero.inventory : [];
   const equipment = compendiums.equipment.entries ?? [];
   const resolveEquipRef = (it: any) => {
-    if (it?.ref?.pack === 'tor2e-equipment' && it?.ref?.id) return findEntryById(equipment, it.ref.id);
+    if (it?.ref?.pack === 'tor2e-equipment' && it?.ref?.id) {
+      const base = findEntryById(equipment, it.ref.id);
+      if (!base) return null;
+      const o = (it as any)?.override ?? {};
+      // Apply lightweight overrides (used for Rewards attached to items)
+      const merged: any = { ...base };
+      if (typeof o.loadDelta === 'number') merged.load = Number(merged.load ?? 0) + Number(o.loadDelta);
+      if (typeof o.damageDelta === 'number') merged.damage = Number(merged.damage ?? 0) + Number(o.damageDelta);
+      if (typeof o.protectionDelta === 'number') {
+        // Protection is stored as dice string (e.g. '1d') or number in compendium; keep numeric adjustments simple.
+        const cur = typeof (merged as any).protection === 'number' ? Number((merged as any).protection) : 0;
+        (merged as any).protection = cur + Number(o.protectionDelta);
+      }
+      if (typeof o.piercingThreshold === 'number') (merged as any).piercingThreshold = Number(o.piercingThreshold);
+      if (typeof o.injuryOverride === 'string' && o.injuryOverride.trim()) (merged as any).injury = o.injuryOverride.trim();
+      if (typeof o.notesAppend === 'string' && o.notesAppend.trim()) {
+        merged.notes = String(merged.notes ?? '').trim();
+        merged.notes = merged.notes ? (merged.notes + ' • ' + o.notesAppend.trim()) : o.notesAppend.trim();
+      }
+      return merged;
+    }
     return null;
   };
 
@@ -153,6 +173,25 @@ export function computeDerived(hero: any, tnBase: number = 20): Tor2eDerived {
   };
 }
 
+
+export function rollName(cultureIdOrName?: string, gender: 'Masculine'|'Feminine'|'Other' = 'Other'): string {
+  // Prefer bundled (user-provided) name lists from the Culture compendium when available.
+  let culture: any = null;
+  if (cultureIdOrName) {
+    culture = findEntryById(compendiums.cultures.entries ?? [], cultureIdOrName);
+    if (!culture) {
+      const needle = String(cultureIdOrName).toLowerCase();
+      culture = (compendiums.cultures.entries ?? []).find((c: any) => String(c?.name ?? '').toLowerCase() === needle) ?? null;
+    }
+  }
+  const names = culture?.names;
+  const male: string[] = Array.isArray(names?.male) ? names.male : [];
+  const female: string[] = Array.isArray(names?.female) ? names.female : [];
+  const pool = gender === 'Masculine' ? male : gender === 'Feminine' ? female : [...male, ...female];
+  if (pool.length > 0) return pool[Math.floor(Math.random() * pool.length)];
+  return rollNameFallback(cultureIdOrName);
+}
+
 export function rollNameFallback(cultureIdOrName?: string): string {
   // Prefer bundled (user-provided) name lists from the Culture compendium when available.
   // Falls back to a lightweight fantasy generator if a culture has no names.
@@ -192,4 +231,3 @@ export function rollNameFallback(cultureIdOrName?: string): string {
   name = name.charAt(0).toUpperCase() + name.slice(1);
   return name;
 }
-
