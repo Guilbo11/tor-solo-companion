@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 type Props = {
   open: boolean;
@@ -10,6 +10,7 @@ type Props = {
 };
 
 export default function BottomSheet({ open, title, onClose, children, closeOnBackdrop = false, closeOnEsc = true }: Props) {
+  const bodyRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape' && closeOnEsc) onClose(); };
@@ -17,6 +18,14 @@ export default function BottomSheet({ open, title, onClose, children, closeOnBac
     return () => window.removeEventListener('keydown', onKey);
   }, [open, onClose, closeOnEsc]);
 
+
+  useEffect(() => {
+    if (!open) return;
+    // Ensure the sheet opens at the top of its internal scroll area
+    requestAnimationFrame(() => {
+      if (bodyRef.current) bodyRef.current.scrollTop = 0;
+    });
+  }, [open]);
   if (!open) return null;
 
   return (
@@ -26,7 +35,7 @@ export default function BottomSheet({ open, title, onClose, children, closeOnBac
           <div className="bs-title">{title}</div>
           <button className="btn btn-ghost" onClick={onClose}>Close</button>
         </div>
-        <div className="bs-body">{children}</div>
+        <div className="bs-body" ref={bodyRef}>{children}</div>
       </div>
     </div>
   );
