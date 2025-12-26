@@ -12,6 +12,7 @@ import FloatingDiceSheet from './FloatingDiceSheet';
 import NPCsPanel from './NPCsPanel';
 import FloatingOracleButton from './FloatingOracleButton';
 import OracleSidePanel from './OracleSidePanel';
+import ErrorBoundary from './ErrorBoundary';
 
 type Tab = 'Journal'|'Heroes'|'Map'|'NPCs'|'Fellowship'|'Oracles'|'Settings';
 
@@ -92,7 +93,8 @@ export default function App() {
   }, [state.settings?.addRollsToJournal]);
 
   return (
-    <div className={isCampaignLanding ? 'landingContainer' : 'container'}>
+    <ErrorBoundary>
+      <div className={isCampaignLanding ? 'landingContainer' : 'container'}>
       {!isCampaignLanding ? header : null}
       {!isCampaignLanding ? (
         <div className="tabs">
@@ -148,6 +150,7 @@ export default function App() {
           </OracleSidePanel>
         </>
       ) : null}
-    </div>
+      </div>
+    </ErrorBoundary>
   );
 }

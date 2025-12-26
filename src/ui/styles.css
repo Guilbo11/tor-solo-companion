@@ -257,3 +257,6 @@ canvas { border-radius: 14px; border: 1px solid #1f2a3a; background: #0b0f14; }
 .toolBtn.active{ border-color: #2a3d60; background: #1b2a44; }
 .richEditor{ min-height: 160px; border: 1px solid #182338; border-radius: 14px; padding: 10px; background: #0b0f17; outline: none; }
 .richEditor:focus{ border-color: #2a3d60; }
+
+/* Journal toolbar select */
+.select{ padding: 8px 10px; border-radius: 12px; border: 1px solid #182338; background: #101826; color: #e9eef8; }

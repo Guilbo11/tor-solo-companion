@@ -1207,6 +1207,12 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                             const key = PROF_LABEL_TO_KEY[v] ?? null;
                             if (key) profs[key] = Math.max(Number(profs[key] ?? 0), 2);
                             next.combatProficiencies = profs;
+                            // Culture combat proficiency bonuses are freebies and must not spend Previous Experience.
+                            // Ensure the PE baseline includes them.
+                            next.previousExperience = {
+                              ...(next.previousExperience ?? {}),
+                              baselineCombatProficiencies: { ...(next.previousExperience?.baselineCombatProficiencies ?? {}), ...profs },
+                            };
                             return next;
                           });
                         }}>
@@ -1224,6 +1230,12 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                             const key = PROF_LABEL_TO_KEY[v] ?? null;
                             if (key) profs[key] = Math.max(Number(profs[key] ?? 0), 1);
                             next.combatProficiencies = profs;
+                            // Culture combat proficiency bonuses are freebies and must not spend Previous Experience.
+                            // Ensure the PE baseline includes them.
+                            next.previousExperience = {
+                              ...(next.previousExperience ?? {}),
+                              baselineCombatProficiencies: { ...(next.previousExperience?.baselineCombatProficiencies ?? {}), ...profs },
+                            };
                             return next;
                           });
                         }}>
@@ -1489,10 +1501,12 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                     gearInv.push({ id: uid('it'), name: entry.name, qty: 1, ref: { pack:'tor2e-equipment', id: entry.id }, equipped: false, dropped: false, override });
                   };
                   const weaponByProf = sg.weaponByProf ?? {};
-                  addGear(weaponByProf.axes);
-                  addGear(weaponByProf.bows);
-                  addGear(weaponByProf.spears);
-                  addGear(weaponByProf.swords);
+                  // Only add a starting weapon for a proficiency the hero actually has.
+                  const cp = h.combatProficiencies ?? {};
+                  if (Number(cp.axes ?? 0) > 0) addGear(weaponByProf.axes);
+                  if (Number(cp.bows ?? 0) > 0) addGear(weaponByProf.bows);
+                  if (Number(cp.spears ?? 0) > 0) addGear(weaponByProf.spears);
+                  if (Number(cp.swords ?? 0) > 0) addGear(weaponByProf.swords);
                   addGear(sg.armourId);
                   addGear(sg.helmId);
                   addGear(sg.shieldId);

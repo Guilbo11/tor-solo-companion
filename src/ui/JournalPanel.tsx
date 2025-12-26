@@ -20,13 +20,80 @@ export default function JournalPanel({ state, setState }: Props) {
   const editing = chapters.find(c => c.id === editingId) ?? null;
 
   const editorRef = useRef<HTMLDivElement | null>(null);
+  const lastRangeRef = useRef<Range | null>(null);
   const [draftHtml, setDraftHtml] = useState<string>(editing ? clampHtml(editing.html) : '');
+  const [blockType, setBlockType] = useState<'P'|'H1'|'H2'|'H3'>('P');
 
   // Keep draft in sync when switching chapters
   useEffect(() => {
     if (!editing) return;
     setDraftHtml(clampHtml(editing.html));
+    setBlockType('P');
+    lastRangeRef.current = null;
   }, [editingId]);
+
+  // Track the last selection range inside the editor so we can insert rolls at the caret
+  // even if the user last clicked a toolbar button.
+  useEffect(() => {
+    if (!editing) return;
+    const onSel = () => {
+      const ed = editorRef.current;
+      if (!ed) return;
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return;
+      const r = sel.getRangeAt(0);
+      if (!ed.contains(r.startContainer)) return;
+      lastRangeRef.current = r.cloneRange();
+
+      // Try to infer current block type for the dropdown.
+      try {
+        const el = (r.startContainer as any)?.nodeType === 1 ? (r.startContainer as HTMLElement) : (r.startContainer.parentElement as HTMLElement | null);
+        const block = el?.closest('h1,h2,h3,p,div');
+        const tag = (block?.tagName ?? '').toUpperCase();
+        if (tag === 'H1' || tag === 'H2' || tag === 'H3') setBlockType(tag as any);
+        else setBlockType('P');
+      } catch {
+        // ignore
+      }
+    };
+
+    document.addEventListener('selectionchange', onSel);
+    return () => document.removeEventListener('selectionchange', onSel);
+  }, [editingId, editing]);
+
+  const insertHtmlAtCaretOrEnd = (html: string) => {
+    const ed = editorRef.current;
+    if (!ed) return;
+
+    const safe = `<br/><br/>${html}`; // one blank line separation
+
+    const sel = window.getSelection();
+    const useLast = lastRangeRef.current;
+    const range = (sel && sel.rangeCount > 0 && ed.contains(sel.getRangeAt(0).startContainer))
+      ? sel.getRangeAt(0)
+      : (useLast && ed.contains(useLast.startContainer) ? useLast : null);
+
+    if (range) {
+      // Insert after the current caret position.
+      range.deleteContents();
+      const frag = range.createContextualFragment(safe);
+      const last = frag.lastChild;
+      range.insertNode(frag);
+      // Move caret after inserted content.
+      if (last) {
+        const r2 = document.createRange();
+        r2.setStartAfter(last);
+        r2.collapse(true);
+        sel?.removeAllRanges();
+        sel?.addRange(r2);
+        lastRangeRef.current = r2.cloneRange();
+      }
+    } else {
+      // No caret in editor: append to the end.
+      ed.insertAdjacentHTML('beforeend', safe);
+    }
+    setDraftHtml(ed.innerHTML);
+  };
 
   // Expose an insert hook for dice/oracle logging.
   useEffect(() => {
@@ -35,24 +102,17 @@ export default function JournalPanel({ state, setState }: Props) {
       const html = String(detail?.html ?? '');
       if (!html.trim()) return;
 
-      // Prefer inserting at caret if editor is active.
-      if (editing && editorRef.current && document.activeElement === editorRef.current) {
-        try {
-          document.execCommand('insertHTML', false, `<br/><br/>${html}`);
-          setDraftHtml(editorRef.current.innerHTML);
-          return;
-        } catch {
-          // fall through to append
-        }
+      // If a chapter is currently being edited, ALWAYS insert into the editor draft.
+      // This prevents losing the inserted roll when the user clicks "Update journal".
+      if (editing && editorRef.current) {
+        insertHtmlAtCaretOrEnd(html);
+        return;
       }
 
-      // Append to chapter content.
+      // Otherwise append to the active chapter content.
       if (!active) return;
       const next = (active.html ?? '') + `<br/><br/>${html}`;
-      setState({
-        ...state,
-        journalChapters: chapters.map(c => c.id === active.id ? { ...c, html: next } : c),
-      });
+      setState({ ...state, journalChapters: chapters.map(c => c.id === active.id ? { ...c, html: next } : c) });
     };
 
     window.addEventListener('torc:journal-insert-html', onInsert as any);
@@ -116,6 +176,12 @@ export default function JournalPanel({ state, setState }: Props) {
 
   const applyHeading = (level: 1 | 2 | 3) => {
     exec('formatBlock', `H${level}`);
+  };
+
+  const applyBlockType = (t: 'P'|'H1'|'H2'|'H3') => {
+    setBlockType(t);
+    if (t === 'P') exec('formatBlock', 'P');
+    else applyHeading(t === 'H1' ? 1 : t === 'H2' ? 2 : 3);
   };
 
   const startEdit = (id: string) => {
@@ -198,13 +264,24 @@ export default function JournalPanel({ state, setState }: Props) {
               <div style={{ marginTop: 12 }}>
                 <div className="editorToolbar">
                   <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
-                    <button className="btn btn-ghost" onClick={() => applyHeading(1)}>H1</button>
-                    <button className="btn btn-ghost" onClick={() => applyHeading(2)}>H2</button>
-                    <button className="btn btn-ghost" onClick={() => applyHeading(3)}>H3</button>
-                    <button className="btn btn-ghost" onClick={() => exec('italic')}>Italic</button>
-                    <button className="btn btn-ghost" onClick={() => exec('underline')}>Underline</button>
-                    <button className="btn btn-ghost" onClick={() => exec('insertUnorderedList')}>• List</button>
-                    <button className="btn btn-ghost" onClick={() => exec('insertOrderedList')}>1. List</button>
+                    <select
+                      className="select"
+                      value={blockType}
+                      onChange={(e) => applyBlockType(e.target.value as any)}
+                      aria-label="Text style"
+                      style={{ minWidth: 160 }}
+                    >
+                      <option value="P">Paragraph</option>
+                      <option value="H1">Heading 1</option>
+                      <option value="H2">Heading 2</option>
+                      <option value="H3">Heading 3</option>
+                    </select>
+
+                    <button className="btn btn-ghost" aria-label="Bold" title="Bold" onClick={() => exec('bold')}><b>B</b></button>
+                    <button className="btn btn-ghost" aria-label="Italic" title="Italic" onClick={() => exec('italic')}><i>I</i></button>
+                    <button className="btn btn-ghost" aria-label="Underline" title="Underline" onClick={() => exec('underline')}><span style={{ textDecoration: 'underline' }}>U</span></button>
+                    <button className="btn btn-ghost" aria-label="Bulleted list" title="Bulleted list" onClick={() => exec('insertUnorderedList')}>•</button>
+                    <button className="btn btn-ghost" aria-label="Numbered list" title="Numbered list" onClick={() => exec('insertOrderedList')}>1.</button>
                   </div>
                 </div>
 
