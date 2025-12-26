@@ -1,20 +1,37 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import type { NPC, StoredState } from '../core/storage';
 import { compendiums, findEntryById, sortByName } from '../core/compendiums';
-import { loadLoreTable } from '../core/oracles';
+import { loadLoreTable, type LoreTableData } from '../core/loreTable';
 
 type Props = { state: StoredState; setState: (s: StoredState) => void };
 
 function uid(prefix='npc'){ return `${prefix}-${crypto.randomUUID()}`; }
 
-function sample<T>(arr: T[]): T | undefined { return arr.length ? arr[Math.floor(Math.random()*arr.length)] : undefined; }
+function sample<T>(arr: T[]): T | undefined {
+  return arr.length ? arr[Math.floor(Math.random() * arr.length)] : undefined;
+}
 
-function rollLorePick(rows: any[]) {
-  const r: any = sample(rows) ?? {};
+function pickDistinct(
+  tries: number,
+  pick: () => string,
+  used: Set<string>
+): string {
+  for (let i = 0; i < tries; i++) {
+    const t = pick().trim();
+    if (!t) continue;
+    if (used.has(t)) continue;
+    used.add(t);
+    return t;
+  }
+  return '';
+}
+
+function rollLorePick(rows: { action: string; aspect: string; focus: string }[]) {
+  const r = sample(rows) ?? { action: '', aspect: '', focus: '' };
   return {
-    action: String(r.action ?? '').trim(),
-    aspect: String(r.aspect ?? '').trim(),
-    focus: String(r.focus ?? '').trim(),
+    action: String((r as any).action ?? '').trim(),
+    aspect: String((r as any).aspect ?? '').trim(),
+    focus: String((r as any).focus ?? '').trim(),
   };
 }
 
@@ -24,14 +41,36 @@ export default function NPCsPanel({ state, setState }: Props) {
 
   const [createOpen, setCreateOpen] = useState(false);
   const [draft, setDraft] = useState<Partial<NPC>>({});
+  const [lore, setLore] = useState<LoreTableData | null>(null);
+  const [loreError, setLoreError] = useState<string | null>(null);
 
   const cultures = useMemo(() => sortByName(compendiums.cultures.entries ?? []), []);
-  const lore = useMemo(() => loadLoreTable(), []);
+
+  useEffect(() => {
+    let mounted = true;
+    loadLoreTable()
+      .then((d) => {
+        if (!mounted) return;
+        setLore(d);
+        setLoreError(null);
+      })
+      .catch((e) => {
+        if (!mounted) return;
+        setLore(null);
+        setLoreError(e?.message ?? 'Failed to load lore table');
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const loreRows = useMemo(() => {
-    const rows: any[] = [];
-    for (const t of lore.tables ?? []) {
-      if (!Array.isArray(t.rows)) continue;
-      for (const r of t.rows) rows.push(r);
+    const rows: { action: string; aspect: string; focus: string }[] = [];
+    if (!lore) return rows;
+    for (const feat of Object.keys(lore.tables ?? {})) {
+      for (const r of lore.tables[feat] ?? []) {
+        rows.push({ action: r.action, aspect: r.aspect, focus: r.focus });
+      }
     }
     return rows;
   }, [lore]);
@@ -69,21 +108,28 @@ export default function NPCsPanel({ state, setState }: Props) {
   };
 
   const rollAspects = () => {
-    const a1 = rollLorePick(loreRows);
-    const a2 = rollLorePick(loreRows);
-    patchDraft({ firstLook: [a1.aspect, a2.aspect].filter(Boolean) });
+    if (!loreRows.length) return;
+    const used = new Set<string>();
+    const a1 = pickDistinct(24, () => rollLorePick(loreRows).aspect, used);
+    const a2 = pickDistinct(24, () => rollLorePick(loreRows).aspect, used);
+    patchDraft({ firstLook: [a1, a2].filter(Boolean) });
   };
 
   const rollGoal = () => {
-    const r = rollLorePick(loreRows);
-    const goal = [r.action, r.focus].filter(Boolean).join(' ');
-    patchDraft({ goal });
+    if (!loreRows.length) return;
+    // Ensure we don't get identical tokens (e.g. same word for action + focus)
+    const used = new Set<string>();
+    const action = pickDistinct(24, () => rollLorePick(loreRows).action, used);
+    const focus = pickDistinct(24, () => rollLorePick(loreRows).focus, used);
+    patchDraft({ goal: [action, focus].filter(Boolean).join(' ') });
   };
 
   const rollMotivations = () => {
-    const r1 = rollLorePick(loreRows);
-    const r2 = rollLorePick(loreRows);
-    patchDraft({ motivations: [r1.focus, r2.action].filter(Boolean) });
+    if (!loreRows.length) return;
+    const used = new Set<string>();
+    const m1 = pickDistinct(24, () => rollLorePick(loreRows).focus, used);
+    const m2 = pickDistinct(24, () => rollLorePick(loreRows).action, used);
+    patchDraft({ motivations: [m1, m2].filter(Boolean) });
   };
 
   const saveNpc = () => {
