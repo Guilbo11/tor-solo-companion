@@ -18,6 +18,95 @@ function uid(prefix: string) {
   return prefix + '-' + Math.random().toString(36).slice(2, 10);
 }
 
+// --------------------------------------------------------------------------------------
+// Shared helpers
+//
+// Vite/esbuild does not typecheck during build, and this file declares multiple sub-
+// components at module scope (below). Those sub-components must use helpers that are
+// also declared at module scope (otherwise you'll get runtime ReferenceError in
+// production, e.g. "solRank is not defined").
+// --------------------------------------------------------------------------------------
+
+function getCultureEntry(cultureId?: string) {
+  return findEntryById(compendiums.cultures.entries ?? [], cultureId);
+}
+
+function solRank(sol: any): number {
+  const v = String(sol ?? '').trim().toLowerCase();
+  if (!v) return 0;
+  if (v === 'frugal') return 1;
+  if (v === 'common') return 2;
+  if (v === 'prosperous') return 3;
+  if (v === 'rich') return 4;
+  return 0;
+}
+
+function usefulItemLimitBySOL(sol: any): number {
+  const r = solRank(sol);
+  if (r <= 1) return 1;
+  if (r === 2) return 2;
+  if (r === 3) return 3;
+  return 4;
+}
+
+const PROF_LABEL_TO_KEY: Record<string, 'axes'|'bows'|'spears'|'swords'> = {
+  'Axes': 'axes',
+  'Bows': 'bows',
+  'Spears': 'spears',
+  'Swords': 'swords',
+};
+
+function getCultureSkillMins(hero: any): Record<string, number> {
+  const c: any = getCultureEntry(hero?.cultureId);
+  const mins: Record<string, number> = {};
+  const starting = c?.startingSkills ?? {};
+  for (const [sid, v] of Object.entries(starting)) mins[String(sid)] = Number(v) || 0;
+  return mins;
+}
+
+function getCultureCombatMins(hero: any): Record<'axes'|'bows'|'spears'|'swords', number> {
+  const mins: Record<'axes'|'bows'|'spears'|'swords', number> = { axes: 0, bows: 0, spears: 0, swords: 0 };
+  const c: any = getCultureEntry(hero?.cultureId);
+  if (!c) return mins;
+
+  const cp = Array.isArray(c.combatProficiencies) ? c.combatProficiencies[0] : null;
+  if (cp?.or?.length && cp.rating) {
+    const chosen2: string | undefined = (hero as any).cultureCombatProf2;
+    const chosenKey = chosen2 ? PROF_LABEL_TO_KEY[chosen2] : undefined;
+    if (chosenKey) mins[chosenKey] = Math.max(mins[chosenKey], Number(cp.rating) || 0);
+  }
+
+  const choiceCount = Number(c.combatProficiencyChoice ?? 0);
+  if (choiceCount >= 1) {
+    const chosen1: string | undefined = (hero as any).cultureCombatProf1;
+    const chosenKey = chosen1 ? PROF_LABEL_TO_KEY[chosen1] : undefined;
+    if (chosenKey) mins[chosenKey] = Math.max(mins[chosenKey], 1);
+  }
+
+  return mins;
+}
+
+function clampToCultureMinimums(hero: any, patch: any): any {
+  const next = { ...hero, ...patch };
+  const skillMins = getCultureSkillMins(next);
+  const combatMins = getCultureCombatMins(next);
+
+  const nextSkillRatings = { ...(next.skillRatings ?? {}) };
+  for (const [sid, min] of Object.entries(skillMins)) {
+    const cur = Number(nextSkillRatings[sid] ?? 0);
+    if (cur < min) nextSkillRatings[sid] = min;
+  }
+
+  const nextCombat = { ...(next.combatProficiencies ?? {}) };
+  for (const k of Object.keys(combatMins) as Array<keyof typeof combatMins>) {
+    const cur = Number((nextCombat as any)[k] ?? 0);
+    const min = combatMins[k];
+    if (cur < min) (nextCombat as any)[k] = min;
+  }
+
+  return { ...patch, skillRatings: nextSkillRatings, combatProficiencies: nextCombat };
+}
+
 export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'main' }: Props) {
   const [expandedId, setExpandedId] = useState<string | null>(state.ui?.heroesExpandedId ?? null);
   const [activeId, setActiveId] = useState<string | null>(state.ui?.activeHeroId ?? null);
@@ -59,30 +148,6 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
     return groups;
   }, []);
 
-  function getCultureEntry(cultureId?: string) {
-    return findEntryById(compendiums.cultures.entries ?? [], cultureId);
-  }
-
-  function solRank(sol: any): number {
-    const v = String(sol ?? '').trim().toLowerCase();
-    if (!v) return 0;
-    // Typical TOR 2e ladder. (We keep this local so the UI can enforce limits.)
-    if (v === 'frugal') return 1;
-    if (v === 'common') return 2;
-    if (v === 'prosperous') return 3;
-    if (v === 'rich') return 4;
-    return 0;
-  }
-
-  function usefulItemLimitBySOL(sol: any): number {
-    // Conservative default mapping when a culture doesn't specify a number explicitly.
-    const r = solRank(sol);
-    if (r <= 1) return 1;
-    if (r === 2) return 2;
-    if (r === 3) return 3;
-    return 4;
-  }
-
   function virtueChoices(hero: any) {
     const cultureId = hero?.cultureId;
     const wisdom = Number(hero?.points?.wisdom ?? 0);
@@ -91,64 +156,6 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
       if (v.virtueType === 'cultural') return wisdom >= 2 && v.cultureId === cultureId;
       return false;
     }));
-  }
-
-  const PROF_LABEL_TO_KEY: Record<string, 'axes'|'bows'|'spears'|'swords'> = {
-    'Axes': 'axes',
-    'Bows': 'bows',
-    'Spears': 'spears',
-    'Swords': 'swords',
-  };
-
-  function getCultureSkillMins(hero: any): Record<string, number> {
-    const c: any = getCultureEntry(hero.cultureId);
-    const mins: Record<string, number> = {};
-    const starting = c?.startingSkills ?? {};
-    for (const [sid, v] of Object.entries(starting)) mins[String(sid)] = Number(v) || 0;
-    return mins;
-  }
-
-  function getCultureCombatMins(hero: any): Record<'axes'|'bows'|'spears'|'swords', number> {
-    const mins: Record<'axes'|'bows'|'spears'|'swords', number> = { axes: 0, bows: 0, spears: 0, swords: 0 };
-    const c: any = getCultureEntry(hero.cultureId);
-    if (!c) return mins;
-
-    const cp = Array.isArray(c.combatProficiencies) ? c.combatProficiencies[0] : null;
-    if (cp?.or?.length && cp.rating) {
-      const chosen2: string | undefined = (hero as any).cultureCombatProf2;
-      const chosenKey = chosen2 ? PROF_LABEL_TO_KEY[chosen2] : undefined;
-      if (chosenKey) mins[chosenKey] = Math.max(mins[chosenKey], Number(cp.rating) || 0);
-    }
-
-    const choiceCount = Number(c.combatProficiencyChoice ?? 0);
-    if (choiceCount >= 1) {
-      const chosen1: string | undefined = (hero as any).cultureCombatProf1;
-      const chosenKey = chosen1 ? PROF_LABEL_TO_KEY[chosen1] : undefined;
-      if (chosenKey) mins[chosenKey] = Math.max(mins[chosenKey], 1);
-    }
-
-    return mins;
-  }
-
-  function clampToCultureMinimums(hero: any, patch: any): any {
-    const next = { ...hero, ...patch };
-    const skillMins = getCultureSkillMins(next);
-    const combatMins = getCultureCombatMins(next);
-
-    const nextSkillRatings = { ...(next.skillRatings ?? {}) };
-    for (const [sid, min] of Object.entries(skillMins)) {
-      const cur = Number(nextSkillRatings[sid] ?? 0);
-      if (cur < min) nextSkillRatings[sid] = min;
-    }
-
-    const nextCombat = { ...(next.combatProficiencies ?? {}) };
-    for (const k of Object.keys(combatMins) as Array<keyof typeof combatMins>) {
-      const cur = Number((nextCombat as any)[k] ?? 0);
-      const min = combatMins[k];
-      if (cur < min) (nextCombat as any)[k] = min;
-    }
-
-    return { ...patch, skillRatings: nextSkillRatings, combatProficiencies: nextCombat };
   }
 
   function unwrapText(input: any): string {
