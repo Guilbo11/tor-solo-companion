@@ -53,7 +53,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
 
   const skillsByGroup = useMemo(() => {
     const groups: Record<string, any[]> = { Personality: [], Movement: [], Perception: [], Survival: [], Custom: [], Vocation: [] };
-    const entries = compendiums.skills.entries ?? [];
+    const entries = compendiums.skills?.entries ?? [];
     for (const e of entries) groups[e.group || 'Custom'].push(e);
     for (const k of Object.keys(groups)) groups[k] = sortByName(groups[k]);
     return groups;
@@ -309,7 +309,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
       cultureId: '',
       callingId: '',
       featureIds: [],
-      skillRatings: Object.fromEntries((compendiums.skills.entries ?? []).map((s: any) => [s.id, 0])),
+      skillRatings: Object.fromEntries((compendiums.skills?.entries ?? []).map((s: any) => [s.id, 0])),
       skillFavoured: {},
       combatProficiencies: { axes: 0, bows: 0, spears: 0, swords: 0 },
       usefulItems: [],
@@ -320,7 +320,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
       // Previous Experience baseline will be set after Culture/Calling choices,
       // so culture/calling freebies never consume the PE budget.
       previousExperience: {
-        baselineSkillRatings: Object.fromEntries((compendiums.skills.entries ?? []).map((s: any) => [s.id, 0])),
+        baselineSkillRatings: Object.fromEntries((compendiums.skills?.entries ?? []).map((s: any) => [s.id, 0])),
         baselineCombatProficiencies: { axes: 0, bows: 0, spears: 0, swords: 0 },
         committed: false,
       },
@@ -1169,7 +1169,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                     }}>
                       <option value="">(choose)</option>
                       {opts.map((sid)=>{
-                        const s:any = findEntryById(compendiums.skills.entries ?? [], sid);
+                        const s:any = findEntryById(compendiums.skills?.entries ?? [], sid);
                         return <option key={sid} value={sid}>{s?.name ?? sid}</option>;
                       })}
                     </select>
@@ -1294,7 +1294,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                   const cur: string[] = Array.isArray(draftHero.callingFavouredSkillIds) ? draftHero.callingFavouredSkillIds : [];
                   const toSkillId = (label: string) => {
                     const needle = String(label).toLowerCase();
-                    const s:any = (compendiums.skills.entries ?? []).find((x:any)=>String(x.name??'').toLowerCase()===needle || String(x.id??'').toLowerCase()===needle);
+                    const s:any = (compendiums.skills?.entries ?? []).find((x:any)=>String(x.name??'').toLowerCase()===needle || String(x.id??'').toLowerCase()===needle);
                     return s?.id ?? needle;
                   };
                   return (
@@ -1547,7 +1547,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                   {fav.length ? (
                     <ul>
                       {fav.map((sid:string)=>{
-                        const s:any = findEntryById(compendiums.skills.entries ?? [], sid);
+                        const s:any = findEntryById(compendiums.skills?.entries ?? [], sid);
                         return <li key={sid}>{s?.name ?? sid}</li>;
                       })}
                     </ul>
@@ -1778,7 +1778,7 @@ function UsefulItemsEditor({ hero, updateHero }: { hero: any; updateHero: (patch
   const limit = usefulItemLimitBySOL(hero.standardOfLiving);
   const [name, setName] = useState('');
   const [skillId, setSkillId] = useState('scan');
-  const skillOptions = useMemo(() => sortByName(compendiums.skills.entries ?? []), []);
+  const skillOptions = useMemo(() => sortByName(compendiums.skills?.entries ?? []), []);
 
   function add() {
     if (items.length >= limit) return;
@@ -2083,7 +2083,7 @@ function PreviousExperienceEditor({ hero, setHero }: { hero: any; setHero: (fn:a
     }));
   };
 
-  const skills = sortByName(compendiums.skills.entries ?? []);
+  const skills = sortByName(compendiums.skills?.entries ?? []);
   const profRows = [
     { key: 'axes', label: 'Axes' },
     { key: 'bows', label: 'Bows' },
@@ -2347,7 +2347,7 @@ function StartingRewardVirtueEditor({ hero, setHero, onSeeMore }: { hero:any; se
 	            const a = cur[0] ?? '';
 	            const b = cur[1] ?? '';
 	            const fav = computeDerived(hero, hero.striderMode ? 18 : 20).favouredSkillSet;
-	            const options = sortByName((compendiums.skills.entries ?? []).filter((s:any)=>!fav.has(String(s.id))));
+	            const options = sortByName((compendiums.skills?.entries ?? []).filter((s:any)=>!fav.has(String(s.id))));
 	            const setPick = (idx: number, sid: string) => {
 	              setHero((h:any)=>{
 	                const next: string[] = Array.isArray(h.masterySkillIds) ? [...h.masterySkillIds] : [];
