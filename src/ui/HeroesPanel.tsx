@@ -37,8 +37,14 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
 
   const campaigns = (state as any).campaigns ?? [];
   const activeCampaignId = (state as any).activeCampaignId ?? (campaigns[0]?.id ?? 'camp-1');
+  // Landing page is campaign management only (Pocketforge-like).
+  // Hero creation/management happens after opening a campaign (main mode).
   const [view, setView] = useState<'campaigns'|'heroes'>(mode === 'landing' ? 'campaigns' : 'heroes');
   const heroesAll = (state as any).heroes ?? [];
+  useEffect(() => {
+    if (mode === 'landing' && view !== 'campaigns') setView('campaigns');
+  }, [mode, view]);
+
   const heroes = heroesAll.filter((h:any)=> (h.campaignId ?? activeCampaignId) === activeCampaignId);
 
   // TN base: normal TOR uses 20; Strider Mode (Fellowship) uses 18.
@@ -252,7 +258,9 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
       saveState(next);
       return next;
     });
-    setView('heroes');
+    // On the landing page we stay on campaign management only.
+    // In main mode, Heroes panel should remain visible.
+    setView(mode === 'landing' ? 'campaigns' : 'heroes');
   }
 
   function deleteCampaign(id: string) {
