@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { StoredState, saveState } from '../core/storage';
 import { compendiums, findEntryById, sortByName } from '../core/compendiums';
+import ErrorBoundary from './ErrorBoundary';
 import { computeDerived, rollNameFallback } from '../core/tor2e';
 import { getSkillAttribute, getSkillTN } from '../core/skills';
 import { rollTOR, RollResult } from '../core/dice';
