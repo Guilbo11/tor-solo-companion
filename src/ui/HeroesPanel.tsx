@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { StoredState, saveState } from '../core/storage';
 import { compendiums, findEntryById, sortByName } from '../core/compendiums';
 import { computeDerived, rollNameFallback } from '../core/tor2e';
@@ -54,6 +54,26 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
 
   function getCultureEntry(cultureId?: string) {
     return findEntryById(compendiums.cultures.entries ?? [], cultureId);
+  }
+
+  function solRank(sol: any): number {
+    const v = String(sol ?? '').trim().toLowerCase();
+    if (!v) return 0;
+    // Typical TOR 2e ladder. (We keep this local so the UI can enforce limits.)
+    if (v === 'frugal') return 1;
+    if (v === 'common') return 2;
+    if (v === 'prosperous') return 3;
+    if (v === 'rich') return 4;
+    return 0;
+  }
+
+  function usefulItemLimitBySOL(sol: any): number {
+    // Conservative default mapping when a culture doesn't specify a number explicitly.
+    const r = solRank(sol);
+    if (r <= 1) return 1;
+    if (r === 2) return 2;
+    if (r === 3) return 3;
+    return 4;
   }
 
   function virtueChoices(hero: any) {
@@ -712,41 +732,15 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                         const budget = hero.striderMode ? 15 : 10;
                         const spent = computeSpent();
                         const remaining = Math.max(0, budget - spent);
-                        const committed = !!pe.committed;
-
-                        const resetBaseline = () => {
-                          updateHero(hero.id, {
-                            previousExperience: {
-                              baselineSkillRatings: { ...(hero.skillRatings ?? {}) },
-                              baselineCombatProficiencies: { axes: hero.combatProficiencies?.axes ?? 0, bows: hero.combatProficiencies?.bows ?? 0, spears: hero.combatProficiencies?.spears ?? 0, swords: hero.combatProficiencies?.swords ?? 0 },
-                              committed: false,
-                            }
-                          });
-                        };
-
-                        const commit = () => {
-                          updateHero(hero.id, {
-                            previousExperience: {
-                              // The baseline is captured *after* Culture/Calling choices.
-                              // Increases made after this point consume the Previous Experience budget.
-                              baselineSkillRatings: { ...(hero.skillRatings ?? {}) },
-                              baselineCombatProficiencies: { axes: hero.combatProficiencies?.axes ?? 0, bows: hero.combatProficiencies?.bows ?? 0, spears: hero.combatProficiencies?.spears ?? 0, swords: hero.combatProficiencies?.swords ?? 0 },
-                              committed: true,
-                            }
-                          });
-                        };
-
-                        return (
+	                        return (
                           <>
                             <div className="row" style={{gap: 10, flexWrap:'wrap'}}>
                               <div className="small">Budget: <b>{budget}</b> · Spent: <b>{spent}</b> · Remaining: <b>{remaining}</b></div>
                               <span className="muted small">(Previous Experience: Skills up to <b>4</b>, Proficiencies up to <b>3</b>)</span>
                             </div>
-                            <div className="row" style={{gap: 8, marginTop: 8, flexWrap:'wrap'}}>
-                              <button className="btn btn-ghost" onClick={resetBaseline}>Reset baseline</button>
-                              <button className="btn" disabled={committed} onClick={commit}>Commit</button>
-                              {!committed ? <span className="small muted">Click <b>Commit</b> once your Culture/Calling choices are final. Then you can spend Previous Experience.</span> : <span className="small muted">Committed. You can now spend Previous Experience (budget enforced).</span>}
-                            </div>
+	                            <div className="row" style={{gap: 8, marginTop: 8, flexWrap:'wrap'}}>
+	                              <span className="small muted">Budget updates immediately. If a + would exceed the remaining points, it is disabled.</span>
+	                            </div>
                           </>
                         );
                       })()}
@@ -756,8 +750,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                       <div className="sectionTitle">Combat Proficiencies</div>
                       <div className="small muted">Use + / – to adjust quickly. Minimums may be set by Culture.</div>
                       {(() => {
-                        const pe = hero.previousExperience;
-                        const committed = !!pe?.committed;
+	                        const committed = true;
                         const profs = hero.combatProficiencies ?? {};
                         const mins = getCultureCombatMins(hero);
                         const rows: Array<{ key: 'axes'|'bows'|'spears'|'swords'; label: string }> = [
@@ -851,7 +844,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                                     const minByCulture = mins[s.id] ?? 0;
                                     const isFav = derived.favouredSkillSet.has(s.id);
                                     const pe = hero.previousExperience;
-                                    const committed = !!pe?.committed;
+	                              const committed = true;
                                     const baselineVal = pe?.baselineSkillRatings ? Number((pe.baselineSkillRatings as any)[s.id] ?? 0) : undefined;
                                     const extra = (typeof baselineVal === 'number') ? Math.max(0, rating - baselineVal) : 0;
 
@@ -1092,6 +1085,14 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                     next.cultureDistinctiveFeatureIds = [];
                     next.cultureCombatProf2 = undefined;
                     next.cultureCombatProf1 = undefined;
+	                    // Reset Previous Experience baseline whenever Culture changes so freebies never consume PE.
+	                    next.previousExperience = {
+	                      ...(next.previousExperience ?? {}),
+	                      baselineSkillRatings: { ...(next.skillRatings ?? {}) },
+	                      baselineCombatProficiencies: { ...(next.combatProficiencies ?? {}) },
+	                    };
+	                    // Also reset any PE purchases.
+	                    // (Purchases are tracked as deltas above the baseline.)
                     return next;
                   });
                 }}>
@@ -1397,18 +1398,56 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                   if (!h.callingId) return alert('Choose a Calling.');
                   if ((Array.isArray(h.callingFavouredSkillIds) ? h.callingFavouredSkillIds.length : 0) < 2) return alert('Choose 2 Calling favoured skills.');
 
-                  // Ensure PE baselines exist and PE is committed
-                  const pe = h.previousExperience ?? {};
-                  const hasBaselines = pe.baselineSkillRatings && pe.baselineCombatProficiencies;
-                  if (!hasBaselines) {
-                    h.previousExperience = {
-                      ...(pe ?? {}),
-                      baselineSkillRatings: { ...(h.skillRatings ?? {}) },
-                      baselineCombatProficiencies: { ...(h.combatProficiencies ?? {}) },
-                      committed: false,
-                    };
-                  }
-                  if (!(h.previousExperience?.committed)) return alert('Commit your Previous Experience spending (even if you spend 0) before finishing.');
+	                  // Ensure PE baselines exist and the PE budget is fully spent
+	                  const pe = h.previousExperience ?? {};
+	                  const hasBaselines = pe.baselineSkillRatings && pe.baselineCombatProficiencies;
+	                  if (!hasBaselines) {
+	                    h.previousExperience = {
+	                      ...(pe ?? {}),
+	                      baselineSkillRatings: { ...(h.skillRatings ?? {}) },
+	                      baselineCombatProficiencies: { ...(h.combatProficiencies ?? {}) },
+	                    };
+	                  }
+	                  const skillCost = (toLevel: number) => (toLevel<=1?1:toLevel===2?2:toLevel===3?3:toLevel===4?5:0);
+	                  const profCost = (toLevel: number) => (toLevel<=1?2:toLevel===2?4:toLevel===3?6:0);
+	                  const baselineSkills = (h.previousExperience?.baselineSkillRatings ?? {}) as Record<string, number>;
+	                  const baselineProfs = (h.previousExperience?.baselineCombatProficiencies ?? {}) as Record<string, number>;
+	                  let spent = 0;
+	                  const curSkills = h.skillRatings ?? {};
+	                  for (const sid of Object.keys(curSkills)) {
+	                    const cur = Number(curSkills[sid] ?? 0);
+	                    const base = Number(baselineSkills[sid] ?? 0);
+	                    for (let lvl = base + 1; lvl <= cur; lvl++) spent += skillCost(lvl);
+	                  }
+	                  const curProfs = h.combatProficiencies ?? {};
+	                  for (const key of ['axes','bows','spears','swords']) {
+	                    const cur = Number(curProfs[key] ?? 0);
+	                    const base = Number(baselineProfs[key] ?? 0);
+	                    for (let lvl = base + 1; lvl <= cur; lvl++) spent += profCost(lvl);
+	                  }
+	                  const budget = h.striderMode ? 15 : 10;
+	                  const remaining = budget - spent;
+	                  if (remaining !== 0) return alert(`Spend all Previous Experience points before finishing (remaining: ${remaining}).`);
+
+	                  // Virtue/Reward are required at creation.
+	                  if (!Array.isArray(h.virtueIds) || !h.virtueIds[0]) return alert('Choose a Virtue.');
+	                  if (!Array.isArray(h.rewardIds) || !h.rewardIds[0]) return alert('Choose a Reward.');
+	                  const rewardIdReq = String((Array.isArray(h.rewardIds) ? h.rewardIds[0] : '') || '');
+	                  const rewardAttached = (h as any).rewardAttached ?? {};
+	                  if (rewardIdReq && !String(rewardAttached[rewardIdReq] ?? '')) {
+	                    return alert('Attach your Reward to a starting item.');
+	                  }
+
+	                  // Virtue-specific required choices
+	                  const vId = (Array.isArray(h.virtueIds) ? h.virtueIds[0] : '') || '';
+	                  if (vId === 'mastery') {
+	                    const picks: string[] = Array.isArray((h as any).masterySkillIds) ? (h as any).masterySkillIds : [];
+	                    if (picks.length < 2 || !picks[0] || !picks[1] || picks[0]===picks[1]) return alert('Mastery: choose two different Skills.');
+	                  }
+	                  if (vId === 'prowess') {
+	                    const a = String((h as any).prowessAttribute ?? '');
+	                    if (!a) return alert('Prowess: choose an Attribute.');
+	                  }
 
                   // Finalize features (cultural blessing + calling extra)
                   let featureIds: string[] = Array.isArray(h.featureIds) ? [...h.featureIds] : [];
@@ -1442,7 +1481,31 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                   addGear(sg.helmId);
                   addGear(sg.shieldId);
 
-                  const finalized = { ...h, featureIds, inventory: gearInv, creationComplete: true };
+	                  // Apply Virtue special effects that depend on player choices.
+	                  const vIdFinal = (Array.isArray(h.virtueIds) ? h.virtueIds[0] : '') || '';
+	                  let skillFavoured = { ...(h.skillFavoured ?? {}) };
+	                  if (vIdFinal === 'mastery') {
+	                    const picks: string[] = Array.isArray((h as any).masterySkillIds) ? (h as any).masterySkillIds : [];
+	                    for (const sid of picks) if (sid) skillFavoured[sid] = true;
+	                  }
+	                  // Virtues with simple stat adjustments at creation.
+	                  let hope = { ...(h.hope ?? {}) };
+	                  let endurance = { ...(h.endurance ?? {}) };
+	                  let parry = { ...(h.parry ?? {}) };
+	                  if (vIdFinal === 'confidence') {
+	                    const nextMax = Number(hope.max ?? 0) + 2;
+	                    hope.max = nextMax;
+	                    hope.current = Math.min(nextMax, Number(hope.current ?? nextMax) + 2);
+	                  }
+	                  if (vIdFinal === 'hardiness') {
+	                    const nextMax = Number(endurance.max ?? 0) + 2;
+	                    endurance.max = nextMax;
+	                    endurance.current = Math.min(nextMax, Number(endurance.current ?? nextMax) + 2);
+	                  }
+	                  if (vIdFinal === 'nimbleness') {
+	                    parry.base = Number(parry.base ?? 0) + 1;
+	                  }
+	                  const finalized = { ...h, featureIds, inventory: gearInv, skillFavoured, hope, endurance, parry, creationComplete: true };
                   const next: StoredState = { ...state, heroes: [finalized, ...heroes] };
                   setState(next);
                   saveState(next);
@@ -1703,11 +1766,13 @@ function InventoryEditor({ hero, updateHero, onSeeMore }: { hero: any; updateHer
 
 function UsefulItemsEditor({ hero, updateHero }: { hero: any; updateHero: (patch:any)=>void }) {
   const items = Array.isArray(hero.usefulItems) ? hero.usefulItems : [];
+  const limit = usefulItemLimitBySOL(hero.standardOfLiving);
   const [name, setName] = useState('');
   const [skillId, setSkillId] = useState('scan');
   const skillOptions = useMemo(() => sortByName(compendiums.skills.entries ?? []), []);
 
   function add() {
+    if (items.length >= limit) return;
     if (!name.trim()) return;
     updateHero({ usefulItems: [{ id: uid('u'), name: name.trim(), skillId }, ...items] });
     setName('');
@@ -1725,7 +1790,11 @@ function UsefulItemsEditor({ hero, updateHero }: { hero: any; updateHero: (patch
         <select className="input" style={{minWidth: 180}} value={skillId} onChange={(e)=>setSkillId(e.target.value)}>
           {skillOptions.map((s:any)=> <option key={s.id} value={s.id}>{s.name}</option>)}
         </select>
-        <button className="btn" onClick={add}>Add</button>
+        <button className="btn" disabled={items.length>=limit} onClick={add}>Add</button>
+      </div>
+
+      <div className="small muted" style={{marginTop:6}}>
+        Limit: <b>{items.length}</b> / {limit} based on Standard of Living.
       </div>
 
       <div className="list" style={{marginTop: 10}}>
@@ -1851,9 +1920,14 @@ function GearEquippedEditor({ hero, updateHero, onSeeMore }: { hero: any; update
   const equipment = compendiums.equipment.entries ?? [];
 
   const weapons = useMemo(() => sortByName(equipment.filter((e:any)=>e.category === 'Weapon')), [equipment]);
-  const armours = useMemo(() => sortByName(equipment.filter((e:any)=>e.category === 'Armour')), [equipment]);
+	  const solOk = (e:any) => {
+	    const req = String(e?.minSOL ?? '').trim();
+	    if (!req) return true;
+	    return solRank(hero.standardOfLiving) >= solRank(req);
+	  };
+	  const armours = useMemo(() => sortByName(equipment.filter((e:any)=>e.category === 'Armour').filter(solOk)), [equipment, hero.standardOfLiving]);
   const helms = useMemo(() => sortByName(equipment.filter((e:any)=>e.category === 'Headgear')), [equipment]);
-  const shields = useMemo(() => sortByName(equipment.filter((e:any)=>e.category === 'Shield')), [equipment]);
+	  const shields = useMemo(() => sortByName(equipment.filter((e:any)=>e.category === 'Shield').filter(solOk)), [equipment, hero.standardOfLiving]);
 
   const weapon:any = eq.weaponId ? findEntryById(equipment, eq.weaponId) : null;
   const armour:any = eq.armourId ? findEntryById(equipment, eq.armourId) : null;
@@ -1934,7 +2008,6 @@ function clone(obj: any) {
 
 function PreviousExperienceEditor({ hero, setHero }: { hero: any; setHero: (fn:any)=>void }) {
   const pe = hero.previousExperience ?? {};
-  const committed = !!pe.committed;
   const budget = hero.striderMode ? 15 : 10;
 
   const skillCost = (toLevel: number) => {
@@ -1954,8 +2027,26 @@ function PreviousExperienceEditor({ hero, setHero }: { hero: any; setHero: (fn:a
   const baselineSkills = pe.baselineSkillRatings ?? {};
   const baselineProfs = pe.baselineCombatProficiencies ?? {};
 
+  const skillMins = getCultureSkillMins(hero);
+  const combatMins = getCultureCombatMins(hero);
+
+  // Ensure a sane baseline exists (culture/calling freebies should be part of the baseline).
+  useEffect(() => {
+    const hasSkills = baselineSkills && Object.keys(baselineSkills).length > 0;
+    const hasProfs = baselineProfs && Object.keys(baselineProfs).length > 0;
+    if (hasSkills && hasProfs) return;
+    setHero((h:any)=>({
+      ...h,
+      previousExperience: {
+        ...(h.previousExperience ?? {}),
+        baselineSkillRatings: { ...(h.skillRatings ?? {}) },
+        baselineCombatProficiencies: { ...(h.combatProficiencies ?? {}) },
+      },
+    }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const computeSpent = () => {
-    if (!committed) return 0;
     let spent = 0;
     const curSkills = hero.skillRatings ?? {};
     for (const sid of Object.keys(curSkills)) {
@@ -1975,8 +2066,12 @@ function PreviousExperienceEditor({ hero, setHero }: { hero: any; setHero: (fn:a
   const spent = computeSpent();
   const remaining = budget - spent;
 
-  const setCommitted = (v: boolean) => {
-    setHero((h:any)=>({ ...h, previousExperience: { ...(h.previousExperience ?? {}), committed: v } }));
+  const resetPoints = () => {
+    setHero((h:any)=>({
+      ...h,
+      skillRatings: { ...(h.previousExperience?.baselineSkillRatings ?? h.skillRatings ?? {}) },
+      combatProficiencies: { ...(h.previousExperience?.baselineCombatProficiencies ?? h.combatProficiencies ?? {}) },
+    }));
   };
 
   const skills = sortByName(compendiums.skills.entries ?? []);
@@ -1991,12 +2086,8 @@ function PreviousExperienceEditor({ hero, setHero }: { hero: any; setHero: (fn:a
     <div>
       <div className="row" style={{gap:10, alignItems:'center', flexWrap:'wrap'}}>
         <div className="small"><b>Remaining</b> {remaining} / {budget}</div>
-        {!committed ? (
-          <button className="btn" onClick={()=>setCommitted(true)}>Commit</button>
-        ) : (
-          <button className="btn btn-ghost" onClick={()=>setCommitted(false)}>Uncommit</button>
-        )}
-        <span className="small muted">When committed, increases beyond the baseline spend points.</span>
+        <button className="btn btn-ghost" onClick={resetPoints}>Reset points</button>
+        <span className="small muted">You can't increase a rating if it would exceed the budget.</span>
       </div>
 
       <div className="miniCard" style={{marginTop:10}}>
@@ -2005,17 +2096,18 @@ function PreviousExperienceEditor({ hero, setHero }: { hero: any; setHero: (fn:a
           {skills.map((s:any)=>{
             const cur = Number((hero.skillRatings ?? {})[s.id] ?? 0);
             const base = Number(baselineSkills[s.id] ?? 0);
+            const min = Math.max(Number(skillMins[s.id] ?? 0), base);
             const maxAllowed = 4;
             const nextLevel = Math.min(maxAllowed, cur + 1);
-            const incCost = (committed && nextLevel > base) ? skillCost(nextLevel) : 0;
-            const canInc = !committed || incCost <= remaining;
+            const incCost = (nextLevel > base) ? skillCost(nextLevel) : 0;
+            const canInc = incCost <= remaining;
             return (
               <div key={s.id} className="skillRow">
                 <div className="skillName">{s.name}</div>
                 <div className="row" style={{gap:6}}>
                   <button className="btn btn-ghost" onClick={()=>{
                     setHero((h:any)=>{
-                      const next = { ...h, skillRatings: { ...(h.skillRatings ?? {}), [s.id]: Math.max(0, cur-1) } };
+                      const next = { ...h, skillRatings: { ...(h.skillRatings ?? {}), [s.id]: Math.max(min, cur-1) } };
                       return next;
                     });
                   }}>-</button>
@@ -2039,16 +2131,17 @@ function PreviousExperienceEditor({ hero, setHero }: { hero: any; setHero: (fn:a
           {profRows.map((r:any)=>{
             const cur = Number((hero.combatProficiencies ?? {})[r.key] ?? 0);
             const base = Number(baselineProfs[r.key] ?? 0);
+            const min = Math.max(Number((combatMins as any)[r.key] ?? 0), base);
             const maxAllowed = 3;
             const nextLevel = Math.min(maxAllowed, cur + 1);
-            const incCost = (committed && nextLevel > base) ? profCost(nextLevel) : 0;
-            const canInc = !committed || incCost <= remaining;
+            const incCost = (nextLevel > base) ? profCost(nextLevel) : 0;
+            const canInc = incCost <= remaining;
             return (
               <div key={r.key} className="skillRow">
                 <div className="skillName">{r.label}</div>
                 <div className="row" style={{gap:6}}>
                   <button className="btn btn-ghost" onClick={()=>{
-                    setHero((h:any)=>({ ...h, combatProficiencies: { ...(h.combatProficiencies ?? {}), [r.key]: Math.max(0, cur-1) } }));
+                    setHero((h:any)=>({ ...h, combatProficiencies: { ...(h.combatProficiencies ?? {}), [r.key]: Math.max(min, cur-1) } }));
                   }}>-</button>
                   <div className="skillNum" style={{minWidth:24, textAlign:'center'}}>{cur}</div>
                   <button className="btn btn-ghost" disabled={!canInc || cur>=maxAllowed} onClick={()=>{
@@ -2067,9 +2160,14 @@ function PreviousExperienceEditor({ hero, setHero }: { hero: any; setHero: (fn:a
 function StartingGearEditor({ hero, setHero }: { hero: any; setHero: (fn:any)=>void }) {
   const equipment = compendiums.equipment.entries ?? [];
   const weapons = equipment.filter((e:any)=>e.category==='Weapon');
-  const armours = equipment.filter((e:any)=>e.category==='Armour');
+  const solOk = (e:any) => {
+    const req = String(e?.minSOL ?? '').trim();
+    if (!req) return true;
+    return solRank(hero.standardOfLiving) >= solRank(req);
+  };
+  const armours = equipment.filter((e:any)=>e.category==='Armour').filter(solOk);
   const helms = equipment.filter((e:any)=>e.category==='Headgear');
-  const shields = equipment.filter((e:any)=>e.category==='Shield');
+  const shields = equipment.filter((e:any)=>e.category==='Shield').filter(solOk);
 
   const profs = hero.combatProficiencies ?? {};
   const profKeys: Array<{key:'axes'|'bows'|'spears'|'swords'; label:string}> = [
@@ -2201,10 +2299,12 @@ function StartingRewardVirtueEditor({ hero, setHero, onSeeMore }: { hero:any; se
     switch (rewardId) {
       case 'improved-armour': return { protectionDelta: 1, notesAppend: 'Improved Armour (+1 PRO)' };
       case 'close-fitting': return { loadDelta: -1, notesAppend: 'Close-fitting (-1 Load)' };
+      case 'cunning-make': return { loadDelta: -2, notesAppend: 'Cunning Make (-2 Load)' };
       case 'accurate-weapon': return { piercingThreshold: 10, notesAppend: 'Accurate (PB 10+)' };
       case 'fell-weapon': return { damageDelta: 1, notesAppend: 'Fell (+1 DMG)' };
       case 'keen-weapon': return { piercingThreshold: 9, notesAppend: 'Keen (PB 9+)' };
       case 'grievous-weapon': return { injuryOverride: '16', notesAppend: 'Grievous (INJ 16)' };
+      case 'reinforced-shield': return { parryModifierDelta: 1, notesAppend: 'Reinforced (+1 Parry)' };
       default: return {};
     }
   };
@@ -2221,20 +2321,75 @@ function StartingRewardVirtueEditor({ hero, setHero, onSeeMore }: { hero:any; se
     <div>
       <div className="field">
         <div className="label">Virtue (choose 1)</div>
-        <select className="input" value={selectedVirtue} onChange={(e)=>setHero((h:any)=>({ ...h, virtueIds: e.target.value ? [e.target.value] : [] }))}>
-          <option value="">(choose)</option>
-          {virtues.map((v:any)=><option key={v.id} value={v.id}>{v.name}</option>)}
-        </select>
-        {selectedVirtue ? <button className="btn btn-ghost" onClick={()=>onSeeMore('virtues', selectedVirtue)}>i</button> : null}
+	        <div className="row" style={{gap:8, alignItems:'center'}}>
+	          <select className="input" value={selectedVirtue} onChange={(e)=>setHero((h:any)=>({ ...h, virtueIds: e.target.value ? [e.target.value] : [], masterySkillIds: [], prowessAttribute: '' }))}>
+	            <option value="">(choose)</option>
+	            {virtues.map((v:any)=><option key={v.id} value={v.id}>{v.name}</option>)}
+	          </select>
+	          {selectedVirtue ? <button className="btn btn-ghost" onClick={()=>onSeeMore('virtues', selectedVirtue)}>i</button> : null}
+	        </div>
       </div>
+
+	      {selectedVirtue === 'mastery' ? (
+	        <div className="field" style={{marginTop:10}}>
+	          <div className="label">Mastery (choose 2 non-favoured Skills)</div>
+	          {(() => {
+	            const cur: string[] = Array.isArray(hero.masterySkillIds) ? hero.masterySkillIds : [];
+	            const a = cur[0] ?? '';
+	            const b = cur[1] ?? '';
+	            const fav = computeDerived(hero, hero.striderMode ? 18 : 20).favouredSkillSet;
+	            const options = sortByName((compendiums.skills.entries ?? []).filter((s:any)=>!fav.has(String(s.id))));
+	            const setPick = (idx: number, sid: string) => {
+	              setHero((h:any)=>{
+	                const next: string[] = Array.isArray(h.masterySkillIds) ? [...h.masterySkillIds] : [];
+	                while (next.length < 2) next.push('');
+	                next[idx] = sid;
+	                // prevent duplicates
+	                if (next[0] && next[1] && next[0] === next[1]) {
+	                  next[1-idx] = '';
+	                }
+	                return { ...h, masterySkillIds: next };
+	              });
+	            };
+	            return (
+	              <div className="grid2" style={{marginTop:8}}>
+	                <select className="input" value={a} onChange={(e)=>setPick(0, e.target.value)}>
+	                  <option value="">(choose)</option>
+	                  {options.map((s:any)=><option key={s.id} value={s.id}>{s.name}</option>)}
+	                </select>
+	                <select className="input" value={b} onChange={(e)=>setPick(1, e.target.value)}>
+	                  <option value="">(choose)</option>
+	                  {options.filter((s:any)=>String(s.id)!==String(a)).map((s:any)=><option key={s.id} value={s.id}>{s.name}</option>)}
+	                </select>
+	              </div>
+	            );
+	          })()}
+	          <div className="small muted" style={{marginTop:6}}>These will become Favoured when you click <b>Create Hero</b>.</div>
+	        </div>
+	      ) : null}
+
+	      {selectedVirtue === 'prowess' ? (
+	        <div className="field" style={{marginTop:10}}>
+	          <div className="label">Prowess (choose 1 Attribute)</div>
+	          <select className="input" value={hero.prowessAttribute ?? ''} onChange={(e)=>setHero((h:any)=>({ ...h, prowessAttribute: e.target.value }))}>
+	            <option value="">(choose)</option>
+	            <option value="Strength">Strength</option>
+	            <option value="Heart">Heart</option>
+	            <option value="Wits">Wits</option>
+	          </select>
+	          <div className="small muted" style={{marginTop:6}}>The chosen Attribute TN will be reduced by 1.</div>
+	        </div>
+	      ) : null}
 
       <div className="field" style={{marginTop:10}}>
         <div className="label">Reward (choose 1)</div>
-        <select className="input" value={selectedReward} onChange={(e)=>setHero((h:any)=>({ ...h, rewardIds: e.target.value ? [e.target.value] : [], rewardAttached: {}, startingGearOverrides: {} }))}>
-          <option value="">(choose)</option>
-          {rewards.map((r:any)=><option key={r.id} value={r.id}>{r.name}</option>)}
-        </select>
-        {selectedReward ? <button className="btn btn-ghost" onClick={()=>onSeeMore('rewards', selectedReward)}>i</button> : null}
+	        <div className="row" style={{gap:8, alignItems:'center'}}>
+	          <select className="input" value={selectedReward} onChange={(e)=>setHero((h:any)=>({ ...h, rewardIds: e.target.value ? [e.target.value] : [], rewardAttached: {}, startingGearOverrides: {} }))}>
+	            <option value="">(choose)</option>
+	            {rewards.map((r:any)=><option key={r.id} value={r.id}>{r.name}</option>)}
+	          </select>
+	          {selectedReward ? <button className="btn btn-ghost" onClick={()=>onSeeMore('rewards', selectedReward)}>i</button> : null}
+	        </div>
       </div>
 
       {selectedReward ? (

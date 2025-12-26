@@ -45,5 +45,11 @@ export function getAttributeRating(hero: any, attr: SkillAttribute): number {
 export function getSkillTN(hero: any, skillId: string, tnBase: number = 20): number {
   const attr = getSkillAttribute(skillId);
   const rating = getAttributeRating(hero, attr);
-  return tnFromRating(rating, tnBase);
+  let tn = tnFromRating(rating, tnBase);
+  // Prowess virtue: reduce one Attribute TN by 1.
+  const p = String(hero?.prowessAttribute ?? '').toLowerCase();
+  if ((p === 'strength' && attr === 'Strength') || (p === 'heart' && attr === 'Heart') || (p === 'wits' && attr === 'Wits')) {
+    tn -= 1;
+  }
+  return tn;
 }

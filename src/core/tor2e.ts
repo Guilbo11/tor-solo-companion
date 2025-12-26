@@ -50,9 +50,15 @@ export function computeDerived(hero: any, tnBase: number = 20): Tor2eDerived {
   const heart = hero?.attributes?.heart ?? 2;
   const wits = hero?.attributes?.wits ?? 2;
 
-  const strengthTN = tnFromRating(strength, tnBase);
-  const heartTN = tnFromRating(heart, tnBase);
-  const witsTN = tnFromRating(wits, tnBase);
+  let strengthTN = tnFromRating(strength, tnBase);
+  let heartTN = tnFromRating(heart, tnBase);
+  let witsTN = tnFromRating(wits, tnBase);
+
+  // Prowess virtue: reduce one Attribute TN by 1.
+  const p = String(hero?.prowessAttribute ?? '').toLowerCase();
+  if (p === 'strength') strengthTN -= 1;
+  if (p === 'heart') heartTN -= 1;
+  if (p === 'wits') witsTN -= 1;
 
   // Favoured skills: culture pick + calling picks + legacy (union)
   const fav = new Set<string>();
@@ -102,9 +108,34 @@ export function computeDerived(hero: any, tnBase: number = 20): Tor2eDerived {
       if (typeof o.loadDelta === 'number') merged.load = Number(merged.load ?? 0) + Number(o.loadDelta);
       if (typeof o.damageDelta === 'number') merged.damage = Number(merged.damage ?? 0) + Number(o.damageDelta);
       if (typeof o.protectionDelta === 'number') {
-        // Protection is stored as dice string (e.g. '1d') or number in compendium; keep numeric adjustments simple.
-        const cur = typeof (merged as any).protection === 'number' ? Number((merged as any).protection) : 0;
-        (merged as any).protection = cur + Number(o.protectionDelta);
+        // Protection is stored as dice string (e.g. '3d') in compendium.
+        // Preserve the dice format when possible.
+        const curVal = (merged as any).protection;
+        if (typeof curVal === 'number') {
+          (merged as any).protection = curVal + Number(o.protectionDelta);
+        } else if (typeof curVal === 'string') {
+          const m = curVal.trim().match(/^(\d+)d$/i);
+          if (m) {
+            const next = Math.max(0, Number(m[1]) + Number(o.protectionDelta));
+            (merged as any).protection = `${next}d`;
+          }
+        }
+      }
+      if (typeof o.parryModifierDelta === 'number') {
+        const cur = (merged as any).parryModifier;
+        if (typeof cur === 'number') {
+          (merged as any).parryModifier = cur + Number(o.parryModifierDelta);
+        } else if (typeof cur === 'string') {
+          const m = cur.trim().match(/^([+-]?)(\d+)$/);
+          if (m) {
+            const sign = m[1] === '-' ? -1 : 1;
+            const n = sign * Number(m[2]);
+            const next = n + Number(o.parryModifierDelta);
+            (merged as any).parryModifier = next >= 0 ? `+${next}` : String(next);
+          }
+        } else {
+          (merged as any).parryModifier = Number(o.parryModifierDelta);
+        }
       }
       if (typeof o.piercingThreshold === 'number') (merged as any).piercingThreshold = Number(o.piercingThreshold);
       if (typeof o.injuryOverride === 'string' && o.injuryOverride.trim()) (merged as any).injury = o.injuryOverride.trim();
