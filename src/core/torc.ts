@@ -31,16 +31,39 @@ export function exportToTorc(state: StoredState): Blob {
   const s: any = structuredClone(state);
   const files: Record<string, Uint8Array> = {};
 
-  // Split map background into binary asset (if present)
-  const bg = s?.map?.backgroundDataUrl;
-  if (typeof bg === 'string' && bg.startsWith('data:')) {
-    const parsed = dataUrlToBytes(bg);
-    if (parsed) {
-      const ext = extFromMime(parsed.mime);
-      const path = `assets/map-background.${ext}`;
-      files[path] = parsed.bytes;
-      s.map.backgroundAsset = path;
-      delete s.map.backgroundDataUrl;
+  // Split map backgrounds into binary assets (v5: per-campaign multi-map)
+  const byCamp = s?.mapsByCampaign;
+  if (byCamp && typeof byCamp === 'object') {
+    for (const [cid, maps] of Object.entries(byCamp)) {
+      if (!Array.isArray(maps)) continue;
+      for (const m of maps as any[]) {
+        const bg = m?.state?.backgroundDataUrl;
+        if (typeof bg === 'string' && bg.startsWith('data:')) {
+          const parsed = dataUrlToBytes(bg);
+          if (parsed) {
+            const ext = extFromMime(parsed.mime);
+            const safeCid = String(cid).replaceAll(/[^a-zA-Z0-9_-]/g, '_');
+            const safeMid = String(m?.id ?? 'map').replaceAll(/[^a-zA-Z0-9_-]/g, '_');
+            const path = `assets/maps/${safeCid}-${safeMid}-background.${ext}`;
+            files[path] = parsed.bytes;
+            m.state.backgroundAsset = path;
+            delete m.state.backgroundDataUrl;
+          }
+        }
+      }
+    }
+  } else {
+    // Legacy fallback: split single map background if present
+    const bg = s?.map?.backgroundDataUrl;
+    if (typeof bg === 'string' && bg.startsWith('data:')) {
+      const parsed = dataUrlToBytes(bg);
+      if (parsed) {
+        const ext = extFromMime(parsed.mime);
+        const path = `assets/map-background.${ext}`;
+        files[path] = parsed.bytes;
+        s.map.backgroundAsset = path;
+        delete s.map.backgroundDataUrl;
+      }
     }
   }
 
@@ -62,11 +85,27 @@ export async function importFromTorc(file: File): Promise<StoredState> {
   if (!stateRaw) throw new Error('Invalid .torc: missing state.json');
   const s: any = JSON.parse(strFromU8(stateRaw));
 
-  // Rehydrate map background if split
+  // Rehydrate map backgrounds if split
+  const byCamp = s?.mapsByCampaign;
+  if (byCamp && typeof byCamp === 'object') {
+    for (const maps of Object.values(byCamp)) {
+      if (!Array.isArray(maps)) continue;
+      for (const m of maps as any[]) {
+        const bgAsset = m?.state?.backgroundAsset;
+        if (typeof bgAsset === 'string' && files[bgAsset]) {
+          const bytes = files[bgAsset];
+          const ext = bgAsset.split('.').pop()?.toLowerCase();
+          const mime = ext === 'png' ? 'image/png' : ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : ext === 'webp' ? 'image/webp' : 'application/octet-stream';
+          m.state.backgroundDataUrl = bytesToDataUrl(bytes, mime);
+        }
+      }
+    }
+  }
+
+  // Legacy fallback
   const bgAsset = s?.map?.backgroundAsset;
   if (typeof bgAsset === 'string' && files[bgAsset]) {
     const bytes = files[bgAsset];
-    // try infer mime from extension
     const ext = bgAsset.split('.').pop()?.toLowerCase();
     const mime = ext === 'png' ? 'image/png' : ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : ext === 'webp' ? 'image/webp' : 'application/octet-stream';
     s.map.backgroundDataUrl = bytesToDataUrl(bytes, mime);

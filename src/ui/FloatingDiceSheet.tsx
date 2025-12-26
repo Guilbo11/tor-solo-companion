@@ -52,6 +52,18 @@ export default function FloatingDiceSheet({ open, onClose }: Props) {
     });
 
     setRes(r);
+
+    // Optional journal logging
+    try {
+      const featTxt = r.feat.type === 'Number' ? String(r.feat.value) : (r.feat.type === 'Eye' ? 'Sauron' : 'Gandalf');
+      const feat2Txt = r.feat2 ? (r.feat2.type === 'Number' ? String(r.feat2.value) : (r.feat2.type === 'Eye' ? 'Sauron' : 'Gandalf')) : '';
+      const modeTxt = featMode === 'normal' ? 'Normal' : featMode === 'favoured' ? 'Favoured' : 'Ill-favoured';
+      const tnTxt = typeof tn === 'number' ? ` (TN ${tn})` : '';
+      const wearyTxt = weary ? ' — Weary' : '';
+      const detail = `Feat ${featTxt}${feat2Txt ? `/${feat2Txt}` : ''}, Total ${r.total}${tnTxt}`;
+      (window as any).__torcLogRollHtml?.(`<div>Roll: ${dice}d6 + feat (${modeTxt}${wearyTxt}) → <b>${detail}</b></div>`);
+    } catch {}
+
     window.setTimeout(() => setAnimating(false), 750);
   };
 

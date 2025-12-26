@@ -25,6 +25,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
   const [heroTab, setHeroTab] = useState<Record<string, 'Sheet'|'Skills'|'Gear'|'Experience'>>({});
   const [createOpen, setCreateOpen] = useState(false);
   const [createStep, setCreateStep] = useState(0);
+  const [createShowAll, setCreateShowAll] = useState(true);
   const [draftHero, setDraftHero] = useState<any | null>(null);
   const [showFeatChoices, setShowFeatChoices] = useState(true);
   const [showAddVirtuesRewards, setShowAddVirtuesRewards] = useState(true);
@@ -1043,14 +1044,19 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
         </>
       )}
 
-      <BottomSheet open={createOpen} title={`Create Hero (${createStep+1}/15)`} closeOnBackdrop={false} closeOnEsc={false} onClose={()=>{ setCreateOpen(false); setDraftHero(null); }}>
+      <BottomSheet open={createOpen} title={`New Hero`} closeOnBackdrop={false} closeOnEsc={false} onClose={()=>{ setCreateOpen(false); setDraftHero(null); }}>
         {draftHero ? (
           <div>
             <div className="small muted" style={{marginBottom:8}}>
               Fields marked with <b>*</b> will be locked after creation.
             </div>
 
-            {createStep===0 && (
+            <label className="row" style={{gap: 8, marginBottom: 12}}>
+              <input type="checkbox" checked={createShowAll} onChange={(e)=>setCreateShowAll(e.target.checked)} />
+              <span className="small">Show all steps (scroll)</span>
+            </label>
+
+            {(createShowAll || createStep===0) && (
               <div>
                 <div className="label">* Mode of play</div>
                 <select className="input" value={draftHero.striderMode ? 'strider' : 'fellowship'} onChange={(e)=>{
@@ -1064,7 +1070,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
               </div>
             )}
 
-            {createStep===1 && (
+            {(createShowAll || createStep===1) && (
               <div>
                 <div className="label">* Culture</div>
                 <select className="input" value={draftHero.cultureId ?? ''} onChange={(e)=>{
@@ -1102,7 +1108,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
               </div>
             )}
 
-            {createStep===2 && (
+            {(createShowAll || createStep===2) && (
               <div>
                 <div className="label">* Culture starting attribute array</div>
                 {(() => {
@@ -1138,7 +1144,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
               </div>
             )}
 
-            {createStep===3 && (
+            {(createShowAll || createStep===3) && (
               <div>
                 <div className="label">* Culture Favoured skill</div>
                 {(() => {
@@ -1162,7 +1168,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
               </div>
             )}
 
-            {createStep===4 && (
+            {(createShowAll || createStep===4) && (
               <div>
                 <div className="label">* Culture Combat proficiencies</div>
                 {(() => {
@@ -1215,7 +1221,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
               </div>
             )}
 
-            {createStep===5 && (
+            {(createShowAll || createStep===5) && (
               <div>
                 <div className="label">* Culture Distinctive features (choose 2)</div>
                 {(() => {
@@ -1248,7 +1254,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
               </div>
             )}
 
-            {createStep===6 && (
+            {(createShowAll || createStep===6) && (
               <div>
                 <div className="label">* Calling</div>
                 <select className="input" value={draftHero.callingId ?? ''} onChange={(e)=>{
@@ -1268,7 +1274,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
               </div>
             )}
 
-            {createStep===7 && (
+            {(createShowAll || createStep===7) && (
               <div>
                 <div className="label">* Calling Favoured skills (choose 2)</div>
                 {(() => {
@@ -1307,7 +1313,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
               </div>
             )}
 
-            {createStep===8 && (
+            {(createShowAll || createStep===8) && (
               <div>
                 <div className="label">* Previous experience</div>
                 <div className="small muted">Budget: <b>{draftHero.striderMode ? 15 : 10}</b> points.</div>
@@ -1318,14 +1324,14 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
               </div>
             )}
 
-            {createStep===9 && (
+            {(createShowAll || createStep===9) && (
               <div>
                 <div className="label">Starting gear</div>
                 <StartingGearEditor hero={draftHero} setHero={setDraftHero} />
               </div>
             )}
 
-            {createStep===10 && (
+            {(createShowAll || createStep===10) && (
               <div>
                 <div className="label">Useful items</div>
                 <div className="small muted" style={{marginBottom:8}}>Choices depend on Standard of Living.</div>
@@ -1333,21 +1339,21 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
               </div>
             )}
 
-            {createStep===11 && (
+            {(createShowAll || createStep===11) && (
               <div>
                 <div className="label">Ponies and horses</div>
                 <MountsEditor hero={draftHero} setHero={setDraftHero} />
               </div>
             )}
 
-            {createStep===12 && (
+            {(createShowAll || createStep===12) && (
               <div>
                 <div className="label">Starting reward and virtue</div>
                 <StartingRewardVirtueEditor hero={draftHero} setHero={setDraftHero} onSeeMore={openEntry} />
               </div>
             )}
 
-            {createStep===13 && (
+            {(createShowAll || createStep===13) && (
               <div>
                 <div className="label">Gender</div>
                 <select className="input" value={draftHero.gender ?? 'Other'} onChange={(e)=>setDraftHero((h:any)=>({ ...h, gender: e.target.value }))}>
@@ -1358,7 +1364,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
               </div>
             )}
 
-            {createStep===14 && (
+            {(createShowAll || createStep===14) && (
               <div>
                 <div className="label">Hero name</div>
                 <input className="input" value={draftHero.name ?? ''} onChange={(e)=>setDraftHero((h:any)=>({ ...h, name: e.target.value }))} />
@@ -1377,38 +1383,33 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
             )}
 
             <div className="row" style={{gap:8, marginTop:14, justifyContent:'space-between'}}>
-              <button className="btn btn-ghost" disabled={createStep===0} onClick={()=>setCreateStep((s:number)=>Math.max(0,s-1))}>Back</button>
-              {createStep < 14 ? (
-                <button className="btn" onClick={()=>{
-                  // Step boundary checks (light)
-                  const h:any = draftHero;
-                  if (createStep===1 && !h.cultureId) return alert('Choose a Culture.');
-                  if (createStep===2 && !h.cultureId) return alert('Choose a Culture first.');
-                  if (createStep===2 && !h.attributeRollChoice) return alert('Choose an Attribute array.');
-                  if (createStep===3 && !h.cultureFavouredSkillId) return alert('Choose the Culture favoured skill.');
-                  if (createStep===4 && !h.cultureCombatProf2) return alert('Choose the +2 Combat Proficiency.');
-                  if (createStep===4 && !h.cultureCombatProf1) return alert('Choose the +1 Combat Proficiency.');
-                  if (createStep===5 && (Array.isArray(h.cultureDistinctiveFeatureIds) ? h.cultureDistinctiveFeatureIds.length : 0) < 2) return alert('Choose 2 Distinctive Features.');
-                  if (createStep===6 && !h.callingId) return alert('Choose a Calling.');
-                  if (createStep===7 && (Array.isArray(h.callingFavouredSkillIds) ? h.callingFavouredSkillIds.length : 0) < 2) return alert('Choose 2 Calling favoured skills.');
-                  if (createStep===8 && !(h.previousExperience?.committed)) return alert('Commit your Previous Experience spending (even if you spend 0) before continuing.');
-                  if (createStep===12) {
-                    if (!Array.isArray(h.virtueIds) || h.virtueIds.length < 1) return alert('Choose 1 Virtue.');
-                    if (!Array.isArray(h.rewardIds) || h.rewardIds.length < 1) return alert('Choose 1 Reward.');
-                    const rid = h.rewardIds[0];
-                    const attached = h.rewardAttached?.[rid] ?? h.rewardAttachmentRefId ?? '';
-                    if (rid && !attached) return alert('Attach your Reward to an item.');
-                  }
-                  // ensure PE baselines set before PE step
-                  if (createStep===7) {
-                    setDraftHero((prev:any)=>({ ...prev, previousExperience: { ...(prev.previousExperience ?? {}), baselineSkillRatings: { ...(prev.skillRatings ?? {}) }, baselineCombatProficiencies: { ...(prev.combatProficiencies ?? {}) }, committed: false } }));
-                  }
-                  setCreateStep((s:number)=>Math.min(14,s+1));
-                }}>Next</button>
-              ) : (
-                <button className="btn" onClick={()=>{
+              <button className="btn btn-ghost" onClick={()=>{ setCreateOpen(false); setDraftHero(null); }}>Close</button>
+              <button className="btn" onClick={()=>{
                   const h:any = draftHero;
                   if (!h.name || !String(h.name).trim()) return alert('Enter a name.');
+
+                  // Required creation fields (when using "show all")
+                  if (!h.cultureId) return alert('Choose a Culture.');
+                  if (!h.attributeRollChoice) return alert('Choose an Attribute array.');
+                  if (!h.cultureFavouredSkillId) return alert('Choose the Culture favoured skill.');
+                  if (!h.cultureCombatProf2 || !h.cultureCombatProf1) return alert('Choose the Culture combat proficiencies (+2 and +1).');
+                  if ((Array.isArray(h.cultureDistinctiveFeatureIds) ? h.cultureDistinctiveFeatureIds.length : 0) < 2) return alert('Choose 2 Distinctive Features.');
+                  if (!h.callingId) return alert('Choose a Calling.');
+                  if ((Array.isArray(h.callingFavouredSkillIds) ? h.callingFavouredSkillIds.length : 0) < 2) return alert('Choose 2 Calling favoured skills.');
+
+                  // Ensure PE baselines exist and PE is committed
+                  const pe = h.previousExperience ?? {};
+                  const hasBaselines = pe.baselineSkillRatings && pe.baselineCombatProficiencies;
+                  if (!hasBaselines) {
+                    h.previousExperience = {
+                      ...(pe ?? {}),
+                      baselineSkillRatings: { ...(h.skillRatings ?? {}) },
+                      baselineCombatProficiencies: { ...(h.combatProficiencies ?? {}) },
+                      committed: false,
+                    };
+                  }
+                  if (!(h.previousExperience?.committed)) return alert('Commit your Previous Experience spending (even if you spend 0) before finishing.');
+
                   // Finalize features (cultural blessing + calling extra)
                   let featureIds: string[] = Array.isArray(h.featureIds) ? [...h.featureIds] : [];
                   const auto = autoFeatureIds(h);
@@ -1450,8 +1451,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                   persistUI(finalized.id, finalized.id, next);
                   setCreateOpen(false);
                   setDraftHero(null);
-                }}>Finish</button>
-              )}
+                }}>Create Hero</button>
             </div>
           </div>
         ) : null}

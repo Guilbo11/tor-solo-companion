@@ -1,201 +1,230 @@
-import React, { useMemo, useState } from 'react';
-import { Journey, JournalEntry, StoredState } from '../core/storage';
-import { makeId } from '../core/oracles';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import type { JournalChapter, StoredState } from '../core/storage';
 
-export default function JournalPanel({ state, setState }: { state: StoredState; setState: (s: StoredState) => void }) {
-  const [view, setView] = useState<'notes'|'journeys'>('notes');
+type Props = { state: StoredState; setState: (s: StoredState) => void };
 
-  // Notes form
-  const [title, setTitle] = useState('');
-  const [body, setBody] = useState('');
-  const [tags, setTags] = useState('');
-  const [linkedHex, setLinkedHex] = useState('');
-
-  // Journey form
-  const [jTitle, setJTitle] = useState('');
-  const [jFrom, setJFrom] = useState('');
-  const [jTo, setJTo] = useState('');
-
-  const entries = useMemo(() => [...state.journal].sort((a,b)=>b.createdAt.localeCompare(a.createdAt)), [state.journal]);
-  const journeys = useMemo(() => [...(state.journeys ?? [])].sort((a,b)=>b.createdAt.localeCompare(a.createdAt)), [state.journeys]);
-
-  function addNote() {
-    if (!title.trim() && !body.trim()) return;
-    const e: JournalEntry = {
-      id: makeId(),
-      createdAt: new Date().toISOString(),
-      title: title.trim() || 'Note',
-      body: body.trim(),
-      tags: tags.split(',').map(t=>t.trim()).filter(Boolean),
-      linkedHex: linkedHex.trim() || undefined,
-    };
-    setState({ ...state, journal: [e, ...state.journal] });
-    setTitle(''); setBody(''); setTags(''); setLinkedHex('');
-  }
-
-  function removeNote(id: string) {
-    setState({ ...state, journal: state.journal.filter(e=>e.id!==id) });
-  }
-
-  function addJourney() {
-    if (!jTitle.trim()) return;
-    const mode = (state.fellowship?.mode ?? 'company') as any;
-    const j: Journey = {
-      id: makeId(),
-      createdAt: new Date().toISOString(),
-      title: jTitle.trim(),
-      from: jFrom.trim() || undefined,
-      to: jTo.trim() || undefined,
-      mode,
-      roles: {},
-      events: [],
-    };
-    setState({ ...state, journeys: [j, ...(state.journeys ?? [])] });
-    setJTitle(''); setJFrom(''); setJTo('');
-  }
-
-  function patchJourney(id: string, patch: Partial<Journey>) {
-    setState({
-      ...state,
-      journeys: (state.journeys ?? []).map(j => j.id === id ? { ...j, ...patch } : j),
-    });
-  }
-
-  function removeJourney(id: string) {
-    setState({ ...state, journeys: (state.journeys ?? []).filter(j=>j.id!==id) });
-  }
-
-  return (
-    <div className="panel">
-      <h2>Journal</h2>
-
-      <div className="row" style={{gap: 8, flexWrap:'wrap'}}>
-        <button className={view==='notes' ? 'btn' : 'btn btn-ghost'} onClick={()=>setView('notes')}>Notes</button>
-        <button className={view==='journeys' ? 'btn' : 'btn btn-ghost'} onClick={()=>setView('journeys')}>Journeys</button>
-      </div>
-
-      {view === 'notes' ? (
-        <>
-          <div className="section">
-            <div className="row" style={{ gap: 8, flexWrap:'wrap' }}>
-              <input className="input" placeholder="Title" value={title} onChange={(e)=>setTitle(e.target.value)} />
-              <input className="input" placeholder="Tags (comma-separated)" value={tags} onChange={(e)=>setTags(e.target.value)} />
-              <input className="input" placeholder="Linked hex (optional)" value={linkedHex} onChange={(e)=>setLinkedHex(e.target.value)} />
-              <button className="btn" onClick={addNote}>Add</button>
-            </div>
-            <textarea className="input" style={{ marginTop: 8, minHeight: 100 }} placeholder="Body" value={body} onChange={(e)=>setBody(e.target.value)} />
-          </div>
-
-          {entries.length === 0 ? <div className="muted">No notes yet.</div> : (
-            <div className="list">
-              {entries.map(e=>(
-                <div key={e.id} className="card">
-                  <div className="row" style={{justifyContent:'space-between', gap: 8, flexWrap:'wrap'}}>
-                    <div>
-                      <div className="cardTitle">{e.title}</div>
-                      <div className="muted small">{new Date(e.createdAt).toLocaleString()}</div>
-                    </div>
-                    <button className="btn btn-ghost" onClick={()=>removeNote(e.id)}>Delete</button>
-                  </div>
-                  <div className="row" style={{ marginTop: 8, gap: 6, flexWrap:'wrap' }}>
-                    {e.tags.map(t => <span key={t} className="badge">{t}</span>)}
-                    {e.linkedHex && <span className="badge">Hex: {e.linkedHex}</span>}
-                  </div>
-                  {e.body && <pre style={{ marginTop: 10, whiteSpace:'pre-wrap' }}>{e.body}</pre>}
-                </div>
-              ))}
-            </div>
-          )}
-        </>
-      ) : (
-        <>
-          <div className="section">
-            <div className="row" style={{ gap: 8, flexWrap:'wrap' }}>
-              <input className="input" placeholder="Journey name" value={jTitle} onChange={(e)=>setJTitle(e.target.value)} />
-              <input className="input" placeholder="From" value={jFrom} onChange={(e)=>setJFrom(e.target.value)} />
-              <input className="input" placeholder="To" value={jTo} onChange={(e)=>setJTo(e.target.value)} />
-              <button className="btn" onClick={addJourney}>Add</button>
-            </div>
-            <div className="small muted" style={{marginTop: 6}}>
-              Mode comes from Fellowship (Company / Strider Mode). Full journey procedure support will be added later.
-            </div>
-          </div>
-
-          {journeys.length === 0 ? <div className="muted">No journeys yet.</div> : (
-            <div className="list">
-              {journeys.map(j=>(
-                <JourneyCard key={j.id} j={j} patch={(p)=>patchJourney(j.id,p)} remove={()=>removeJourney(j.id)} />
-              ))}
-            </div>
-          )}
-        </>
-      )}
-    </div>
-  );
+function uid(prefix = 'id') {
+  return `${prefix}-${crypto.randomUUID()}`;
 }
 
-function JourneyCard({ j, patch, remove }: { j: any; patch: (p:any)=>void; remove: ()=>void }) {
-  const [open, setOpen] = useState(false);
+function clampHtml(html: string) {
+  return typeof html === 'string' ? html : '';
+}
 
-  const addEvent = () => {
-    const ev = { id: makeId(), title: 'Event', body: '' };
-    patch({ events: [ev, ...(j.events ?? [])] });
+export default function JournalPanel({ state, setState }: Props) {
+  const chapters = state.journalChapters ?? [];
+  const activeId = state.activeJournalChapterId ?? chapters[0]?.id;
+  const active = useMemo(() => chapters.find(c => c.id === activeId) ?? chapters[0], [chapters, activeId]);
+
+  const [editingId, setEditingId] = useState<string | null>(active?.id ?? null);
+  const editing = chapters.find(c => c.id === editingId) ?? null;
+
+  const editorRef = useRef<HTMLDivElement | null>(null);
+  const [draftHtml, setDraftHtml] = useState<string>(editing ? clampHtml(editing.html) : '');
+
+  // Keep draft in sync when switching chapters
+  useEffect(() => {
+    if (!editing) return;
+    setDraftHtml(clampHtml(editing.html));
+  }, [editingId]);
+
+  // Expose an insert hook for dice/oracle logging.
+  useEffect(() => {
+    const onInsert = (ev: Event) => {
+      const detail = (ev as CustomEvent).detail as { html?: string };
+      const html = String(detail?.html ?? '');
+      if (!html.trim()) return;
+
+      // Prefer inserting at caret if editor is active.
+      if (editing && editorRef.current && document.activeElement === editorRef.current) {
+        try {
+          document.execCommand('insertHTML', false, `<br/><br/>${html}`);
+          setDraftHtml(editorRef.current.innerHTML);
+          return;
+        } catch {
+          // fall through to append
+        }
+      }
+
+      // Append to chapter content.
+      if (!active) return;
+      const next = (active.html ?? '') + `<br/><br/>${html}`;
+      setState({
+        ...state,
+        journalChapters: chapters.map(c => c.id === active.id ? { ...c, html: next } : c),
+      });
+    };
+
+    window.addEventListener('torc:journal-insert-html', onInsert as any);
+    return () => window.removeEventListener('torc:journal-insert-html', onInsert as any);
+  }, [state, setState, chapters, active, editing]);
+
+  const toggleCollapsed = (id: string) => {
+    setState({
+      ...state,
+      journalChapters: chapters.map(c => c.id === id ? { ...c, collapsed: !c.collapsed } : c),
+    });
   };
 
-  const patchEvent = (eid: string, p: any) => {
-    patch({ events: (j.events ?? []).map((e:any)=> e.id===eid ? { ...e, ...p } : e) });
+  const addChapter = () => {
+    const id = uid('chap');
+    const next: JournalChapter = { id, title: `Chapter ${chapters.length + 1}`, html: '', collapsed: false };
+    setState({
+      ...state,
+      journalChapters: [...chapters, next],
+      activeJournalChapterId: id,
+    });
+    setEditingId(id);
   };
 
-  const removeEvent = (eid: string) => {
-    patch({ events: (j.events ?? []).filter((e:any)=>e.id!==eid) });
+  const removeChapter = (id: string) => {
+    const c = chapters.find(x => x.id === id);
+    if (!c) return;
+    if (!confirm(`Delete "${c.title}"?`)) return;
+    const nextList = chapters.filter(x => x.id !== id);
+    const nextActive = nextList[0]?.id;
+    setState({
+      ...state,
+      journalChapters: nextList,
+      activeJournalChapterId: nextActive,
+    });
+    if (editingId === id) setEditingId(nextActive ?? null);
+  };
+
+  // Drag & drop reordering
+  const [dragId, setDragId] = useState<string | null>(null);
+  const onDrop = (targetId: string) => {
+    if (!dragId || dragId === targetId) return;
+    const from = chapters.findIndex(c => c.id === dragId);
+    const to = chapters.findIndex(c => c.id === targetId);
+    if (from < 0 || to < 0) return;
+    const next = [...chapters];
+    const [m] = next.splice(from, 1);
+    next.splice(to, 0, m);
+    setState({ ...state, journalChapters: next });
+    setDragId(null);
+  };
+
+  const exec = (cmd: string, value?: string) => {
+    try {
+      document.execCommand(cmd, false, value);
+      if (editorRef.current) setDraftHtml(editorRef.current.innerHTML);
+    } catch {
+      // ignore
+    }
+  };
+
+  const applyHeading = (level: 1 | 2 | 3) => {
+    exec('formatBlock', `H${level}`);
+  };
+
+  const startEdit = (id: string) => {
+    setState({ ...state, activeJournalChapterId: id });
+    setEditingId(id);
+    // focus shortly after paint
+    window.setTimeout(() => editorRef.current?.focus(), 50);
+  };
+
+  const updateChapter = () => {
+    if (!editing) return;
+    const nextHtml = editorRef.current ? editorRef.current.innerHTML : draftHtml;
+    setState({
+      ...state,
+      journalChapters: chapters.map(c => c.id === editing.id ? { ...c, html: nextHtml } : c),
+      activeJournalChapterId: editing.id,
+    });
   };
 
   return (
     <div className="card">
-      <div className="row" style={{justifyContent:'space-between', gap: 8, flexWrap:'wrap'}}>
+      <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
         <div>
-          <div className="cardTitle">{j.title}</div>
-          <div className="muted small">{j.from ? j.from : '(unknown)'} → {j.to ? j.to : '(unknown)'} • {j.mode === 'strider' ? 'Strider Mode' : 'Company'}</div>
+          <div className="h2">Journal</div>
+          <div className="small muted">One chapter can be edited at a time. Rolls can be logged to the active chapter.</div>
         </div>
-        <div className="row" style={{gap: 8}}>
-          <button className="btn btn-ghost" onClick={()=>setOpen(!open)}>{open ? 'Collapse' : 'Expand'}</button>
-          <button className="btn btn-ghost" onClick={remove}>Delete</button>
-        </div>
+        <button className="btn" onClick={addChapter}>+ Chapter</button>
       </div>
 
-      {open ? (
-        <div style={{marginTop: 10}}>
-          <div className="row" style={{gap: 8, flexWrap:'wrap'}}>
-            <div className="field" style={{minWidth: 220}}>
-              <div className="label">From</div>
-              <input className="input" value={j.from ?? ''} onChange={(e)=>patch({from: e.target.value})} />
-            </div>
-            <div className="field" style={{minWidth: 220}}>
-              <div className="label">To</div>
-              <input className="input" value={j.to ?? ''} onChange={(e)=>patch({to: e.target.value})} />
-            </div>
-          </div>
-
-          <div className="row" style={{justifyContent:'space-between', marginTop: 10}}>
-            <div className="label">Events</div>
-            <button className="btn btn-ghost" onClick={addEvent}>+ Add event</button>
-          </div>
-
-          {(j.events ?? []).length === 0 ? <div className="small muted">No events yet.</div> : (
-            <div className="list">
-              {(j.events ?? []).map((e:any)=>(
-                <div key={e.id} className="card" style={{marginTop: 8}}>
-                  <div className="row" style={{justifyContent:'space-between', gap: 8, flexWrap:'wrap'}}>
-                    <input className="input" value={e.title ?? ''} onChange={(ev)=>patchEvent(e.id,{title: ev.target.value})} />
-                    <button className="btn btn-ghost" onClick={()=>removeEvent(e.id)}>Remove</button>
+      <div style={{ marginTop: 12 }}>
+        {chapters.map(c => (
+          <div key={c.id} className="card" style={{ marginBottom: 10, padding: 12 }}>
+            <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+              <div className="row" style={{ gap: 10, alignItems: 'center', flex: 1 }}>
+                <button
+                  type="button"
+                  className="dragHandle"
+                  aria-label="Drag to reorder"
+                  draggable
+                  onDragStart={() => setDragId(c.id)}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={() => onDrop(c.id)}
+                >
+                  <div className="dragDots" aria-hidden="true">
+                    <span />
+                    <span />
+                    <span />
+                    <span />
                   </div>
-                  <textarea className="input" style={{ marginTop: 8, minHeight: 70 }} value={e.body ?? ''} onChange={(ev)=>patchEvent(e.id,{body: ev.target.value})} />
+                </button>
+
+                <button
+                  className="btn btn-ghost"
+                  onClick={() => toggleCollapsed(c.id)}
+                  style={{ padding: '8px 10px', borderRadius: 12 }}
+                >
+                  {c.collapsed ? '▸' : '▾'}
+                </button>
+
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 800 }}>
+                    {c.title}{c.id === activeId ? <span className="badge" style={{ marginLeft: 8 }}>active</span> : null}
+                  </div>
                 </div>
-              ))}
+              </div>
+
+              <div className="row" style={{ gap: 8, alignItems: 'center' }}>
+                <button className="btn btn-ghost" aria-label="Edit" onClick={() => startEdit(c.id)}>✏️</button>
+                <button className="btn-danger" aria-label="Delete" onClick={() => removeChapter(c.id)}>🗑️</button>
+              </div>
             </div>
-          )}
-        </div>
-      ) : null}
+
+            {!c.collapsed && (
+              <div style={{ marginTop: 10 }}>
+                <div className="rich-read" dangerouslySetInnerHTML={{ __html: c.html || '<span class="muted">(empty)</span>' }} />
+              </div>
+            )}
+
+            {editing && editing.id === c.id && (
+              <div style={{ marginTop: 12 }}>
+                <div className="editorToolbar">
+                  <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
+                    <button className="btn btn-ghost" onClick={() => applyHeading(1)}>H1</button>
+                    <button className="btn btn-ghost" onClick={() => applyHeading(2)}>H2</button>
+                    <button className="btn btn-ghost" onClick={() => applyHeading(3)}>H3</button>
+                    <button className="btn btn-ghost" onClick={() => exec('italic')}>Italic</button>
+                    <button className="btn btn-ghost" onClick={() => exec('underline')}>Underline</button>
+                    <button className="btn btn-ghost" onClick={() => exec('insertUnorderedList')}>• List</button>
+                    <button className="btn btn-ghost" onClick={() => exec('insertOrderedList')}>1. List</button>
+                  </div>
+                </div>
+
+                <div
+                  ref={editorRef}
+                  className="richEditor"
+                  contentEditable
+                  suppressContentEditableWarning
+                  onInput={() => setDraftHtml(editorRef.current?.innerHTML ?? '')}
+                  dangerouslySetInnerHTML={{ __html: draftHtml }}
+                />
+
+                <button className="btn" style={{ width: '100%', marginTop: 10 }} onClick={updateChapter}>
+                  Update journal
+                </button>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

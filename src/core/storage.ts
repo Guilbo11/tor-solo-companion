@@ -1,14 +1,62 @@
 export type StoredState = {
-  version: 4;
+  version: 5;
+
+  // Legacy notes/journeys (kept for backward compatibility with older saves)
   journal: JournalEntry[];
   journeys: Journey[];
+
   fellowship: FellowshipState;
-  map: MapState;
+
+  // Maps are now per-campaign (multi-map support)
+  mapsByCampaign: Record<string, MapDoc[]>;
+  activeMapIdByCampaign: Record<string, string | undefined>;
+
+  // Oracles
   oracle: OracleState;
+
+  // Journal v2 (chapters + rich HTML)
+  journalChapters: JournalChapter[];
+  activeJournalChapterId?: string;
+
+  // NPCs
+  npcs: NPC[];
+
+  // Campaigns & heroes
   campaigns: Campaign[];
   activeCampaignId?: string;
   heroes: Hero[];
+
+  // Settings
+  settings: SettingsState;
+
   ui?: UIState;
+};
+
+export type SettingsState = {
+  addRollsToJournal: boolean;
+};
+
+export type JournalChapter = {
+  id: string;
+  title: string;
+  html: string;
+  collapsed?: boolean;
+};
+
+export type NPC = {
+  id: string;
+  campaignId: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+  cultureId?: string;
+  gender?: 'Masculine'|'Feminine'|'Other';
+  firstLook?: string[];
+  goal?: string;
+  motivations?: string[];
+  location?: string;
+  notesHtml?: string;
+  collapsed?: boolean;
 };
 
 export type JournalEntry = {
@@ -168,6 +216,18 @@ export type MapState = {
   pan?: { x: number; y: number };
 };
 
+export type MapDoc = {
+  id: string;
+  name: string;
+  state: MapState;
+};
+
+export type MapDoc = {
+  id: string;
+  name: string;
+  state: MapState;
+};
+
 export type OracleTable = {
   id: string;
   name: string;
@@ -189,15 +249,20 @@ export function loadState(): StoredState {
   if (!raw) return defaultState();
   try {
     const parsed = JSON.parse(raw) as StoredState;
-    if (parsed?.version !== 3 && parsed?.version !== 4) return defaultState();
+    if (![3,4,5].includes((parsed as any)?.version)) return defaultState();
 
     // Migrate v3 -> v4 (campaigns)
     if (parsed?.version === 3) {
       return ensureDefaults(migrateV3ToV4(parsed as any));
     }
 
+    // Migrate v4 -> v5 (journal chapters, settings, NPCs, multi-map)
+    if ((parsed as any)?.version === 4) {
+      return ensureDefaults(migrateV4ToV5(parsed as any));
+    }
+
     // Ensure defaults exist even if older saved state is missing new fields
-    return ensureDefaults(parsed);
+    return ensureDefaults(parsed as any);
   } catch {
     return defaultState();
   }
@@ -208,27 +273,37 @@ export function saveState(state: StoredState) {
 }
 
 export function defaultState(): StoredState {
+  const now = new Date().toISOString();
+  const campId = 'camp-1';
+  const defaultMap: MapState = {
+    hexSize: 28,
+    origin: { x: 380, y: 260 },
+    notes: {},
+    gridLocked: false,
+    showGrid: true,
+    showSettings: true,
+    nudgeStep: 2,
+    calibDir: 'E',
+    zoom: 1,
+    pan: { x: 0, y: 0 },
+  };
+
   return ensureDefaults({
-    version: 4,
+    version: 5,
+
+    // legacy
     journal: [],
     journeys: [],
+
     fellowship: { mode: 'company', companyName: '' },
-    campaigns: [{ id: 'camp-1', name: 'My Campaign', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }],
-    activeCampaignId: 'camp-1',
-    heroes: [],
-    ui: {},
-    map: {
-      hexSize: 28,
-      origin: { x: 380, y: 260 },
-      notes: {},
-      gridLocked: false,
-      showGrid: true,
-      showSettings: true,
-      nudgeStep: 2,
-      calibDir: 'E',
-      zoom: 1,
-      pan: { x: 0, y: 0 },
+
+    // maps per campaign
+    mapsByCampaign: {
+      [campId]: [{ id: 'map-1', name: 'Map 1', state: defaultMap }],
     },
+    activeMapIdByCampaign: { [campId]: 'map-1' },
+
+    // oracles
     oracle: {
       tables: [
         {
@@ -293,6 +368,20 @@ export function defaultState(): StoredState {
       },
       history: [],
     },
+
+    // journal v2
+    journalChapters: [{ id: 'chap-1', title: 'Chapter 1', html: '' }],
+    activeJournalChapterId: 'chap-1',
+
+    // npcs
+    npcs: [],
+
+    campaigns: [{ id: campId, name: 'My Campaign', createdAt: now, updatedAt: now }],
+    activeCampaignId: campId,
+    heroes: [],
+    ui: {},
+
+    settings: { addRollsToJournal: false },
   });
 }
 
@@ -315,6 +404,58 @@ function migrateV3ToV4(s: any): any {
   return { ...s, version: 4, campaigns, activeCampaignId: campId, heroes };
 }
 
+function migrateV4ToV5(s: any): any {
+  // Keep data as-is; ensureDefaults will populate new fields and migrate legacy map/journal.
+  return { ...s, version: 5 };
+}
+
+function ensureJournalChapterDefaults(c: any): JournalChapter {
+  return {
+    id: String(c?.id ?? crypto.randomUUID()),
+    title: String(c?.title ?? 'Chapter'),
+    html: typeof c?.html === 'string' ? c.html : '',
+    collapsed: typeof c?.collapsed === 'boolean' ? c.collapsed : false,
+  };
+}
+
+function ensureNpcDefaults(n: any): NPC {
+  return {
+    id: String(n?.id ?? crypto.randomUUID()),
+    campaignId: typeof n?.campaignId === 'string' ? n.campaignId : 'camp-1',
+    name: String(n?.name ?? 'Unnamed'),
+    createdAt: String(n?.createdAt ?? new Date().toISOString()),
+    updatedAt: String(n?.updatedAt ?? new Date().toISOString()),
+    cultureId: n?.cultureId ? String(n.cultureId) : undefined,
+    gender: (n?.gender ?? undefined) as any,
+    firstLook: Array.isArray(n?.firstLook) ? n.firstLook.map(String) : [],
+    goal: typeof n?.goal === 'string' ? n.goal : '',
+    motivations: Array.isArray(n?.motivations) ? n.motivations.map(String) : [],
+    location: typeof n?.location === 'string' ? n.location : '',
+    notesHtml: typeof n?.notesHtml === 'string' ? n.notesHtml : '',
+    collapsed: typeof n?.collapsed === 'boolean' ? n.collapsed : true,
+  };
+}
+
+function escapeHtml(txt: string): string {
+  return txt
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
+function legacyNotesToHtml(entries: JournalEntry[]): string {
+  if (!entries?.length) return '';
+  const sorted = [...entries].sort((a,b)=>String(a.createdAt).localeCompare(String(b.createdAt)));
+  return sorted.map(e => {
+    const title = escapeHtml(e.title ?? 'Note');
+    const body = escapeHtml(e.body ?? '').replaceAll('\n', '<br/>');
+    const when = escapeHtml(new Date(e.createdAt).toLocaleString());
+    return `<p><strong>${title}</strong><br/><span style="opacity:.75;font-size:12px">${when}</span><br/>${body}</p>`;
+  }).join('');
+}
+
 function ensureCampaignDefaults(c: any): Campaign {
   return {
     id: String(c?.id ?? crypto.randomUUID()),
@@ -325,16 +466,76 @@ function ensureCampaignDefaults(c: any): Campaign {
 }
 
 function ensureDefaults(s: StoredState): StoredState {
+  const campaigns: Campaign[] = Array.isArray((s as any).campaigns)
+    ? (s as any).campaigns.map(ensureCampaignDefaults)
+    : [{ id: 'camp-1', name: 'My Campaign', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }];
+
+  const activeCampaignId = typeof (s as any).activeCampaignId === 'string'
+    ? (s as any).activeCampaignId
+    : (campaigns[0]?.id ?? 'camp-1');
+
+  // Multi-maps: migrate from legacy single map if needed.
+  const legacyMap = ensureMapDefaults((s as any).map);
+  const mapsByCampaign: Record<string, MapDoc[]> = (s as any).mapsByCampaign && typeof (s as any).mapsByCampaign === 'object'
+    ? Object.fromEntries(Object.entries((s as any).mapsByCampaign).map(([cid, maps]: any) => [
+        String(cid),
+        Array.isArray(maps)
+          ? maps.map((m: any) => ({
+              id: String(m?.id ?? crypto.randomUUID()),
+              name: String(m?.name ?? 'Map'),
+              state: ensureMapDefaults(m?.state ?? legacyMap),
+            }))
+          : [{ id: 'map-1', name: 'Map 1', state: legacyMap }],
+      ]))
+    : {};
+
+  // Ensure each campaign has at least one map.
+  for (const c of campaigns) {
+    if (!mapsByCampaign[c.id] || mapsByCampaign[c.id].length === 0) {
+      mapsByCampaign[c.id] = [{ id: 'map-1', name: 'Map 1', state: legacyMap }];
+    }
+  }
+
+  const activeMapIdByCampaign: Record<string, string | undefined> = (s as any).activeMapIdByCampaign && typeof (s as any).activeMapIdByCampaign === 'object'
+    ? { ...(s as any).activeMapIdByCampaign }
+    : {};
+
+  for (const c of campaigns) {
+    const desired = activeMapIdByCampaign[c.id];
+    const exists = desired && mapsByCampaign[c.id].some(m => m.id === desired);
+    if (!exists) activeMapIdByCampaign[c.id] = mapsByCampaign[c.id][0]?.id;
+  }
+
+  const heroes: Hero[] = Array.isArray((s as any).heroes) ? (s as any).heroes.map(ensureHeroDefaults) : [];
+  const npcs: NPC[] = Array.isArray((s as any).npcs) ? (s as any).npcs.map(ensureNpcDefaults) : [];
+
+  const settings: SettingsState = (s as any).settings && typeof (s as any).settings === 'object'
+    ? { addRollsToJournal: !!(s as any).settings.addRollsToJournal }
+    : { addRollsToJournal: false };
+
+  const journalChapters: JournalChapter[] = Array.isArray((s as any).journalChapters)
+    ? (s as any).journalChapters.map(ensureJournalChapterDefaults)
+    : [{ id: 'chap-1', title: 'Chapter 1', html: legacyNotesToHtml(Array.isArray((s as any).journal) ? (s as any).journal : []) }];
+
+  const activeJournalChapterId = typeof (s as any).activeJournalChapterId === 'string'
+    ? (s as any).activeJournalChapterId
+    : (journalChapters[0]?.id ?? 'chap-1');
+
   const out: StoredState = {
-    version: 4,
+    version: 5,
     journal: Array.isArray((s as any).journal) ? (s as any).journal : [],
     journeys: Array.isArray((s as any).journeys) ? (s as any).journeys.map(ensureJourneyDefaults) : [],
     fellowship: ensureFellowshipDefaults((s as any).fellowship),
+    mapsByCampaign,
+    activeMapIdByCampaign,
     oracle: ensureOracleDefaults((s as any).oracle),
-    map: ensureMapDefaults((s as any).map),
-    campaigns: Array.isArray((s as any).campaigns) ? (s as any).campaigns.map(ensureCampaignDefaults) : [{ id: 'camp-1', name: 'My Campaign', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }],
-    activeCampaignId: typeof (s as any).activeCampaignId === 'string' ? (s as any).activeCampaignId : ((Array.isArray((s as any).campaigns) && (s as any).campaigns[0]?.id) ? String((s as any).campaigns[0].id) : 'camp-1'),
-    heroes: Array.isArray((s as any).heroes) ? (s as any).heroes.map(ensureHeroDefaults) : [],
+    journalChapters,
+    activeJournalChapterId,
+    npcs,
+    campaigns,
+    activeCampaignId,
+    heroes,
+    settings,
     ui: (s as any).ui && typeof (s as any).ui === 'object' ? (s as any).ui : {},
   };
   return out;

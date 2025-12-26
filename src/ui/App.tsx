@@ -1,7 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { defaultState, loadState, saveState, StoredState } from '../core/storage';
 import { exportToTorc, importFromTorc } from '../core/torc';
-import DicePanel from './DicePanel';
 import JournalPanel from './JournalPanel';
 import MapPanel from './MapPanel';
 import OraclesPanel from './OraclesPanel';
@@ -10,22 +9,26 @@ import HeroesPanel from './HeroesPanel';
 import FellowshipPanel from './FellowshipPanel';
 import FloatingDieButton from './FloatingDieButton';
 import FloatingDiceSheet from './FloatingDiceSheet';
+import NPCsPanel from './NPCsPanel';
+import FloatingOracleButton from './FloatingOracleButton';
+import OracleSidePanel from './OracleSidePanel';
 
-type Tab = 'Heroes'|'Fellowship'|'Dice'|'Oracles'|'Map'|'Journal'|'Settings';
+type Tab = 'Journal'|'Heroes'|'Map'|'NPCs'|'Fellowship'|'Oracles'|'Settings';
 
 type AppMode = 'landing' | 'main';
 
 export default function App() {
   const [state, setState] = useState<StoredState>(() => loadState());
   const [mode, setMode] = useState<AppMode>('landing');
-  const [tab, setTab] = useState<Tab>('Heroes');
+  const [tab, setTab] = useState<Tab>('Journal');
   const [diceSheetOpen, setDiceSheetOpen] = useState(false);
+  const [oracleOpen, setOracleOpen] = useState(false);
 
   // When on the landing page, render a clean page (no app header/tabs/dice)
   // like Pocketforge. Campaign management only happens there.
   const isCampaignLanding = mode === 'landing';
 
-  const tabs: Tab[] = ['Heroes','Fellowship','Dice','Oracles','Map','Journal','Settings'];
+  const tabs: Tab[] = ['Journal','Heroes','Map','NPCs','Fellowship','Oracles','Settings'];
 
   const set: React.Dispatch<React.SetStateAction<StoredState>> = (next) => {
     setState((prev) => {
@@ -70,14 +73,23 @@ export default function App() {
             }} />
           </label>
 
-          <button className="btn" onClick={() => {
-            if (!confirm('Reset all local data?')) return;
-            set(defaultState());
-          }}>Reset</button>
+          {/* Reset removed (too risky) */}
         </div>
       </div>
     );
   }, [state]);
+
+  // Global roll logger hook (dice + oracles) -> active journal chapter
+  useEffect(() => {
+    (window as any).__torcLogRollHtml = (html: string) => {
+      if (!state.settings?.addRollsToJournal) return;
+      const clean = String(html ?? '').trim();
+      if (!clean) return;
+      // Try insert at caret if Journal editor is focused
+      window.dispatchEvent(new CustomEvent('torc:journal-insert-html', { detail: { html: clean } }));
+    };
+    return () => { (window as any).__torcLogRollHtml = undefined; };
+  }, [state.settings?.addRollsToJournal]);
 
   return (
     <div className={isCampaignLanding ? 'landingContainer' : 'container'}>
@@ -106,12 +118,12 @@ export default function App() {
 
       {!isCampaignLanding && (
         <>
-          {tab === 'Heroes' && <HeroesPanel state={state} setState={set} mode="main" />}
-          {tab === 'Fellowship' && <FellowshipPanel state={state} setState={set} />}
-          {tab === 'Dice' && <DicePanel />}
-          {tab === 'Oracles' && <OraclesPanel state={state} setState={set} />}
-          {tab === 'Map' && <MapPanel state={state} setState={set} />}
           {tab === 'Journal' && <JournalPanel state={state} setState={set} />}
+          {tab === 'Heroes' && <HeroesPanel state={state} setState={set} mode="main" />}
+          {tab === 'Map' && <MapPanel state={state} setState={set} />}
+          {tab === 'NPCs' && <NPCsPanel state={state} setState={set} />}
+          {tab === 'Fellowship' && <FellowshipPanel state={state} setState={set} />}
+          {tab === 'Oracles' && <OraclesPanel state={state} setState={set} />}
           {tab === 'Settings' && (
             <SettingsPanel
               state={state}
@@ -126,8 +138,14 @@ export default function App() {
 
       {!isCampaignLanding ? (
         <>
-          <FloatingDieButton onClick={() => setDiceSheetOpen(true)} />
+          <div className="fab-row">
+            <FloatingDieButton onClick={() => setDiceSheetOpen(true)} />
+            <FloatingOracleButton onClick={() => setOracleOpen(true)} />
+          </div>
           <FloatingDiceSheet open={diceSheetOpen} onClose={() => setDiceSheetOpen(false)} />
+          <OracleSidePanel open={oracleOpen} onClose={() => setOracleOpen(false)}>
+            <OraclesPanel state={state} setState={set} compact />
+          </OracleSidePanel>
         </>
       ) : null}
     </div>

@@ -28,6 +28,25 @@ export default function SettingsPanel({ state, setState, onBackToCampaigns }: { 
         Configure oracle likelihood thresholds to match Strider Mode exactly (as written in your PDF).
       </div>
 
+      <hr />
+      <div className="h2">Journal</div>
+      <div className="card" style={{ padding: 12, marginTop: 10 }}>
+        <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+          <div>
+            <div style={{ fontWeight: 800 }}>Add rolls to journal</div>
+            <div className="small muted">When enabled, dice + oracle results are appended to the currently active journal chapter.</div>
+          </div>
+          <label className="toggle">
+            <input
+              type="checkbox"
+              checked={!!state.settings?.addRollsToJournal}
+              onChange={(e) => setState({ ...state, settings: { ...(state.settings ?? {}), addRollsToJournal: e.target.checked } })}
+            />
+            <span />
+          </label>
+        </div>
+      </div>
+
       {onBackToCampaigns ? (
         <>
           <hr />

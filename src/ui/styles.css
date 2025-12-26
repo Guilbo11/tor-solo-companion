@@ -20,7 +20,15 @@ hr { border: none; border-top: 1px solid #1f2a3a; margin: 16px 0; }
 .btn:disabled { opacity: .5; cursor: not-allowed; }
 .input { width: 100%; padding: 10px 12px; border-radius: 12px; border: 1px solid #2a3d60; background: #0f1623; color: #e8eef6; }
 .small { font-size: 12px; }
-.tabs { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 16px; }
+.tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 12px 0 16px;
+  padding-bottom: 4px;
+}
 .tab { padding: 8px 10px; border-radius: 999px; background: #0f1623; border: 1px solid #1f2a3a; cursor: pointer; }
 .tab.active { background: #1b2a44; border-color: #2a3d60; }
 .kv { display: grid; grid-template-columns: 140px 1fr; gap: 10px; align-items: center; }
@@ -148,11 +156,18 @@ canvas { border-radius: 14px; border: 1px solid #1f2a3a; background: #0b0f14; }
 }
 
 
-/* Floating dice (Pocketforge-style) */
-.fab-die{
+/* Floating buttons */
+.fab-row{
   position: fixed;
   right: 16px;
   bottom: 16px;
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  z-index: 2000;
+}
+
+.fab-btn{
   width: 56px;
   height: 56px;
   border-radius: 999px;
@@ -162,10 +177,10 @@ canvas { border-radius: 14px; border: 1px solid #1f2a3a; background: #0b0f14; }
   box-shadow: 0 10px 24px rgba(0,0,0,.35);
   display: grid;
   place-items: center;
-  z-index: 2000;
+  font-size: 22px;
   touch-action: manipulation;
 }
-.fab-die__icon{ font-size: 22px; }
+.fab-btn:active{ transform: translateY(1px); }
 
 /* small roll animation */
 .anim-zone{ height: 42px; display: grid; place-items: center; margin-top: 10px; }
@@ -186,3 +201,55 @@ canvas { border-radius: 14px; border: 1px solid #1f2a3a; background: #0b0f14; }
 
 .btn-danger{ background:#4a1a1a; border:1px solid #7a2a2a; color:#ffd7d7; padding:10px 12px; border-radius:12px; }
 .btn-danger:hover{ filter: brightness(1.08); }
+
+/* Toggle (settings) */
+.toggle{ position: relative; width: 44px; height: 26px; display: inline-flex; align-items: center; }
+.toggle input{ opacity: 0; width: 0; height: 0; }
+.toggle span{ position: absolute; inset: 0; background: #1b2a44; border: 1px solid #2a3d60; border-radius: 999px; transition: 150ms ease; }
+.toggle span:before{ content: ''; position: absolute; height: 20px; width: 20px; left: 3px; top: 2px; background: #e9eef8; border-radius: 999px; transition: 150ms ease; }
+.toggle input:checked + span{ background: #214a2e; border-color: #2f6a40; }
+.toggle input:checked + span:before{ transform: translateX(18px); }
+
+/* Side panel (oracles) */
+.sidePanelOverlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+  z-index: 2500;
+  display: flex;
+  justify-content: flex-end;
+}
+.sidePanel{
+  width: min(520px, 92vw);
+  height: 100%;
+  background: #0b0f17;
+  border-left: 1px solid #182338;
+  padding: 14px;
+  overflow: auto;
+  animation: slideIn 160ms ease-out;
+}
+@keyframes slideIn{ from{ transform: translateX(20px); opacity: .6; } to{ transform: translateX(0); opacity: 1; } }
+
+/* Simple side modal (NPC creation) */
+.sideModal{ position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 2400; display: grid; place-items: center; padding: 16px; }
+.sideModalCard{ width: min(640px, 96vw); max-height: 90vh; overflow: auto; background: #0b0f17; border: 1px solid #182338; border-radius: 16px; padding: 14px; }
+
+/* NPC list */
+.npcRow{ border: 1px solid #182338; border-radius: 14px; padding: 10px; margin-bottom: 10px; background: #0b0f17; }
+.npcToggle{ border: 1px solid #182338; background: #101826; color: #e9eef8; width: 36px; height: 36px; border-radius: 12px; }
+.npcDetails{ margin-top: 10px; }
+
+/* Journal */
+.journalHeader{ margin-bottom: 10px; }
+.journalChapters{ display: flex; flex-direction: column; gap: 10px; }
+.chapterCard{ border: 1px solid #182338; border-radius: 16px; background: #0b0f17; }
+.chapterRow{ padding: 10px; }
+.dragHandle{ width: 22px; height: 22px; border: 1px solid #182338; border-radius: 8px; background: #101826; display: grid; place-items: center; cursor: grab; user-select: none; }
+.dragDots{ width: 10px; height: 10px; display: grid; grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr); gap: 2px; }
+.dragDots span{ width: 4px; height: 4px; border-radius: 999px; background: #9fb0cf; }
+.chapterBody{ padding: 0 10px 10px; }
+.richToolbar{ display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.toolBtn{ padding: 8px 10px; border-radius: 12px; border: 1px solid #182338; background: #101826; color: #e9eef8; }
+.toolBtn.active{ border-color: #2a3d60; background: #1b2a44; }
+.richEditor{ min-height: 160px; border: 1px solid #182338; border-radius: 14px; padding: 10px; background: #0b0f17; outline: none; }
+.richEditor:focus{ border-color: #2a3d60; }

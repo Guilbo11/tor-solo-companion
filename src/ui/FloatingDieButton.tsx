@@ -7,8 +7,8 @@ type Props = {
 
 export default function FloatingDieButton({ onClick, ariaLabel = 'Open dice roller' }: Props) {
   return (
-    <button type="button" onClick={onClick} aria-label={ariaLabel} className="fab-die">
-      <span className="fab-die__icon" aria-hidden="true">🎲</span>
+    <button type="button" onClick={onClick} aria-label={ariaLabel} className="fab-btn">
+      🎲
     </button>
   );
 }

@@ -9,7 +9,7 @@ type Props = {
   closeOnEsc?: boolean;
 };
 
-export default function BottomSheet({ open, title, onClose, children, closeOnBackdrop = true, closeOnEsc = true }: Props) {
+export default function BottomSheet({ open, title, onClose, children, closeOnBackdrop = false, closeOnEsc = true }: Props) {
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape' && closeOnEsc) onClose(); };

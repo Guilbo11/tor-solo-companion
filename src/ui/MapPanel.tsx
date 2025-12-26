@@ -114,16 +114,28 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [selected, setSelected] = useState<string>('');
 
+  const campId = state.activeCampaignId ?? state.campaigns?.[0]?.id ?? 'camp-1';
+  const maps = state.mapsByCampaign?.[campId] ?? [];
+  const activeMapId = state.activeMapIdByCampaign?.[campId] ?? maps[0]?.id;
+  const activeMap = maps.find(m => m.id === activeMapId) ?? maps[0];
+  const mstate = activeMap?.state;
+
+  const patchActiveMap = (patch: Partial<typeof mstate>) => {
+    if (!activeMap) return;
+    setState({
+      ...state,
+      mapsByCampaign: {
+        ...state.mapsByCampaign,
+        [campId]: maps.map(m => m.id === activeMap.id ? { ...m, state: { ...m.state, ...(patch as any) } } : m),
+      },
+    });
+  };
+
   // Keep latest state to avoid stale-closure overwrites (fixes toggles flipping back on scroll/zoom)
   const stateRef = useRef(state);
   useEffect(() => {
     stateRef.current = state;
   }, [state]);
-
-  const patchMap = (patch: Partial<StoredState['map']>) => {
-    const cur = stateRef.current;
-    setState({ ...cur, map: { ...cur.map, ...patch } });
-  };
 
   const [catColors, setCatColors] = useState<CatColors>(() => {
     try {
@@ -144,7 +156,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
     }
   }, [catColors]);
 
-  const map = state.map;
+  const map = mstate;
 
   const gridLocked = map.gridLocked ?? false;
   const showGrid = map.showGrid ?? true; // now means: show GREY lattice only
@@ -156,7 +168,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
   const zoom = map.zoom ?? 1;
   const pan = map.pan ?? { x: 0, y: 0 };
 
-  const setZoomPan = (nextZoom: number, nextPan: { x: number; y: number }) => patchMap({ zoom: nextZoom, pan: nextPan });
+  const setZoomPan = (nextZoom: number, nextPan: { x: number; y: number }) => patchActiveMap({ zoom: nextZoom, pan: nextPan });
   const resetView = () => setZoomPan(1, { x: 0, y: 0 });
 
   // Calibration (UI-only)
@@ -409,7 +421,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
 
   const onPickBackground = async (file: File) => {
     const dataUrl = await fileToCompressedDataUrl(file, { maxWidth: 1600, quality: 0.82 });
-    patchMap({ backgroundDataUrl: dataUrl });
+    patchActiveMap({ backgroundDataUrl: dataUrl });
   };
 
   const handleCanvasClick = (screenP: { x: number; y: number }) => {
@@ -437,7 +449,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
         const safeSize = clamp(size, 2, 120);
         const origin = { x: calibP1.x, y: calibP1.y };
 
-        patchMap({ hexSize: safeSize, origin, gridLocked: true });
+        patchActiveMap({ hexSize: safeSize, origin, gridLocked: true });
         setCalibOn(false);
         resetCalibration();
         return;
@@ -559,7 +571,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
     if (dragRef.current.mode === 'origin') {
       const wdx = dx / zoom;
       const wdy = dy / zoom;
-      patchMap({ origin: { x: map.origin.x + wdx, y: map.origin.y + wdy } });
+      patchActiveMap({ origin: { x: map.origin.x + wdx, y: map.origin.y + wdy } });
       return;
     }
   };
@@ -609,14 +621,52 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
     const built = buildNote(category, text);
     if (!built.trim()) delete notes[selected];
     else notes[selected] = built;
-    patchMap({ notes });
+    patchActiveMap({ notes });
   };
 
   const setCategoryColor = (cat: CategoryName, color: string) => setCatColors((prev) => ({ ...prev, [cat]: color }));
 
   return (
     <div className="card">
-      <div className="h2">Eriador Map</div>
+      <div className="row" style={{justifyContent:'space-between', alignItems:'center', gap: 10, flexWrap:'wrap'}}>
+        <div className="h2">Map</div>
+
+        <div className="row" style={{gap: 8, alignItems:'center', flexWrap:'wrap'}}>
+          <select
+            className="input"
+            value={activeMap?.id ?? ''}
+            onChange={(e)=>{
+              const id = e.target.value;
+              setSelected('');
+              setState({
+                ...state,
+                activeMapIdByCampaign: { ...state.activeMapIdByCampaign, [campId]: id },
+              });
+            }}
+            style={{minWidth: 180}}
+          >
+            {maps.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+          </select>
+
+          <button
+            className="btn"
+            onClick={() => {
+              const name = prompt('New map name?', `Map ${maps.length + 1}`);
+              if (!name) return;
+              const id = crypto.randomUUID();
+              const base = activeMap?.state ?? mstate;
+              const nextDoc = { id, name: name.trim(), state: structuredClone(base) };
+              setState({
+                ...state,
+                mapsByCampaign: { ...state.mapsByCampaign, [campId]: [...maps, nextDoc] },
+                activeMapIdByCampaign: { ...state.activeMapIdByCampaign, [campId]: id },
+              });
+            }}
+          >
+            + Map
+          </button>
+        </div>
+      </div>
 
       {/* Always visible controls */}
       <div className="row" style={{ marginTop: 10, gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -636,7 +686,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
             checked={gridLocked}
             onChange={(e) => {
               const locked = e.target.checked;
-              patchMap({ gridLocked: locked });
+              patchActiveMap({ gridLocked: locked });
               if (locked) {
                 setCalibOn(false);
                 resetCalibration();
@@ -651,13 +701,13 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
           <input
             type="checkbox"
             checked={showGrid}
-            onChange={(e) => patchMap({ showGrid: e.target.checked })}
+            onChange={(e) => patchActiveMap({ showGrid: e.target.checked })}
             style={{ marginRight: 8 }}
           />
           🧩 Show hex lattice
         </label>
 
-        <button className="btn" onClick={() => patchMap({ showSettings: !showSettings })}>
+        <button className="btn" onClick={() => patchActiveMap({ showSettings: !showSettings })}>
           {showSettings ? 'Hide settings' : 'Show settings'}
         </button>
       </div>
@@ -704,7 +754,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
                   <select
                     className="input"
                     value={calibDir}
-                    onChange={(e) => patchMap({ calibDir: e.target.value as CalibDir })}
+                    onChange={(e) => patchActiveMap({ calibDir: e.target.value as CalibDir })}
                     disabled={!calibOn || gridLocked}
                     style={{ minWidth: 240 }}
                   >
@@ -739,7 +789,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
                   onChange={(e) => {
                     const raw = parseFloat(e.target.value || '28');
                     const safe = Number.isFinite(raw) ? raw : 28;
-                    patchMap({ hexSize: clamp(safe, 2, 120) });
+                    patchActiveMap({ hexSize: clamp(safe, 2, 120) });
                   }}
                 />
 
@@ -749,7 +799,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
                   type="number"
                   value={map.origin.x}
                   disabled={gridLocked}
-                  onChange={(e) => patchMap({ origin: { ...map.origin, x: parseFloat(e.target.value || '0') } })}
+                  onChange={(e) => patchActiveMap({ origin: { ...map.origin, x: parseFloat(e.target.value || '0') } })}
                 />
 
                 <label className="small muted">Origin Y</label>
@@ -758,7 +808,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
                   type="number"
                   value={map.origin.y}
                   disabled={gridLocked}
-                  onChange={(e) => patchMap({ origin: { ...map.origin, y: parseFloat(e.target.value || '0') } })}
+                  onChange={(e) => patchActiveMap({ origin: { ...map.origin, y: parseFloat(e.target.value || '0') } })}
                 />
               </div>
 
@@ -772,7 +822,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
                   step={0.5}
                   value={nudgeStep}
                   disabled={gridLocked}
-                  onChange={(e) => patchMap({ nudgeStep: clamp(parseFloat(e.target.value || '2'), 0.5, 50) })}
+                  onChange={(e) => patchActiveMap({ nudgeStep: clamp(parseFloat(e.target.value || '2'), 0.5, 50) })}
                 />
                 <div className="small muted" style={{ marginTop: 6 }}>
                   Unlocked: drag moves grid. Arrow keys move origin. (+/−) changes hex size.

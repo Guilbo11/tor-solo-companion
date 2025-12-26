@@ -1,0 +1,231 @@
+import React, { useMemo, useState } from 'react';
+import type { NPC, StoredState } from '../core/storage';
+import { compendiums, findEntryById, sortByName } from '../core/compendiums';
+import { loadLoreTable } from '../core/oracles';
+
+type Props = { state: StoredState; setState: (s: StoredState) => void };
+
+function uid(prefix='npc'){ return `${prefix}-${crypto.randomUUID()}`; }
+
+function sample<T>(arr: T[]): T | undefined { return arr.length ? arr[Math.floor(Math.random()*arr.length)] : undefined; }
+
+function rollLorePick(rows: any[]) {
+  const r: any = sample(rows) ?? {};
+  return {
+    action: String(r.action ?? '').trim(),
+    aspect: String(r.aspect ?? '').trim(),
+    focus: String(r.focus ?? '').trim(),
+  };
+}
+
+export default function NPCsPanel({ state, setState }: Props) {
+  const campId = state.activeCampaignId ?? state.campaigns?.[0]?.id ?? 'camp-1';
+  const npcs = (state.npcs ?? []).filter(n => n.campaignId === campId);
+
+  const [createOpen, setCreateOpen] = useState(false);
+  const [draft, setDraft] = useState<Partial<NPC>>({});
+
+  const cultures = useMemo(() => sortByName(compendiums.cultures.entries ?? []), []);
+  const lore = useMemo(() => loadLoreTable(), []);
+  const loreRows = useMemo(() => {
+    const rows: any[] = [];
+    for (const t of lore.tables ?? []) {
+      if (!Array.isArray(t.rows)) continue;
+      for (const r of t.rows) rows.push(r);
+    }
+    return rows;
+  }, [lore]);
+
+  const startCreate = () => {
+    setDraft({
+      id: uid(),
+      campaignId: campId,
+      name: '',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      gender: 'Other',
+      collapsed: false,
+      firstLook: [],
+      motivations: [],
+      goal: '',
+      location: '',
+      notesHtml: '',
+    });
+    setCreateOpen(true);
+  };
+
+  const patchDraft = (p: Partial<NPC>) => setDraft(d => ({ ...d, ...p }));
+
+  const cultureEntry: any = draft.cultureId ? findEntryById(compendiums.cultures.entries ?? [], draft.cultureId) : null;
+
+  const rollName = () => {
+    const c:any = cultureEntry;
+    const male: string[] = Array.isArray(c?.names?.male) ? c.names.male : [];
+    const female: string[] = Array.isArray(c?.names?.female) ? c.names.female : [];
+    const g = String(draft.gender ?? 'Other');
+    const pool = g==='Masculine' ? male : g==='Feminine' ? female : [...male, ...female];
+    const pick = pool.length ? pool[Math.floor(Math.random()*pool.length)] : `NPC ${npcs.length + 1}`;
+    patchDraft({ name: pick });
+  };
+
+  const rollAspects = () => {
+    const a1 = rollLorePick(loreRows);
+    const a2 = rollLorePick(loreRows);
+    patchDraft({ firstLook: [a1.aspect, a2.aspect].filter(Boolean) });
+  };
+
+  const rollGoal = () => {
+    const r = rollLorePick(loreRows);
+    const goal = [r.action, r.focus].filter(Boolean).join(' ');
+    patchDraft({ goal });
+  };
+
+  const rollMotivations = () => {
+    const r1 = rollLorePick(loreRows);
+    const r2 = rollLorePick(loreRows);
+    patchDraft({ motivations: [r1.focus, r2.action].filter(Boolean) });
+  };
+
+  const saveNpc = () => {
+    const n: NPC = {
+      ...(draft as any),
+      name: String(draft.name ?? '').trim() || `NPC ${npcs.length + 1}`,
+      updatedAt: new Date().toISOString(),
+    };
+    const others = (state.npcs ?? []).filter(x => x.campaignId !== campId);
+    const existing = npcs.find(x => x.id === n.id);
+    const nextList = existing ? [...others, ...npcs.map(x => x.id === n.id ? n : x)] : [...others, n, ...npcs];
+    setState({ ...state, npcs: nextList });
+    setCreateOpen(false);
+  };
+
+  const toggleCollapse = (id: string) => {
+    setState({
+      ...state,
+      npcs: (state.npcs ?? []).map(n => n.id === id ? { ...n, collapsed: !n.collapsed } : n),
+    });
+  };
+
+  const editNpc = (id: string) => {
+    const n = (state.npcs ?? []).find(x => x.id === id);
+    if (!n) return;
+    setDraft({ ...n });
+    setCreateOpen(true);
+  };
+
+  const removeNpc = (id: string) => {
+    const n = (state.npcs ?? []).find(x => x.id === id);
+    if (!n) return;
+    if (!confirm(`Delete ${n.name}?`)) return;
+    setState({ ...state, npcs: (state.npcs ?? []).filter(x => x.id !== id) });
+  };
+
+  return (
+    <div className="card">
+      <div className="row" style={{justifyContent:'space-between', alignItems:'center'}}>
+        <div>
+          <div className="h2">NPCs</div>
+          <div className="small muted">Per-campaign list. Tap a row to reveal details.</div>
+        </div>
+        <button className="btn" onClick={startCreate}>+ NPC</button>
+      </div>
+
+      <div style={{marginTop: 12}}>
+        {npcs.length === 0 ? (
+          <div className="muted">No NPCs yet.</div>
+        ) : (
+          npcs.map(n => (
+            <div key={n.id} className="npcRow">
+              <div className="row" style={{justifyContent:'space-between', alignItems:'center', gap: 10}}>
+                <button className="npcToggle" onClick={()=>toggleCollapse(n.id)} aria-label="Toggle details">
+                  {n.collapsed ? '▸' : '▾'}
+                </button>
+
+                <div style={{flex: 1, fontWeight: 800}}>{n.name}</div>
+
+                <div className="row" style={{gap: 8}}>
+                  <button className="btn btn-ghost" aria-label="Edit" onClick={()=>editNpc(n.id)}>✏️</button>
+                  <button className="btn-danger" aria-label="Delete" onClick={()=>removeNpc(n.id)}>🗑️</button>
+                </div>
+              </div>
+
+              {!n.collapsed && (
+                <div className="npcDetails">
+                  <div className="kv"><div className="k">Culture</div><div className="v">{findEntryById(compendiums.cultures.entries ?? [], n.cultureId)?.name ?? '—'}</div></div>
+                  <div className="kv"><div className="k">Gender</div><div className="v">{n.gender ?? '—'}</div></div>
+                  <div className="kv"><div className="k">First look</div><div className="v">{(n.firstLook ?? []).filter(Boolean).join(' • ') || '—'}</div></div>
+                  <div className="kv"><div className="k">Goal</div><div className="v">{n.goal || '—'}</div></div>
+                  <div className="kv"><div className="k">Motivations</div><div className="v">{(n.motivations ?? []).filter(Boolean).join(' • ') || '—'}</div></div>
+                  <div className="kv"><div className="k">Location</div><div className="v">{n.location || '—'}</div></div>
+                </div>
+              )}
+            </div>
+          ))
+        )}
+      </div>
+
+      {createOpen && (
+        <div className="sideModal">
+          <div className="sideModalCard">
+            <div className="row" style={{justifyContent:'space-between', alignItems:'center'}}>
+              <div className="h2" style={{fontSize: 18}}>{npcs.some(x=>x.id===draft.id) ? 'Edit NPC' : 'New NPC'}</div>
+              <button className="btn btn-ghost" onClick={()=>setCreateOpen(false)}>Close</button>
+            </div>
+
+            <div style={{marginTop: 10}}>
+              <div className="label">Culture</div>
+              <select className="input" value={draft.cultureId ?? ''} onChange={(e)=>patchDraft({ cultureId: e.target.value })}>
+                <option value="">(choose)</option>
+                {cultures.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+
+              <div className="label" style={{marginTop: 10}}>Gender</div>
+              <select className="input" value={draft.gender ?? 'Other'} onChange={(e)=>patchDraft({ gender: e.target.value as any })}>
+                <option value="Masculine">Masculine</option>
+                <option value="Feminine">Feminine</option>
+                <option value="Other">Other</option>
+              </select>
+
+              <div className="label" style={{marginTop: 10}}>Name</div>
+              <div className="row" style={{gap: 8}}>
+                <input className="input" value={draft.name ?? ''} onChange={(e)=>patchDraft({ name: e.target.value })} />
+                <button className="btn" onClick={rollName}>Random</button>
+              </div>
+
+              <hr style={{margin:'14px 0'}} />
+
+              <div className="row" style={{justifyContent:'space-between', alignItems:'center'}}>
+                <div className="h2" style={{fontSize: 16}}>First look</div>
+                <button className="btn" onClick={rollAspects}>Random</button>
+              </div>
+              <div className="row" style={{gap: 8, marginTop: 8}}>
+                <input className="input" placeholder="First look 1" value={(draft.firstLook?.[0] ?? '')} onChange={(e)=>patchDraft({ firstLook: [e.target.value, draft.firstLook?.[1] ?? ''] as any })} />
+                <input className="input" placeholder="First look 2" value={(draft.firstLook?.[1] ?? '')} onChange={(e)=>patchDraft({ firstLook: [draft.firstLook?.[0] ?? '', e.target.value] as any })} />
+              </div>
+
+              <div className="row" style={{justifyContent:'space-between', alignItems:'center', marginTop: 14}}>
+                <div className="h2" style={{fontSize: 16}}>Goal</div>
+                <button className="btn" onClick={rollGoal}>Random</button>
+              </div>
+              <input className="input" style={{marginTop: 8}} value={draft.goal ?? ''} onChange={(e)=>patchDraft({ goal: e.target.value })} />
+
+              <div className="row" style={{justifyContent:'space-between', alignItems:'center', marginTop: 14}}>
+                <div className="h2" style={{fontSize: 16}}>Motivations</div>
+                <button className="btn" onClick={rollMotivations}>Random</button>
+              </div>
+              <div className="row" style={{gap: 8, marginTop: 8}}>
+                <input className="input" placeholder="Motivation 1" value={(draft.motivations?.[0] ?? '')} onChange={(e)=>patchDraft({ motivations: [e.target.value, draft.motivations?.[1] ?? ''] as any })} />
+                <input className="input" placeholder="Motivation 2" value={(draft.motivations?.[1] ?? '')} onChange={(e)=>patchDraft({ motivations: [draft.motivations?.[0] ?? '', e.target.value] as any })} />
+              </div>
+
+              <div className="label" style={{marginTop: 14}}>Location</div>
+              <input className="input" value={draft.location ?? ''} onChange={(e)=>patchDraft({ location: e.target.value })} />
+
+              <button className="btn" style={{width:'100%', marginTop: 14}} onClick={saveNpc}>Save NPC</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

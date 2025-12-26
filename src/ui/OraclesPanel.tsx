@@ -42,9 +42,11 @@ function badgeStyle(tone: 'good' | 'bad' | 'neutral'): React.CSSProperties {
 export default function OraclesPanel({
   state,
   setState,
+  compact,
 }: {
   state: StoredState;
   setState: (s: StoredState) => void;
+  compact?: boolean;
 }) {
   const [question, setQuestion] = useState('');
   const [likelihood, setLikelihood] = useState<Likelihood>('Possible');
@@ -87,6 +89,10 @@ export default function OraclesPanel({
       },
     });
 
+    if (state.settings?.addRollsToJournal) {
+      (window as any).__torcLogRollHtml?.(`<div>Ask: ${question.trim()} → <b>${result}</b></div>`);
+    }
+
     setQuestion('');
   };
 
@@ -104,6 +110,10 @@ export default function OraclesPanel({
         ],
       },
     });
+
+    if (state.settings?.addRollsToJournal) {
+      (window as any).__torcLogRollHtml?.(`<div>${`Table: ${t.name}`} → <b>${result}</b></div>`);
+    }
   };
 
   const doRollLore = () => {
@@ -135,6 +145,10 @@ export default function OraclesPanel({
       },
     });
 
+    if (state.settings?.addRollsToJournal) {
+      (window as any).__torcLogRollHtml?.(`<div>${prompt} → <b>${result}</b></div>`);
+    }
+
     setCopied(false);
   };
 
@@ -148,11 +162,13 @@ export default function OraclesPanel({
 
   const history = useMemo(() => state.oracle.history.slice(0, 30), [state.oracle.history]);
 
-  return (
-    <div className="card">
-      <div className="h2">Strider Mode Oracles</div>
+  const Container: any = compact ? 'div' : 'div';
 
-      <hr />
+  return (
+    <div className={compact ? '' : 'card'}>
+      {!compact && <div className="h2">Strider Mode Oracles</div>}
+
+      {!compact && <hr />}
 
       {/* Lore Table */}
       <div className="h2">Lore Table</div>
