@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 
 type Props = {
@@ -12,6 +12,14 @@ type Props = {
 
 export default function BottomSheet({ open, title, onClose, children, closeOnBackdrop = false, closeOnEsc = true }: Props) {
   const bodyRef = useRef<HTMLDivElement | null>(null);
+
+  // Resolve the portal target safely.
+  // Rendering into document.body (or a dedicated #modal-root) avoids clipping/stacking-context issues,
+  // and prevents crashes if the target is missing.
+  const portalTarget = useMemo(() => {
+    if (typeof document === 'undefined') return null;
+    return document.getElementById('modal-root') ?? document.body;
+  }, []);
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape' && closeOnEsc) onClose(); };
@@ -28,6 +36,7 @@ export default function BottomSheet({ open, title, onClose, children, closeOnBac
     });
   }, [open]);
   if (!open) return null;
+  if (!portalTarget) return null;
 
   return createPortal(
     <div className="bs-backdrop" onClick={()=>{ if (closeOnBackdrop) onClose(); }}>
@@ -39,5 +48,5 @@ export default function BottomSheet({ open, title, onClose, children, closeOnBac
         <div className="bs-body" ref={bodyRef}>{children}</div>
       </div>
     </div>
-  );
+  , portalTarget);
 }
