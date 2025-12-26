@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 
 type Props = {
   open: boolean;
@@ -28,7 +29,7 @@ export default function BottomSheet({ open, title, onClose, children, closeOnBac
   }, [open]);
   if (!open) return null;
 
-  return (
+  return createPortal(
     <div className="bs-backdrop" onClick={()=>{ if (closeOnBackdrop) onClose(); }}>
       <div className="bs-sheet" onClick={(e) => e.stopPropagation()}>
         <div className="bs-header">
