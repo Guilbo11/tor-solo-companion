@@ -79,17 +79,37 @@ export default function App() {
     );
   }, [state]);
 
-  // Global roll logger hook (dice + oracles) -> active journal chapter
+  // Global roll logger hook (dice + oracles) -> active journal chapter (works from any tab).
   useEffect(() => {
     (window as any).__torcLogRollHtml = (html: string) => {
       if (!state.settings?.addRollsToJournal) return;
       const clean = String(html ?? '').trim();
       if (!clean) return;
-      // Try insert at caret if Journal editor is focused
-      window.dispatchEvent(new CustomEvent('torc:journal-insert-html', { detail: { html: clean } }));
+
+      const chapters = state.journalChapters ?? [];
+      const activeId = state.activeJournalChapterId ?? chapters[0]?.id;
+
+      // Ensure we always have a chapter to write into.
+      let nextChapters = chapters;
+      let targetId = activeId;
+      if (!targetId) {
+        targetId = `chap-${crypto.randomUUID()}`;
+        nextChapters = [{ id: targetId, title: 'Chapter 1', html: '', collapsed: false }, ...chapters] as any;
+      }
+
+      const next = nextChapters.map((c: any) => {
+        if (c.id !== targetId) return c;
+        const base = String(c.html ?? '');
+        const joined = base ? `${base}<br/><br/>${clean}` : clean;
+        return { ...c, html: joined };
+      });
+      set({ ...state, journalChapters: next, activeJournalChapterId: targetId });
+
+      // Also notify the Journal editor (if mounted) so it can insert at caret / update immediately.
+      window.dispatchEvent(new CustomEvent('torc:journal-insert-html', { detail: { html: clean, chapterId: targetId } }));
     };
     return () => { (window as any).__torcLogRollHtml = undefined; };
-  }, [state.settings?.addRollsToJournal]);
+  }, [state, set]);
 
   return (
     <div className={isCampaignLanding ? 'landingContainer' : 'container'}>

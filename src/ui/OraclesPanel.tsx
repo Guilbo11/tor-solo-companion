@@ -90,7 +90,7 @@ export default function OraclesPanel({
     });
 
     if (state.settings?.addRollsToJournal) {
-      (window as any).__torcLogRollHtml?.(`<div>Ask: ${question.trim()} → <b>${result}</b></div>`);
+      (window as any).__torcLogRollHtml?.(`<div><b>${result}</b> — Ask: ${question.trim()}</div>`);
     }
 
     setQuestion('');
@@ -112,7 +112,7 @@ export default function OraclesPanel({
     });
 
     if (state.settings?.addRollsToJournal) {
-      (window as any).__torcLogRollHtml?.(`<div>${`Table: ${t.name}`} → <b>${result}</b></div>`);
+      (window as any).__torcLogRollHtml?.(`<div><b>${result}</b> — ${`Table: ${t.name}`}</div>`);
     }
   };
 
@@ -146,7 +146,7 @@ export default function OraclesPanel({
     });
 
     if (state.settings?.addRollsToJournal) {
-      (window as any).__torcLogRollHtml?.(`<div>${prompt} → <b>${result}</b></div>`);
+      (window as any).__torcLogRollHtml?.(`<div><b>${result}</b> — ${prompt}</div>`);
     }
 
     setCopied(false);

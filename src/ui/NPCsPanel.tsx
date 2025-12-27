@@ -35,6 +35,11 @@ function rollLorePick(rows: { action: string; aspect: string; focus: string }[])
   };
 }
 
+function randomGender(): 'Masculine'|'Feminine'|'Other' {
+  const g = sample(['Masculine','Feminine','Other'] as const);
+  return (g ?? 'Other') as any;
+}
+
 export default function NPCsPanel({ state, setState }: Props) {
   const campId = state.activeCampaignId ?? state.campaigns?.[0]?.id ?? 'camp-1';
   const npcs = (state.npcs ?? []).filter(n => n.campaignId === campId);
@@ -132,6 +137,21 @@ export default function NPCsPanel({ state, setState }: Props) {
     patchDraft({ motivations: [m1, m2].filter(Boolean) });
   };
 
+  const randomizeAll = () => {
+    // Quick NPC creation: fill every field except Location.
+    const nextCultureId = String(draft.cultureId ?? sample(cultures as any[])?.id ?? '');
+    const nextGender = randomGender();
+    patchDraft({ cultureId: nextCultureId, gender: nextGender });
+
+    // Culture change affects name pool, so roll name after patching culture/gender.
+    window.setTimeout(() => {
+      rollName();
+      rollAspects();
+      rollGoal();
+      rollMotivations();
+    }, 0);
+  };
+
   const saveNpc = () => {
     const n: NPC = {
       ...(draft as any),
@@ -187,7 +207,10 @@ export default function NPCsPanel({ state, setState }: Props) {
                   {n.collapsed ? '▸' : '▾'}
                 </button>
 
-                <div style={{flex: 1, fontWeight: 800}}>{n.name}</div>
+                <div style={{flex: 1, fontWeight: 800, display:'flex', gap: 8, alignItems:'baseline', flexWrap:'wrap'}}>
+                  <span>{n.name}</span>
+                  {n.location ? <span className="small muted">({n.location})</span> : null}
+                </div>
 
                 <div className="row" style={{gap: 8}}>
                   <button className="btn btn-ghost" aria-label="Edit" onClick={()=>editNpc(n.id)}>✏️</button>
@@ -215,7 +238,10 @@ export default function NPCsPanel({ state, setState }: Props) {
           <div className="sideModalCard">
             <div className="row" style={{justifyContent:'space-between', alignItems:'center'}}>
               <div className="h2" style={{fontSize: 18}}>{npcs.some(x=>x.id===draft.id) ? 'Edit NPC' : 'New NPC'}</div>
-              <button className="btn btn-ghost" onClick={()=>setCreateOpen(false)}>Close</button>
+              <div className="row" style={{gap: 8, alignItems:'center'}}>
+                <button className="btn" onClick={randomizeAll} disabled={!!loreError}>Random all</button>
+                <button className="btn btn-ghost" onClick={()=>setCreateOpen(false)}>Close</button>
+              </div>
             </div>
 
             <div style={{marginTop: 10}}>

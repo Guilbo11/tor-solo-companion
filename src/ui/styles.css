@@ -6,8 +6,8 @@ button, input, select, textarea { font: inherit; }
 .container {
   max-width: 1100px;
   margin: 0 auto;
-  /* Keep content clear of mobile status bars / notches in full-screen / PWA mode */
-  padding: calc(16px + env(safe-area-inset-top)) 16px 16px;
+  /* Keep content clear of mobile status bars / notches and floating UI (dice/oracles). */
+  padding: calc(16px + env(safe-area-inset-top)) 16px calc(96px + env(safe-area-inset-bottom));
 }
 
 /* Campaign landing page (Pocketforge-like): no app header/tabs */

@@ -11,6 +11,25 @@ function clampHtml(html: string) {
   return typeof html === 'string' ? html : '';
 }
 
+function isDefaultChapterTitle(title: string) {
+  return /^Chapter\s+\d+\s*$/i.test(String(title ?? '').trim());
+}
+
+function extractFirstLineTitle(html: string): string {
+  try {
+    const doc = new DOMParser().parseFromString(String(html ?? ''), 'text/html');
+    const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT);
+    let node: any;
+    while ((node = walker.nextNode())) {
+      const text = (node.textContent ?? '').replace(/\s+/g, ' ').trim();
+      if (text) return text.slice(0, 80);
+    }
+  } catch {
+    // ignore
+  }
+  return '';
+}
+
 export default function JournalPanel({ state, setState }: Props) {
   const chapters = state.journalChapters ?? [];
   const activeId = state.activeJournalChapterId ?? chapters[0]?.id;
@@ -28,31 +47,41 @@ export default function JournalPanel({ state, setState }: Props) {
     setDraftHtml(clampHtml(editing.html));
   }, [editingId]);
 
+  // When switching chapters, push the stored html into the contentEditable element
+  // without re-binding innerHTML on every keystroke (prevents caret jumps on mobile).
+  useEffect(() => {
+    if (!editing) return;
+    if (!editorRef.current) return;
+    editorRef.current.innerHTML = clampHtml(editing.html);
+  }, [editingId, editing?.html]);
+
   // Expose an insert hook for dice/oracle logging.
   useEffect(() => {
     const onInsert = (ev: Event) => {
-      const detail = (ev as CustomEvent).detail as { html?: string };
+      const detail = (ev as CustomEvent).detail as { html?: string; chapterId?: string };
       const html = String(detail?.html ?? '');
       if (!html.trim()) return;
 
-      // Prefer inserting at caret if editor is active.
-      if (editing && editorRef.current && document.activeElement === editorRef.current) {
-        try {
-          document.execCommand('insertHTML', false, `<br/><br/>${html}`);
-          setDraftHtml(editorRef.current.innerHTML);
-          return;
-        } catch {
-          // fall through to append
+      const targetId = detail?.chapterId ?? active?.id;
+      if (!targetId) return;
+
+      // If the editor is currently editing the target chapter, update the live box immediately.
+      if (editing && editing.id === targetId && editorRef.current) {
+        const isFocused = document.activeElement === editorRef.current;
+        if (isFocused) {
+          try {
+            document.execCommand('insertHTML', false, `<br/><br/>${html}`);
+          } catch {
+            editorRef.current.innerHTML = (editorRef.current.innerHTML || '') + `<br/><br/>${html}`;
+          }
+        } else {
+          editorRef.current.innerHTML = (editorRef.current.innerHTML || '') + `<br/><br/>${html}`;
         }
+        setDraftHtml(editorRef.current.innerHTML);
       }
 
-      // Append to chapter content.
-      if (!active) return;
-      const next = (active.html ?? '') + `<br/><br/>${html}`;
-      setState({
-        ...state,
-        journalChapters: chapters.map(c => c.id === active.id ? { ...c, html: next } : c),
-      });
+      // Note: persistence to state is handled globally in App.tsx; this hook is just
+      // for immediate editor UI updates when the Journal tab is open.
     };
 
     window.addEventListener('torc:journal-insert-html', onInsert as any);
@@ -114,9 +143,7 @@ export default function JournalPanel({ state, setState }: Props) {
     }
   };
 
-  const applyHeading = (level: 1 | 2 | 3) => {
-    exec('formatBlock', `H${level}`);
-  };
+  const setBlock = (kind: 'P'|'H1'|'H2'|'H3') => exec('formatBlock', kind);
 
   const startEdit = (id: string) => {
     setState({ ...state, activeJournalChapterId: id });
@@ -128,9 +155,13 @@ export default function JournalPanel({ state, setState }: Props) {
   const updateChapter = () => {
     if (!editing) return;
     const nextHtml = editorRef.current ? editorRef.current.innerHTML : draftHtml;
+    const maybeNewTitle = isDefaultChapterTitle(editing.title) ? extractFirstLineTitle(nextHtml) : '';
     setState({
       ...state,
-      journalChapters: chapters.map(c => c.id === editing.id ? { ...c, html: nextHtml } : c),
+      journalChapters: chapters.map(c => {
+        if (c.id !== editing.id) return c;
+        return { ...c, html: nextHtml, title: maybeNewTitle ? maybeNewTitle : c.title };
+      }),
       activeJournalChapterId: editing.id,
     });
   };
@@ -198,13 +229,25 @@ export default function JournalPanel({ state, setState }: Props) {
               <div style={{ marginTop: 12 }}>
                 <div className="editorToolbar">
                   <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
-                    <button className="btn btn-ghost" onClick={() => applyHeading(1)}>H1</button>
-                    <button className="btn btn-ghost" onClick={() => applyHeading(2)}>H2</button>
-                    <button className="btn btn-ghost" onClick={() => applyHeading(3)}>H3</button>
-                    <button className="btn btn-ghost" onClick={() => exec('italic')}>Italic</button>
-                    <button className="btn btn-ghost" onClick={() => exec('underline')}>Underline</button>
-                    <button className="btn btn-ghost" onClick={() => exec('insertUnorderedList')}>• List</button>
-                    <button className="btn btn-ghost" onClick={() => exec('insertOrderedList')}>1. List</button>
+                    <select
+                      className="input"
+                      style={{ width: 170, paddingTop: 8, paddingBottom: 8 }}
+                      defaultValue="P"
+                      onChange={(e) => setBlock(e.target.value as any)}
+                    >
+                      <option value="P">Paragraph</option>
+                      <option value="H1">Heading 1</option>
+                      <option value="H2">Heading 2</option>
+                      <option value="H3">Heading 3</option>
+                    </select>
+
+                    <button className="btn btn-ghost" aria-label="Bold" onClick={() => exec('bold')}><b>B</b></button>
+                    <button className="btn btn-ghost" aria-label="Italic" onClick={() => exec('italic')}><i>I</i></button>
+                    <button className="btn btn-ghost" aria-label="Underline" onClick={() => exec('underline')}><span style={{ textDecoration: 'underline' }}>U</span></button>
+                    <button className="btn btn-ghost" aria-label="Bulleted list" onClick={() => exec('insertUnorderedList')}>•</button>
+                    <button className="btn btn-ghost" aria-label="Numbered list" onClick={() => exec('insertOrderedList')}>1.</button>
+                    <button className="btn btn-ghost" aria-label="Quote" onClick={() => exec('formatBlock', 'BLOCKQUOTE')}>❝</button>
+                    <button className="btn btn-ghost" aria-label="Horizontal rule" onClick={() => exec('insertHorizontalRule')}>—</button>
                   </div>
                 </div>
 
@@ -214,7 +257,6 @@ export default function JournalPanel({ state, setState }: Props) {
                   contentEditable
                   suppressContentEditableWarning
                   onInput={() => setDraftHtml(editorRef.current?.innerHTML ?? '')}
-                  dangerouslySetInnerHTML={{ __html: draftHtml }}
                 />
 
                 <button className="btn" style={{ width: '100%', marginTop: 10 }} onClick={updateChapter}>

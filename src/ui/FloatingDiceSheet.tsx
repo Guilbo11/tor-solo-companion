@@ -61,7 +61,8 @@ export default function FloatingDiceSheet({ open, onClose }: Props) {
       const tnTxt = typeof tn === 'number' ? ` (TN ${tn})` : '';
       const wearyTxt = weary ? ' — Weary' : '';
       const detail = `Feat ${featTxt}${feat2Txt ? `/${feat2Txt}` : ''}, Total ${r.total}${tnTxt}`;
-      (window as any).__torcLogRollHtml?.(`<div>Roll: ${dice}d6 + feat (${modeTxt}${wearyTxt}) → <b>${detail}</b></div>`);
+      // Journal logging format: bold result first, then the rest.
+      (window as any).__torcLogRollHtml?.(`<div><b>${detail}</b> — Roll: ${dice}d6 + feat (${modeTxt}${wearyTxt})</div>`);
     } catch {}
 
     window.setTimeout(() => setAnimating(false), 750);
