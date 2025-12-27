@@ -3,10 +3,20 @@
 body { margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial; background: #0b0f14; color: #e8eef6; }
 a { color: #8ab4ff; }
 button, input, select, textarea { font: inherit; }
-.container { max-width: 1100px; margin: 0 auto; padding: 16px; }
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  /* Keep content clear of mobile status bars / notches in full-screen / PWA mode */
+  padding: calc(16px + env(safe-area-inset-top)) 16px 16px;
+}
 
 /* Campaign landing page (Pocketforge-like): no app header/tabs */
-.landingContainer { max-width: 1100px; margin: 0 auto; padding: 0; }
+.landingContainer {
+  max-width: 1100px;
+  margin: 0 auto;
+  /* Same safe-area handling as main container */
+  padding: env(safe-area-inset-top) 0 0;
+}
 .card { background: #111826; border: 1px solid #1f2a3a; border-radius: 16px; padding: 16px; }
 .row { display: flex; gap: 12px; flex-wrap: wrap; }
 .col { flex: 1; min-width: 260px; }
@@ -207,12 +217,13 @@ canvas { border-radius: 14px; border: 1px solid #1f2a3a; background: #0b0f14; }
 .btn-danger:hover{ filter: brightness(1.08); }
 
 /* Toggle (settings) */
-.toggle{ position: relative; width: 44px; height: 26px; display: inline-flex; align-items: center; }
-.toggle input{ opacity: 0; width: 0; height: 0; }
-.toggle span{ position: absolute; inset: 0; background: #1b2a44; border: 1px solid #2a3d60; border-radius: 999px; transition: 150ms ease; }
-.toggle span:before{ content: ''; position: absolute; height: 20px; width: 20px; left: 3px; top: 2px; background: #e9eef8; border-radius: 999px; transition: 150ms ease; }
-.toggle input:checked + span{ background: #214a2e; border-color: #2f6a40; }
-.toggle input:checked + span:before{ transform: translateX(18px); }
+/* Switch-style toggle (used in Settings) */
+.switch{ position: relative; width: 44px; height: 26px; display: inline-flex; align-items: center; }
+.switch input{ opacity: 0; width: 0; height: 0; }
+.switch span{ position: absolute; inset: 0; background: #1b2a44; border: 1px solid #2a3d60; border-radius: 999px; transition: 150ms ease; }
+.switch span:before{ content: ''; position: absolute; height: 20px; width: 20px; left: 3px; top: 2px; background: #e9eef8; border-radius: 999px; transition: 150ms ease; }
+.switch input:checked + span{ background: #214a2e; border-color: #2f6a40; }
+.switch input:checked + span:before{ transform: translateX(18px); }
 
 /* Side panel (oracles) */
 .sidePanelOverlay{
@@ -257,6 +268,3 @@ canvas { border-radius: 14px; border: 1px solid #1f2a3a; background: #0b0f14; }
 .toolBtn.active{ border-color: #2a3d60; background: #1b2a44; }
 .richEditor{ min-height: 160px; border: 1px solid #182338; border-radius: 14px; padding: 10px; background: #0b0f17; outline: none; }
 .richEditor:focus{ border-color: #2a3d60; }
-
-/* Journal toolbar select */
-.select{ padding: 8px 10px; border-radius: 12px; border: 1px solid #182338; background: #101826; color: #e9eef8; }

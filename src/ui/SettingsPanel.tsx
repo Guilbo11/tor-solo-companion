@@ -36,7 +36,7 @@ export default function SettingsPanel({ state, setState, onBackToCampaigns }: { 
             <div style={{ fontWeight: 800 }}>Add rolls to journal</div>
             <div className="small muted">When enabled, dice + oracle results are appended to the currently active journal chapter.</div>
           </div>
-          <label className="toggle">
+          <label className="switch">
             <input
               type="checkbox"
               checked={!!state.settings?.addRollsToJournal}

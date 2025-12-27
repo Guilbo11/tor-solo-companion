@@ -1203,17 +1203,19 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                           const v = e.target.value;
                           setDraftHero((h:any)=>{
                             const next:any = { ...h, cultureCombatProf2: v, cultureCombatProf1: (h.cultureCombatProf1===v? '' : h.cultureCombatProf1) };
-                            const profs = { ...(next.combatProficiencies ?? {}) };
-                            const key = PROF_LABEL_TO_KEY[v] ?? null;
-                            if (key) profs[key] = Math.max(Number(profs[key] ?? 0), 2);
-                            next.combatProficiencies = profs;
-                            // Culture combat proficiency bonuses are freebies and must not spend Previous Experience.
-                            // Ensure the PE baseline includes them.
-                            next.previousExperience = {
-                              ...(next.previousExperience ?? {}),
-                              baselineCombatProficiencies: { ...(next.previousExperience?.baselineCombatProficiencies ?? {}), ...profs },
+
+                            // Apply/re-apply free culture proficiency ranks, removing the old selection.
+                            const nextPlus2Key = PROF_LABEL_TO_KEY[v] ?? undefined;
+                            const nextPlus1Key = PROF_LABEL_TO_KEY[next.cultureCombatProf1] ?? undefined;
+                            const withChoices = applyCultureCombatProfChoices(next, nextPlus2Key, nextPlus1Key);
+
+                            // Keep PE baselines aligned so culture freebies never spend Previous Experience.
+                            const profs = withChoices.combatProficiencies ?? {};
+                            withChoices.previousExperience = {
+                              ...(withChoices.previousExperience ?? {}),
+                              baselineCombatProficiencies: { ...(withChoices.previousExperience?.baselineCombatProficiencies ?? {}), ...profs },
                             };
-                            return next;
+                            return withChoices;
                           });
                         }}>
                           <option value="">(choose)</option>
@@ -1226,17 +1228,15 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                           const v = e.target.value;
                           setDraftHero((h:any)=>{
                             const next:any = { ...h, cultureCombatProf1: v };
-                            const profs = { ...(next.combatProficiencies ?? {}) };
-                            const key = PROF_LABEL_TO_KEY[v] ?? null;
-                            if (key) profs[key] = Math.max(Number(profs[key] ?? 0), 1);
-                            next.combatProficiencies = profs;
-                            // Culture combat proficiency bonuses are freebies and must not spend Previous Experience.
-                            // Ensure the PE baseline includes them.
-                            next.previousExperience = {
-                              ...(next.previousExperience ?? {}),
-                              baselineCombatProficiencies: { ...(next.previousExperience?.baselineCombatProficiencies ?? {}), ...profs },
+                            const nextPlus2Key = PROF_LABEL_TO_KEY[next.cultureCombatProf2] ?? undefined;
+                            const nextPlus1Key = PROF_LABEL_TO_KEY[v] ?? undefined;
+                            const withChoices = applyCultureCombatProfChoices(next, nextPlus2Key, nextPlus1Key);
+                            const profs = withChoices.combatProficiencies ?? {};
+                            withChoices.previousExperience = {
+                              ...(withChoices.previousExperience ?? {}),
+                              baselineCombatProficiencies: { ...(withChoices.previousExperience?.baselineCombatProficiencies ?? {}), ...profs },
                             };
-                            return next;
+                            return withChoices;
                           });
                         }}>
                           <option value="">(choose)</option>
@@ -2034,6 +2034,42 @@ function clone(obj: any) {
   return JSON.parse(JSON.stringify(obj ?? {}));
 }
 
+function applyCultureCombatProfChoices(hero: any, nextPlus2: string | undefined, nextPlus1: string | undefined) {
+  // Culture combat proficiency picks are *free* starting ranks.
+  // Because the hero creation flow is a single scrolling page, the user may change
+  // these choices after moving on. The expectation is that old culture-provided ranks
+  // are removed when the selection changes.
+  const all = ['axes','bows','spears','swords'];
+  const profs: any = { ...(hero.combatProficiencies ?? { axes:0, bows:0, spears:0, swords:0 }) };
+
+  const oldPlus2 = hero.cultureCombatProfPlus2;
+  const oldPlus1 = hero.cultureCombatProfPlus1;
+
+  // Remove the old free ranks (do not go below 0).
+  const removeFree = (key: string | undefined, amount: number) => {
+    if (!key) return;
+    // If the key is still selected (new), don't remove.
+    if (key === nextPlus2) return;
+    if (key === nextPlus1) return;
+    // Also, if it was both +2 and +1 (shouldn't happen), we'll clamp anyway.
+    profs[key] = Math.max(0, Number(profs[key] ?? 0) - amount);
+  };
+  removeFree(oldPlus2, 2);
+  removeFree(oldPlus1, 1);
+
+  // Apply new free ranks (set to at least these values).
+  for (const k of all) profs[k] = Number(profs[k] ?? 0);
+  if (nextPlus2) profs[nextPlus2] = Math.max(profs[nextPlus2], 2);
+  if (nextPlus1) profs[nextPlus1] = Math.max(profs[nextPlus1], 1);
+
+  return {
+    ...hero,
+    combatProficiencies: profs,
+    cultureCombatProfPlus2: nextPlus2,
+    cultureCombatProfPlus1: nextPlus1,
+  };
+}
+
 // --- Creation wizard editors ---
 
 function PreviousExperienceEditor({ hero, setHero }: { hero: any; setHero: (fn:any)=>void }) {
@@ -2214,6 +2250,21 @@ function StartingGearEditor({ hero, setHero }: { hero: any; setHero: (fn:any)=>v
   const shieldId = sg.shieldId ?? '';
 
   const setSG = (patch:any) => setHero((h:any)=>({ ...h, startingGear: { ...(h.startingGear ?? {}), ...patch } }));
+
+  // If a combat proficiency is no longer available, drop any corresponding weapon pick.
+  useEffect(() => {
+    const allowed = new Set(profKeys.filter(p => Number(profs[p.key] ?? 0) > 0).map(p => p.key));
+    const cleaned: any = { ...weaponByProf };
+    let changed = false;
+    for (const k of Object.keys(cleaned)) {
+      if (!allowed.has(k as any)) {
+        delete cleaned[k];
+        changed = true;
+      }
+    }
+    if (changed) setSG({ weaponByProf: cleaned });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profs.axes, profs.bows, profs.spears, profs.swords]);
 
   return (
     <div>
