@@ -126,7 +126,7 @@ canvas { border-radius: 14px; border: 1px solid #1f2a3a; background: #0b0f14; }
 .toggle.on{ background: rgba(255,255,255,0.16); }
 .toggle input{ transform: scale(1.1); }
 
-.skillRow.favoured .skillName{ font-weight: 700; }
+.skillRow.favoured .skillName{ flex:1;  font-weight: 700; }
 
 .pillInfo{ margin-left: 8px; border:1px solid rgba(255,255,255,0.18); background: rgba(255,255,255,0.08); color:#fff; border-radius: 999px; width: 22px; height: 22px; line-height: 18px; cursor:pointer; }
 .pill{
@@ -142,7 +142,7 @@ canvas { border-radius: 14px; border: 1px solid #1f2a3a; background: #0b0f14; }
 
 .details summary{ cursor:pointer; font-weight: 700; margin: 6px 0; }
 .skillsList{ display:flex; flex-direction:column; gap: 8px; padding: 6px 0 2px; }
-.skillRow{ display:grid; grid-template-columns: 1fr auto auto 72px; gap: 8px; align-items:center; }
+.skillRow{ display:flex; justify-content:space-between; align-items:center; gap: 8px; }
 .skillName{ cursor:pointer; text-decoration: underline; text-underline-offset: 2px; }
 .skillMeta{ opacity:.7; font-size: 12px; }
 .skillNum{ width: 72px; padding: 6px 8px; border-radius: 10px; border: 1px solid rgba(255,255,255,.12); background: rgba(0,0,0,.18); color:white; }
@@ -268,3 +268,11 @@ canvas { border-radius: 14px; border: 1px solid #1f2a3a; background: #0b0f14; }
 .toolBtn.active{ border-color: #2a3d60; background: #1b2a44; }
 .richEditor{ min-height: 160px; border: 1px solid #182338; border-radius: 14px; padding: 10px; background: #0b0f17; outline: none; }
 .richEditor:focus{ border-color: #2a3d60; }
+
+/* Skills compact */
+@media (max-width: 520px){
+  .skillRow{ padding: 4px 0; }
+  .skillName{ font-size: 14px; }
+  .skillRow .btn{ padding: 6px 10px; }
+  .skillNum{ min-width: 20px !important; }
+}

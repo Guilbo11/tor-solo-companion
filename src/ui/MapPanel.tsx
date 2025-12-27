@@ -649,6 +649,27 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
           </select>
 
           <button
+            className="btn btn-ghost"
+            onClick={() => {
+              if (!activeMap) return;
+              const next = prompt('Rename map', activeMap.name);
+              if (!next) return;
+              const name = next.trim();
+              if (!name) return;
+              setState({
+                ...state,
+                mapsByCampaign: {
+                  ...state.mapsByCampaign,
+                  [campId]: maps.map(m => m.id === activeMap.id ? { ...m, name } : m),
+                },
+              });
+            }}
+            title="Rename map"
+          >
+            ✏️
+          </button>
+
+          <button
             className="btn"
             onClick={() => {
               const name = prompt('New map name?', `Map ${maps.length + 1}`);
