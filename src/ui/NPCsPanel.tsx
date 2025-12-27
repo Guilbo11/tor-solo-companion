@@ -226,7 +226,11 @@ export default function NPCsPanel({ state, setState }: Props) {
                   <div className="kv"><div className="k">Goal</div><div className="v">{n.goal || '—'}</div></div>
                   <div className="kv"><div className="k">Motivations</div><div className="v">{(n.motivations ?? []).filter(Boolean).join(' • ') || '—'}</div></div>
                   <div className="kv"><div className="k">Location</div><div className="v">{n.location || '—'}</div></div>
-                </div>
+                
+                  <div className="kv"><div className="k">Notes</div><div className="v">{(n.notesHtml && n.notesHtml.trim()) ? (
+                    <div className="richText" dangerouslySetInnerHTML={{__html: n.notesHtml}} />
+                  ) : '—'}</div></div>
+</div>
               )}
             </div>
           ))

@@ -1852,7 +1852,8 @@ function InventoryEditor({ hero, updateHero, onSeeMore }: { hero: any; updateHer
 
       <div className="list" style={{marginTop: 10}}>
         {(hero.inventory ?? []).map((it:any, idx:number)=>(
-          <div key={it.id ?? idx} className="invRow" style={{alignItems:'center'}}>
+          <div key={it.id ?? idx} className="invRow invRowGrid">
+            <div className="invCol invCol1">
             <button className="btn btn-ghost" style={{textAlign:'left'}} onClick={()=>{
               if (it.ref?.pack === 'tor2e-equipment' && it.ref?.id) onSeeMore('equipment', it.ref.id);
             }}>
@@ -1869,7 +1870,10 @@ function InventoryEditor({ hero, updateHero, onSeeMore }: { hero: any; updateHer
                 })()
               ) : null}
             </button>
+          </div>
+        </div>
 
+          <div className="invCol invCol2">
             <label className="toggle" style={{marginRight: 6}} title="Equip">
               <input type="checkbox" checked={!!it.equipped} disabled={!!it.dropped} onChange={(e)=>updateItem(idx,{equipped: e.target.checked})} />
               <span className="small">Equip</span>
@@ -1879,7 +1883,9 @@ function InventoryEditor({ hero, updateHero, onSeeMore }: { hero: any; updateHer
               <input type="checkbox" checked={!!it.dropped} onChange={(e)=>updateItem(idx,{dropped: e.target.checked, equipped: e.target.checked ? false : it.equipped})} />
               <span className="small">Dropped</span>
             </label>
+          </div>
 
+          <div className="invCol invCol3">
             <input className="input" style={{maxWidth: 72}} type="number" min={0} value={(it.load ?? '') as any}
               placeholder="Load" onChange={(e)=>{
                 const v = e.target.value;
@@ -1894,6 +1900,7 @@ function InventoryEditor({ hero, updateHero, onSeeMore }: { hero: any; updateHer
               updateHero({ inventory: cur.filter((_:any, i:number)=>i!==idx) });
             }}>🗑</button>
           </div>
+        </div>
         ))}
       </div>
     </div>

@@ -143,10 +143,26 @@ export default function JournalPanel({ state, setState }: Props) {
     window.setTimeout(() => editorRef.current?.focus(), 50);
   };
 
-  const updateChapter = () => {
+  
+  const extractChapterTitleFromHtml = (html: string): string => {
+    try {
+      const el = document.createElement('div');
+      el.innerHTML = html || '';
+      const raw = (el.innerText || el.textContent || '').replace(/\r/g,'');
+      const lines = raw.split('\n').map(s => s.trim()).filter(Boolean);
+      const first = lines[0] ?? '';
+      // keep it reasonably short for list display
+      return first.length > 80 ? (first.slice(0, 77) + '…') : first;
+    } catch {
+      return '';
+    }
+  };
+
+const updateChapter = () => {
     if (!editing) return;
     const nextHtml = editorRef.current ? editorRef.current.innerHTML : draftHtml;
-    writeJournal(chapters.map(c => (c.id === editing.id ? { ...c, html: nextHtml } : c)), editing.id);
+    const nextTitle = extractChapterTitleFromHtml(nextHtml);
+    writeJournal(chapters.map(c => (c.id === editing.id ? { ...c, html: nextHtml, title: nextTitle || c.title } : c)), editing.id);
   };
 
   return (

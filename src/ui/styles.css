@@ -50,7 +50,7 @@ canvas { border-radius: 14px; border: 1px solid #1f2a3a; background: #0b0f14; }
   position: fixed; inset: 0;
   background: rgba(0,0,0,.55);
   display:flex; align-items:flex-end; justify-content:center;
-  z-index: 200;
+  z-index: 2600;
 }
 .bs-sheet{
   width: 100%;
@@ -320,4 +320,39 @@ canvas { border-radius: 14px; border: 1px solid #1f2a3a; background: #0b0f14; }
   .editorToolbarRow .input{ max-width: 120px; }
   .editorToolbarRow{ gap: 6px; }
   .editorToolbarButtons .btn{ padding: 8px 10px; }
+}
+
+
+.richText{ white-space: pre-wrap; }
+
+.invRowGrid{
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  gap: 10px;
+  align-items: center;
+}
+.invRowGrid .invCol2,
+.invRowGrid .invCol3{
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+@media (max-width: 520px){
+  .invRowGrid{
+    grid-template-columns: 1fr 92px 88px 44px;
+    align-items: start;
+  }
+  .invRowGrid .invCol2,
+  .invRowGrid .invCol3{
+    display: grid;
+    gap: 6px;
+    align-items: start;
+  }
+  .invRowGrid .toggle{
+    padding: 6px 8px;
+    gap: 6px;
+  }
+  .invRowGrid .toggle .small{ font-size: 12px; }
+  .invRowGrid .invCol3 .input{ width: 100%; max-width: 100% !important; }
+  .invRowGrid .invCol4{ display:flex; justify-content:center; align-items:center; padding-top: 2px; }
 }

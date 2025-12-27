@@ -165,7 +165,13 @@ export function computeDerived(hero: any, tnBase: number = 20): Tor2eDerived {
   const equippedHelm = invHelm ?? legacyHelm;
   const equippedShield = invShield ?? legacyShield;
 
-  const parryBase = typeof hero?.parry?.base === 'number' ? hero.parry.base : 0;
+  const culture = hero?.cultureId ? findEntryById(compendiums.cultures.entries ?? [], hero.cultureId) : null;
+  const cultureParryBonus = (culture as any)?.derived?.parryBonus ?? 12;
+  const nimbleness = Array.isArray(hero?.virtueIds) && hero.virtueIds.includes('nimbleness');
+  const parryBase = typeof hero?.parry?.base === 'number'
+    ? hero.parry.base
+    : (wits + cultureParryBonus + (nimbleness ? 1 : 0));
+
   const parryOther = typeof hero?.parry?.other === 'number' ? hero.parry.other : 0;
   const parryShield = equippedShield ? parseParryModifier(equippedShield.parryModifier) : 0;
   const parryTotal = parryBase + parryShield + parryOther;
