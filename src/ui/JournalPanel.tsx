@@ -11,28 +11,10 @@ function clampHtml(html: string) {
   return typeof html === 'string' ? html : '';
 }
 
-function isDefaultChapterTitle(title: string) {
-  return /^Chapter\s+\d+\s*$/i.test(String(title ?? '').trim());
-}
-
-function extractFirstLineTitle(html: string): string {
-  try {
-    const doc = new DOMParser().parseFromString(String(html ?? ''), 'text/html');
-    const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT);
-    let node: any;
-    while ((node = walker.nextNode())) {
-      const text = (node.textContent ?? '').replace(/\s+/g, ' ').trim();
-      if (text) return text.slice(0, 80);
-    }
-  } catch {
-    // ignore
-  }
-  return '';
-}
-
 export default function JournalPanel({ state, setState }: Props) {
-  const chapters = state.journalChapters ?? [];
-  const activeId = state.activeJournalChapterId ?? chapters[0]?.id;
+  const campaignId = state.activeCampaignId ?? 'camp-1';
+  const chapters = state.journalByCampaign?.[campaignId] ?? [];
+  const activeId = state.activeJournalChapterIdByCampaign?.[campaignId] ?? chapters[0]?.id;
   const active = useMemo(() => chapters.find(c => c.id === activeId) ?? chapters[0], [chapters, activeId]);
 
   const [editingId, setEditingId] = useState<string | null>(active?.id ?? null);
@@ -40,6 +22,17 @@ export default function JournalPanel({ state, setState }: Props) {
 
   const editorRef = useRef<HTMLDivElement | null>(null);
   const [draftHtml, setDraftHtml] = useState<string>(editing ? clampHtml(editing.html) : '');
+
+  function writeJournal(nextChapters: JournalChapter[], nextActiveId?: string) {
+    setState({
+      ...state,
+      journalByCampaign: { ...(state.journalByCampaign ?? {}), [campaignId]: nextChapters },
+      activeJournalChapterIdByCampaign: {
+        ...(state.activeJournalChapterIdByCampaign ?? {}),
+        [campaignId]: nextActiveId ?? (state.activeJournalChapterIdByCampaign?.[campaignId] ?? nextChapters[0]?.id),
+      },
+    });
+  }
 
   // Keep draft in sync when switching chapters
   useEffect(() => {
@@ -58,7 +51,8 @@ export default function JournalPanel({ state, setState }: Props) {
   // Expose an insert hook for dice/oracle logging.
   useEffect(() => {
     const onInsert = (ev: Event) => {
-      const detail = (ev as CustomEvent).detail as { html?: string; chapterId?: string };
+      const detail = (ev as CustomEvent).detail as { html?: string; chapterId?: string; campaignId?: string };
+      if (detail?.campaignId && detail.campaignId !== campaignId) return;
       const html = String(detail?.html ?? '');
       if (!html.trim()) return;
 
@@ -70,12 +64,12 @@ export default function JournalPanel({ state, setState }: Props) {
         const isFocused = document.activeElement === editorRef.current;
         if (isFocused) {
           try {
-            document.execCommand('insertHTML', false, `<br/><br/>${html}`);
+            document.execCommand('insertHTML', false, `<br/>${html}`);
           } catch {
-            editorRef.current.innerHTML = (editorRef.current.innerHTML || '') + `<br/><br/>${html}`;
+            editorRef.current.innerHTML = (editorRef.current.innerHTML || '') + `<br/>${html}`;
           }
         } else {
-          editorRef.current.innerHTML = (editorRef.current.innerHTML || '') + `<br/><br/>${html}`;
+          editorRef.current.innerHTML = (editorRef.current.innerHTML || '') + `<br/>${html}`;
         }
         setDraftHtml(editorRef.current.innerHTML);
       }
@@ -88,21 +82,22 @@ export default function JournalPanel({ state, setState }: Props) {
     return () => window.removeEventListener('torc:journal-insert-html', onInsert as any);
   }, [state, setState, chapters, active, editing]);
 
-  const toggleCollapsed = (id: string) => {
+  const commit = (nextChapters: JournalChapter[], nextActiveId?: string) => {
     setState({
       ...state,
-      journalChapters: chapters.map(c => c.id === id ? { ...c, collapsed: !c.collapsed } : c),
+      journalByCampaign: { ...(state.journalByCampaign ?? {}), [campaignId]: nextChapters },
+      activeJournalChapterIdByCampaign: { ...(state.activeJournalChapterIdByCampaign ?? {}), [campaignId]: nextActiveId },
     });
+  };
+
+  const toggleCollapsed = (id: string) => {
+    writeJournal(chapters.map(c => c.id === id ? { ...c, collapsed: !c.collapsed } : c));
   };
 
   const addChapter = () => {
     const id = uid('chap');
     const next: JournalChapter = { id, title: `Chapter ${chapters.length + 1}`, html: '', collapsed: false };
-    setState({
-      ...state,
-      journalChapters: [...chapters, next],
-      activeJournalChapterId: id,
-    });
+    writeJournal([...chapters, next], id);
     setEditingId(id);
   };
 
@@ -112,11 +107,7 @@ export default function JournalPanel({ state, setState }: Props) {
     if (!confirm(`Delete "${c.title}"?`)) return;
     const nextList = chapters.filter(x => x.id !== id);
     const nextActive = nextList[0]?.id;
-    setState({
-      ...state,
-      journalChapters: nextList,
-      activeJournalChapterId: nextActive,
-    });
+    writeJournal(nextList, nextActive);
     if (editingId === id) setEditingId(nextActive ?? null);
   };
 
@@ -130,7 +121,7 @@ export default function JournalPanel({ state, setState }: Props) {
     const next = [...chapters];
     const [m] = next.splice(from, 1);
     next.splice(to, 0, m);
-    setState({ ...state, journalChapters: next });
+    writeJournal(next);
     setDragId(null);
   };
 
@@ -146,7 +137,7 @@ export default function JournalPanel({ state, setState }: Props) {
   const setBlock = (kind: 'P'|'H1'|'H2'|'H3') => exec('formatBlock', kind);
 
   const startEdit = (id: string) => {
-    setState({ ...state, activeJournalChapterId: id });
+    writeJournal(chapters, id);
     setEditingId(id);
     // focus shortly after paint
     window.setTimeout(() => editorRef.current?.focus(), 50);
@@ -155,15 +146,7 @@ export default function JournalPanel({ state, setState }: Props) {
   const updateChapter = () => {
     if (!editing) return;
     const nextHtml = editorRef.current ? editorRef.current.innerHTML : draftHtml;
-    const maybeNewTitle = isDefaultChapterTitle(editing.title) ? extractFirstLineTitle(nextHtml) : '';
-    setState({
-      ...state,
-      journalChapters: chapters.map(c => {
-        if (c.id !== editing.id) return c;
-        return { ...c, html: nextHtml, title: maybeNewTitle ? maybeNewTitle : c.title };
-      }),
-      activeJournalChapterId: editing.id,
-    });
+    writeJournal(chapters.map(c => (c.id === editing.id ? { ...c, html: nextHtml } : c)), editing.id);
   };
 
   return (
@@ -178,7 +161,7 @@ export default function JournalPanel({ state, setState }: Props) {
 
       <div style={{ marginTop: 12 }}>
         {chapters.map(c => (
-          <div key={c.id} className="card" style={{ marginBottom: 10, padding: 12 }}>
+          <div key={c.id} className="chapterCard">
             <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
               <div className="row" style={{ gap: 10, alignItems: 'center', flex: 1 }}>
                 <button
@@ -215,7 +198,7 @@ export default function JournalPanel({ state, setState }: Props) {
 
               <div className="row" style={{ gap: 8, alignItems: 'center' }}>
                 <button className="btn btn-ghost" aria-label="Edit" onClick={() => startEdit(c.id)}>✏️</button>
-                <button className="btn-danger" aria-label="Delete" onClick={() => removeChapter(c.id)}>🗑️</button>
+                <button className="btn btn-danger" aria-label="Delete" onClick={() => removeChapter(c.id)}>🗑️</button>
               </div>
             </div>
 
@@ -228,10 +211,10 @@ export default function JournalPanel({ state, setState }: Props) {
             {editing && editing.id === c.id && (
               <div style={{ marginTop: 12 }}>
                 <div className="editorToolbar">
-                  <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
+                  <div className="editorToolbarRow">
                     <select
                       className="input"
-                      style={{ width: 170, paddingTop: 8, paddingBottom: 8 }}
+                      style={{ width: 160, paddingTop: 8, paddingBottom: 8 }}
                       defaultValue="P"
                       onChange={(e) => setBlock(e.target.value as any)}
                     >
@@ -241,13 +224,13 @@ export default function JournalPanel({ state, setState }: Props) {
                       <option value="H3">Heading 3</option>
                     </select>
 
-                    <button className="btn btn-ghost" aria-label="Bold" onClick={() => exec('bold')}><b>B</b></button>
-                    <button className="btn btn-ghost" aria-label="Italic" onClick={() => exec('italic')}><i>I</i></button>
-                    <button className="btn btn-ghost" aria-label="Underline" onClick={() => exec('underline')}><span style={{ textDecoration: 'underline' }}>U</span></button>
-                    <button className="btn btn-ghost" aria-label="Bulleted list" onClick={() => exec('insertUnorderedList')}>•</button>
-                    <button className="btn btn-ghost" aria-label="Numbered list" onClick={() => exec('insertOrderedList')}>1.</button>
-                    <button className="btn btn-ghost" aria-label="Quote" onClick={() => exec('formatBlock', 'BLOCKQUOTE')}>❝</button>
-                    <button className="btn btn-ghost" aria-label="Horizontal rule" onClick={() => exec('insertHorizontalRule')}>—</button>
+                    <div className="editorToolbarButtons" role="group" aria-label="Text formatting">
+                      <button className="btn" aria-label="Bold" onClick={() => exec('bold')}><b>B</b></button>
+                      <button className="btn" aria-label="Italic" onClick={() => exec('italic')}><i>I</i></button>
+                      <button className="btn" aria-label="Underline" onClick={() => exec('underline')}><span style={{ textDecoration: 'underline' }}>U</span></button>
+                      <button className="btn" aria-label="Bulleted list" onClick={() => exec('insertUnorderedList')}>•</button>
+                      <button className="btn" aria-label="Numbered list" onClick={() => exec('insertOrderedList')}>1.</button>
+                    </div>
                   </div>
                 </div>
 

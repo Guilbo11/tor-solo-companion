@@ -293,6 +293,15 @@ export default function NPCsPanel({ state, setState }: Props) {
               <div className="label" style={{marginTop: 14}}>Location</div>
               <input className="input" value={draft.location ?? ''} onChange={(e)=>patchDraft({ location: e.target.value })} />
 
+              <div className="label" style={{marginTop: 14}}>Notes</div>
+              <textarea
+                className="input"
+                style={{ minHeight: 120, whiteSpace: 'pre-wrap' }}
+                value={draft.notesHtml ?? ''}
+                onChange={(e)=>patchDraft({ notesHtml: e.target.value })}
+                placeholder="Notes..."
+              />
+
               <button className="btn" style={{width:'100%', marginTop: 14}} onClick={saveNpc}>Save NPC</button>
             </div>
           </div>

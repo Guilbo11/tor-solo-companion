@@ -88,6 +88,7 @@ canvas { border-radius: 14px; border: 1px solid #1f2a3a; background: #0b0f14; }
 .cardBody{ margin-top: 10px; display:flex; flex-direction:column; gap: 12px; }
 .row{ display:flex; gap: 10px; flex-wrap:wrap; }
 .field{ flex:1; min-width: 220px; }
+.nameRow{ flex-wrap: nowrap; }
 .label{ font-size: 12px; opacity:.75; margin-bottom: 4px; }
 .input, .textarea, select.input{
   width: 100%;
@@ -247,7 +248,7 @@ canvas { border-radius: 14px; border: 1px solid #1f2a3a; background: #0b0f14; }
 
 /* Simple side modal (NPC creation) */
 .sideModal{ position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 2400; display: grid; place-items: center; padding: 16px; }
-.sideModalCard{ width: min(640px, 96vw); max-height: 90vh; overflow: auto; background: #0b0f17; border: 1px solid #182338; border-radius: 16px; padding: 14px; }
+.sideModalCard{ width: min(640px, 96vw); max-height: 90vh; overflow: auto; background: #0b0f17; border: 1px solid #182338; border-radius: 16px; padding: 14px; padding-bottom: 90px; }
 
 /* NPC list */
 .npcRow{ border: 1px solid #182338; border-radius: 14px; padding: 10px; margin-bottom: 10px; background: #0b0f17; }
@@ -256,14 +257,27 @@ canvas { border-radius: 14px; border: 1px solid #1f2a3a; background: #0b0f14; }
 
 /* Journal */
 .journalHeader{ margin-bottom: 10px; }
-.journalChapters{ display: flex; flex-direction: column; gap: 10px; }
-.chapterCard{ border: 1px solid #182338; border-radius: 16px; background: #0b0f17; }
-.chapterRow{ padding: 10px; }
+.journalChapters{ display: flex; flex-direction: column; gap: 6px; }
+/* Keep chapters lightweight (no inner grey "card" look) */
+.chapterCard{ border: none; border-radius: 0; background: transparent; padding: 0; }
+.chapterRow{ padding: 6px 0; }
 .dragHandle{ width: 22px; height: 22px; border: 1px solid #182338; border-radius: 8px; background: #101826; display: grid; place-items: center; cursor: grab; user-select: none; }
 .dragDots{ width: 10px; height: 10px; display: grid; grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr); gap: 2px; }
 .dragDots span{ width: 4px; height: 4px; border-radius: 999px; background: #9fb0cf; }
 .chapterBody{ padding: 0 10px 10px; }
-.richToolbar{ display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.editorToolbar{ margin-bottom: 8px; }
+.editorToolbarRow{ display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; }
+.editorToolbarRow .input{ flex: 0 0 auto; }
+.toolbarButtons{ display: flex; align-items: center; border: 1px solid #182338; border-radius: 12px; overflow: hidden; }
+.toolbarButtons .btn{ border: none !important; border-radius: 0 !important; }
+.toolbarButtons .btn + .btn{ border-left: 1px solid #182338 !important; }
+
+@media (max-width: 520px){
+  .editorToolbarRow{ width: 100%; }
+  .editorToolbarRow .input{ width: 44vw; min-width: 140px; }
+  .toolbarButtons{ flex: 1 1 auto; }
+  .toolbarButtons .btn{ padding: 8px 10px; }
+}
 .toolBtn{ padding: 8px 10px; border-radius: 12px; border: 1px solid #182338; background: #101826; color: #e9eef8; }
 .toolBtn.active{ border-color: #2a3d60; background: #1b2a44; }
 .richEditor{ min-height: 160px; border: 1px solid #182338; border-radius: 14px; padding: 10px; background: #0b0f17; outline: none; }
@@ -273,6 +287,37 @@ canvas { border-radius: 14px; border: 1px solid #1f2a3a; background: #0b0f14; }
 @media (max-width: 520px){
   .skillRow{ padding: 4px 0; }
   .skillName{ font-size: 14px; }
+  .skillMeta{ display: none; }
   .skillRow .btn{ padding: 6px 10px; }
   .skillNum{ min-width: 20px !important; }
+  .invRow{ flex-direction: column; align-items: stretch; }
+  .invRow .row{ justify-content: space-between; }
+}
+
+/* Journal editor toolbar: keep everything on one line on mobile */
+.editorToolbar{ margin-top: 8px; }
+.editorToolbarRow{
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+.editorToolbarRow .input{ max-width: 180px; }
+.editorToolbarButtons{
+  display: flex;
+  align-items: stretch;
+  border: 1px solid #24324b;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.editorToolbarButtons .btn{
+  border-radius: 0;
+  border: none;
+}
+.editorToolbarButtons .btn + .btn{ border-left: 1px solid #24324b; }
+
+@media (max-width: 520px){
+  .editorToolbarRow .input{ max-width: 120px; }
+  .editorToolbarRow{ gap: 6px; }
+  .editorToolbarButtons .btn{ padding: 8px 10px; }
 }

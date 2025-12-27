@@ -15,8 +15,13 @@ export type StoredState = {
   oracle: OracleState;
 
   // Journal v2 (chapters + rich HTML)
-  journalChapters: JournalChapter[];
+  // NOTE: legacy (single journal) fields are kept for backward compatibility.
+  journalChapters?: JournalChapter[];
   activeJournalChapterId?: string;
+
+  // Journal v3 (per-campaign)
+  journalByCampaign: Record<string, JournalChapter[]>;
+  activeJournalChapterIdByCampaign: Record<string, string | undefined>;
 
   // NPCs
   npcs: NPC[];
@@ -369,9 +374,15 @@ export function defaultState(): StoredState {
       history: [],
     },
 
-    // journal v2
-    journalChapters: [{ id: 'chap-1', title: 'Chapter 1', html: '' }],
-    activeJournalChapterId: 'chap-1',
+    // journal per campaign
+    journalByCampaign: {
+      [campId]: [{ id: 'chap-1', title: 'Chapter 1', html: '', collapsed: false }],
+    },
+    activeJournalChapterIdByCampaign: { [campId]: 'chap-1' },
+
+    // legacy (single-journal) fields (kept empty; migration fills if needed)
+    journalChapters: undefined,
+    activeJournalChapterId: undefined,
 
     // npcs
     npcs: [],
@@ -513,13 +524,44 @@ function ensureDefaults(s: StoredState): StoredState {
     ? { addRollsToJournal: !!(s as any).settings.addRollsToJournal }
     : { addRollsToJournal: false };
 
-  const journalChapters: JournalChapter[] = Array.isArray((s as any).journalChapters)
+  // Journal: now per-campaign.
+  // Migration rules:
+  // - If journalByCampaign exists, keep it.
+  // - Else if legacy journalChapters exist, attach them to the active campaign.
+  // - Else, build a single chapter from legacy notes for the active campaign.
+  const legacyChapters: JournalChapter[] = Array.isArray((s as any).journalChapters)
     ? (s as any).journalChapters.map(ensureJournalChapterDefaults)
-    : [{ id: 'chap-1', title: 'Chapter 1', html: legacyNotesToHtml(Array.isArray((s as any).journal) ? (s as any).journal : []) }];
+    : [{ id: 'chap-1', title: 'Chapter 1', html: legacyNotesToHtml(Array.isArray((s as any).journal) ? (s as any).journal : []), collapsed: false }];
 
-  const activeJournalChapterId = typeof (s as any).activeJournalChapterId === 'string'
-    ? (s as any).activeJournalChapterId
-    : (journalChapters[0]?.id ?? 'chap-1');
+  const journalByCampaign: Record<string, JournalChapter[]> = ((s as any).journalByCampaign && typeof (s as any).journalByCampaign === 'object')
+    ? Object.fromEntries(Object.entries((s as any).journalByCampaign).map(([cid, chs]: any) => [
+        String(cid),
+        Array.isArray(chs) ? chs.map(ensureJournalChapterDefaults) : [],
+      ]))
+    : { [activeCampaignId]: legacyChapters };
+
+  // Ensure each campaign has at least one chapter.
+  for (const c of campaigns) {
+    if (!journalByCampaign[c.id] || journalByCampaign[c.id].length === 0) {
+      journalByCampaign[c.id] = [{ id: 'chap-1', title: 'Chapter 1', html: '', collapsed: false }];
+    }
+  }
+
+  const activeJournalChapterIdByCampaign: Record<string, string | undefined> = ((s as any).activeJournalChapterIdByCampaign && typeof (s as any).activeJournalChapterIdByCampaign === 'object')
+    ? { ...(s as any).activeJournalChapterIdByCampaign }
+    : {};
+
+  // If we only had the legacy active id, attach it to the active campaign.
+  const legacyActiveId = typeof (s as any).activeJournalChapterId === 'string' ? (s as any).activeJournalChapterId : undefined;
+  if (legacyActiveId && !activeJournalChapterIdByCampaign[activeCampaignId]) {
+    activeJournalChapterIdByCampaign[activeCampaignId] = legacyActiveId;
+  }
+
+  for (const c of campaigns) {
+    const desired = activeJournalChapterIdByCampaign[c.id];
+    const exists = desired && journalByCampaign[c.id].some(ch => ch.id === desired);
+    if (!exists) activeJournalChapterIdByCampaign[c.id] = journalByCampaign[c.id][0]?.id;
+  }
 
   const out: StoredState = {
     version: 5,
@@ -529,8 +571,12 @@ function ensureDefaults(s: StoredState): StoredState {
     mapsByCampaign,
     activeMapIdByCampaign,
     oracle: ensureOracleDefaults((s as any).oracle),
-    journalChapters,
-    activeJournalChapterId,
+    journalByCampaign,
+    activeJournalChapterIdByCampaign,
+
+    // legacy (kept for backward compatibility in storage, but not used by UI)
+    journalChapters: (s as any).journalChapters ? legacyChapters : undefined,
+    activeJournalChapterId: (s as any).activeJournalChapterId ? legacyActiveId : undefined,
     npcs,
     campaigns,
     activeCampaignId,

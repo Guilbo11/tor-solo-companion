@@ -120,6 +120,37 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
   const activeMap = maps.find(m => m.id === activeMapId) ?? maps[0];
   const mstate = activeMap?.state;
 
+  // Defensive init: brand-new campaigns might not yet have a map entry
+  // (or the active map id) when the Maps tab is opened for the first time.
+  useEffect(() => {
+    if (activeMap) return;
+    const defaultMapState: any = {
+      hexSize: 28,
+      origin: { x: 380, y: 260 },
+      notes: {},
+      gridLocked: false,
+      showGrid: true,
+      showSettings: true,
+      nudgeStep: 2,
+      calibDir: 'E' as CalibDir,
+      zoom: 1,
+      pan: { x: 0, y: 0 },
+    };
+    const newId = `map-${crypto.randomUUID()}`;
+    setState({
+      ...state,
+      mapsByCampaign: {
+        ...state.mapsByCampaign,
+        [campId]: [{ id: newId, name: 'Map 1', state: defaultMapState }],
+      },
+      activeMapIdByCampaign: {
+        ...(state.activeMapIdByCampaign ?? {}),
+        [campId]: newId,
+      },
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [campId]);
+
   const patchActiveMap = (patch: Partial<typeof mstate>) => {
     if (!activeMap) return;
     setState({
@@ -626,6 +657,15 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
 
   const setCategoryColor = (cat: CategoryName, color: string) => setCatColors((prev) => ({ ...prev, [cat]: color }));
 
+  if (!activeMap || !mstate) {
+    return (
+      <div className="card">
+        <div className="h2">Map</div>
+        <div className="muted small" style={{ marginTop: 6 }}>Initializing map…</div>
+      </div>
+    );
+  }
+
   return (
     <div className="card">
       <div className="row" style={{justifyContent:'space-between', alignItems:'center', gap: 10, flexWrap:'wrap'}}>
@@ -648,14 +688,11 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
             {maps.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
           </select>
 
-          <button
-            className="btn btn-ghost"
-            onClick={() => {
-              if (!activeMap) return;
-              const next = prompt('Rename map', activeMap.name);
-              if (!next) return;
-              const name = next.trim();
-              if (!name) return;
+          <input
+            className="input"
+            value={activeMap.name}
+            onChange={(e) => {
+              const name = e.target.value;
               setState({
                 ...state,
                 mapsByCampaign: {
@@ -664,10 +701,9 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
                 },
               });
             }}
-            title="Rename map"
-          >
-            ✏️
-          </button>
+            style={{ minWidth: 180 }}
+            aria-label="Map title"
+          />
 
           <button
             className="btn"

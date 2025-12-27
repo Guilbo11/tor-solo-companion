@@ -261,8 +261,45 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
     if (!name) return;
     const now = new Date().toISOString();
     const newCamp = { id: uid('camp'), name: String(name), createdAt: now, updatedAt: now };
+    const defaultMapState = {
+      hexSize: 28,
+      origin: { x: 380, y: 260 },
+      notes: {},
+      gridLocked: false,
+      showGrid: true,
+      showSettings: true,
+      nudgeStep: 2,
+      calibDir: 'E',
+      zoom: 1,
+      pan: { x: 0, y: 0 },
+    };
+    const mapId = `map-${crypto.randomUUID()}`;
+    const chapId = `chap-${crypto.randomUUID()}`;
+
     setState((s:any) => {
-      const next = { ...s, campaigns: [...((s as any).campaigns ?? []), newCamp], activeCampaignId: newCamp.id };
+      const mapsByCampaign = { ...((s as any).mapsByCampaign ?? {}) };
+      const activeMapIdByCampaign = { ...((s as any).activeMapIdByCampaign ?? {}) };
+      if (!mapsByCampaign[newCamp.id] || mapsByCampaign[newCamp.id].length === 0) {
+        mapsByCampaign[newCamp.id] = [{ id: mapId, name: 'Map 1', state: defaultMapState }];
+        activeMapIdByCampaign[newCamp.id] = mapId;
+      }
+
+      const journalByCampaign = { ...((s as any).journalByCampaign ?? {}) };
+      const activeJournalChapterIdByCampaign = { ...((s as any).activeJournalChapterIdByCampaign ?? {}) };
+      if (!journalByCampaign[newCamp.id] || journalByCampaign[newCamp.id].length === 0) {
+        journalByCampaign[newCamp.id] = [{ id: chapId, title: 'Chapter 1', html: '', collapsed: false }];
+        activeJournalChapterIdByCampaign[newCamp.id] = chapId;
+      }
+
+      const next = {
+        ...s,
+        campaigns: [...((s as any).campaigns ?? []), newCamp],
+        activeCampaignId: newCamp.id,
+        mapsByCampaign,
+        activeMapIdByCampaign,
+        journalByCampaign,
+        activeJournalChapterIdByCampaign,
+      };
       saveState(next);
       return next;
     });
@@ -609,17 +646,18 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
 
                   {activeTab === 'Sheet' && (
                     <>
-                      <div className="row" style={{alignItems:'flex-end'}}>
-                        <div className="field" style={{flex:2}}>
-                          <div className="label">Name</div>
-                          <div className="row" style={{gap:8}}>
+                      <div className="field">
+                        <div className="label">Name</div>
+                        <div className="row nameRow" style={{gap:8}}>
                             <input className="input" value={hero.name} onChange={(e)=>updateHero(hero.id,{name:e.target.value})}/>
                             <button className="btn" title="Roll a name (fallback generator)" onClick={()=>{
                               const c:any = getCultureEntry(hero.cultureId);
                               updateHero(hero.id,{name: rollNameFallback(c?.name)});
                             }}>🎲</button>
                           </div>
-                        </div>
+                      </div>
+
+                      <div className="row" style={{alignItems:'flex-end', marginTop: 8}}>
                         <div className="field" style={{flex:1}}>
                           <div className="label">Valour</div>
                           <input className="input" type="number" min={0} max={6} value={hero.valour ?? 0} onChange={(e)=>updateHero(hero.id,{valour: Number(e.target.value)})}/>
@@ -750,11 +788,23 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                         <div className="sectionTitle">Attacks</div>
                         <AttackSection hero={hero} derived={derived} />
                       </div>
+
+                      <div className="section">
+                        <div className="sectionTitle">Notes</div>
+                        <textarea
+                          className="input"
+                          style={{ minHeight: 120 }}
+                          value={hero.notes ?? ''}
+                          onChange={(e)=>updateHero(hero.id,{notes:e.target.value})}
+                          placeholder="Add any notes for this hero..."
+                        />
+                      </div>
                     </>
                   )}
 
                   {activeTab === 'Skills' && (
                     <div className="section" style={{marginTop: 0}}>
+                      {false && (<>
                       <div className="sectionTitle">Previous Experience</div>
                       {(() => {
                         const pe = hero.previousExperience ?? {
@@ -797,9 +847,10 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                           return spent;
                         };
 
-                        const budget = hero.striderMode ? 15 : 10;
+                        // After creation, allow free adjustment (no Previous Experience budget).
+                        const budget = 999;
                         const spent = computeSpent();
-                        const remaining = Math.max(0, budget - spent);
+                        const remaining = 999;
 	                        return (
                           <>
                             <div className="row" style={{gap: 10, flexWrap:'wrap'}}>
@@ -812,6 +863,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                           </>
                         );
                       })()}
+                      </>)}
 
                       <hr />
 
@@ -841,7 +893,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                           if (toLevel === 3) return 6;
                           return 0;
                         };
-                        const budget = hero.striderMode ? 15 : 10;
+                        const budget = 999;
                         const computeSpent = () => {
                           if (!committed) return 0;
                           let spent = 0;
@@ -862,7 +914,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                           return spent;
                         };
                         const spent = computeSpent();
-                        const remaining = Math.max(0, budget - spent);
+                        const remaining = 999;
 
                         const canEdit = committed;
                         return (
@@ -931,7 +983,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                                       if (toLevel === 3) return 6;
                                       return 0;
                                     };
-                                    const budget = hero.striderMode ? 15 : 10;
+                                    const budget = 999;
                                     const computeSpent = () => {
                                       if (!committed) return 0;
                                       let spent = 0;
@@ -952,7 +1004,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                                       return spent;
                                     };
                                     const spent = computeSpent();
-                                    const remaining = Math.max(0, budget - spent);
+                                    const remaining = 999;
 
                                     const canEdit = committed;
                                     const maxAllowed = canEdit ? Math.max(minByCulture, 4) : rating;
@@ -1552,7 +1604,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                     const entry:any = findEntryById(compendiums.equipment.entries ?? [], refId);
                     if (!entry) return;
                     const override = ov?.[refId] ?? undefined;
-                    gearInv.push({ id: uid('it'), name: entry.name, qty: 1, ref: { pack:'tor2e-equipment', id: entry.id }, equipped: false, dropped: false, override });
+                    gearInv.push({ id: uid('it'), name: entry.name, qty: 1, ref: { pack:'tor2e-equipment', id: entry.id }, equipped: true, dropped: false, override });
                   };
                   const weaponByProf = sg.weaponByProf ?? {};
                   // Only add a starting weapon for a proficiency the hero actually has.
@@ -1837,10 +1889,10 @@ function InventoryEditor({ hero, updateHero, onSeeMore }: { hero: any; updateHer
             <input className="input" style={{maxWidth: 72}} type="number" min={1} value={it.qty ?? 1}
               onChange={(e)=>updateItem(idx,{qty: Number(e.target.value)})} />
 
-            <button className="btn btn-ghost" onClick={()=>{
+            <button className="btn btn-danger" title="Remove" onClick={()=>{
               const cur = hero.inventory ?? [];
               updateHero({ inventory: cur.filter((_:any, i:number)=>i!==idx) });
-            }}>Remove</button>
+            }}>🗑</button>
           </div>
         ))}
       </div>
@@ -1888,7 +1940,7 @@ function UsefulItemsEditor({ hero, updateHero }: { hero: any; updateHero: (patch
             <select className="input" style={{minWidth: 160}} value={it.skillId ?? 'scan'} onChange={(e)=>updateItem(idx,{skillId:e.target.value})}>
               {skillOptions.map((s:any)=> <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
-            <button className="btn btn-ghost" onClick={()=>updateHero({ usefulItems: items.filter((_:any,i:number)=>i!==idx) })}>Remove</button>
+            <button className="btn btn-danger" title="Remove" onClick={()=>updateHero({ usefulItems: items.filter((_:any,i:number)=>i!==idx) })}>🗑</button>
           </div>
         ))}
         {items.length===0 ? <div className="small muted">No useful items yet. Add anything and link it to a Skill.</div> : null}

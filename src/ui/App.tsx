@@ -86,8 +86,9 @@ export default function App() {
       const clean = String(html ?? '').trim();
       if (!clean) return;
 
-      const chapters = state.journalChapters ?? [];
-      const activeId = state.activeJournalChapterId ?? chapters[0]?.id;
+      const campId = state.activeCampaignId ?? 'camp-1';
+      const chapters = (state.journalByCampaign?.[campId] ?? []) as any[];
+      const activeId = state.activeJournalChapterIdByCampaign?.[campId] ?? chapters[0]?.id;
 
       // Ensure we always have a chapter to write into.
       let nextChapters = chapters;
@@ -100,13 +101,18 @@ export default function App() {
       const next = nextChapters.map((c: any) => {
         if (c.id !== targetId) return c;
         const base = String(c.html ?? '');
-        const joined = base ? `${base}<br/><br/>${clean}` : clean;
+        const joined = base ? `${base}<br/>${clean}` : clean;
         return { ...c, html: joined };
       });
-      set({ ...state, journalChapters: next, activeJournalChapterId: targetId });
+
+      set({
+        ...state,
+        journalByCampaign: { ...(state.journalByCampaign ?? {}), [campId]: next },
+        activeJournalChapterIdByCampaign: { ...(state.activeJournalChapterIdByCampaign ?? {}), [campId]: targetId },
+      });
 
       // Also notify the Journal editor (if mounted) so it can insert at caret / update immediately.
-      window.dispatchEvent(new CustomEvent('torc:journal-insert-html', { detail: { html: clean, chapterId: targetId } }));
+      window.dispatchEvent(new CustomEvent('torc:journal-insert-html', { detail: { html: clean, chapterId: targetId, campaignId: campId } }));
     };
     return () => { (window as any).__torcLogRollHtml = undefined; };
   }, [state, set]);
