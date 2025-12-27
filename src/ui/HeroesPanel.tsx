@@ -351,12 +351,64 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
       if (h.parry || patch.parry) merged.parry = { ...(h.parry ?? {}), ...(patch.parry ?? {}) };
       if (h.combatProficiencies || patch.combatProficiencies) merged.combatProficiencies = { ...(h.combatProficiencies ?? {}), ...(patch.combatProficiencies ?? {}) };
 
+      // Clamp current values to their maxima
+      const endMax = Number(merged.endurance?.max ?? 0);
+      const endCurRaw = Number(merged.endurance?.current ?? 0);
+      const endCur = endMax > 0 ? Math.min(endCurRaw, endMax) : endCurRaw;
+      merged.endurance = { ...(merged.endurance ?? {}), current: endCur, max: endMax };
+
+      const hopeMax = Number(merged.hope?.max ?? 0);
+      const hopeCurRaw = Number(merged.hope?.current ?? 0);
+      const hopeCur = hopeMax > 0 ? Math.min(hopeCurRaw, hopeMax) : hopeCurRaw;
+      merged.hope = { ...(merged.hope ?? {}), current: hopeCur, max: hopeMax };
+
+      // Recompute base Parry from Culture (Wits + culture bonus), plus Nimbleness if present.
+      const culture = merged.cultureId ? findEntryById((compendiums.cultures.entries ?? []) as any, merged.cultureId) : null;
+      const parryBonus = (culture as any)?.derived?.parryBonus ?? 12;
+      const wits = Number(merged.attributes?.wits ?? 2);
+      const nimbleness = Array.isArray(merged.virtueIds) && merged.virtueIds.includes('nimbleness');
+      merged.parry = { ...(merged.parry ?? {}), base: wits + parryBonus + (nimbleness ? 1 : 0) };
+
+      // Apply Reward/Starting Gear overrides to inventory items (load/protection/etc.)
+      if (merged.startingGearOverrides && Array.isArray(merged.inventory)) {
+        merged.inventory = merged.inventory.map((it: any) => {
+          const refId = it?.ref?.id;
+          if (!refId) return it;
+          const ov = (merged.startingGearOverrides as any)[refId];
+          if (!ov) return it;
+
+          const base: any = findEntryById((compendiums.equipment.entries ?? []) as any, refId);
+          const nextIt: any = { ...it };
+
+          const baseNotes = (base?.notes ?? it?.notes ?? '').toString();
+          const notesAppend = ov?.notesAppend ? ` • ${ov.notesAppend}` : '';
+          nextIt.notes = (baseNotes + notesAppend).trim();
+
+          if (typeof base?.load === 'number') nextIt.load = base.load + Number(ov?.loadDelta ?? 0);
+          if (typeof base?.protection === 'number' && typeof ov?.protectionDelta === 'number') nextIt.protection = base.protection + ov.protectionDelta;
+          if (typeof base?.parryModifier === 'number' && typeof ov?.parryDelta === 'number') nextIt.parryModifier = base.parryModifier + ov.parryDelta;
+
+          if (typeof base?.damage === 'number' && typeof ov?.damageDelta === 'number') nextIt.damage = base.damage + ov.damageDelta;
+          if (typeof ov?.piercingThreshold === 'number') nextIt.piercingThreshold = ov.piercingThreshold;
+          if (typeof ov?.injuryOverride === 'string') nextIt.injury = ov.injuryOverride;
+
+          return nextIt;
+        });
+      }
+
       const d = computeDerived(merged);
-      // Store computed load for display and auto-toggle weary per rule.
+
+      // Store computed load for display. Weary if (Fatigue + Load) >= current Endurance.
+      const fatigue = Number(merged.endurance?.fatigue ?? 0);
       merged.endurance = { ...(merged.endurance ?? {}), load: d.loadTotal };
-      const curEnd = Number(merged.endurance?.current ?? 0);
-      const weary = curEnd < d.loadTotal;
-      merged.conditions = { ...(merged.conditions ?? {}), weary };
+      const combined = d.loadTotal + fatigue;
+      const weary = Number(merged.endurance?.current ?? 0) > 0 ? (combined >= Number(merged.endurance?.current ?? 0)) : false;
+
+      // Miserable if Shadow >= current Hope.
+      const shadowPts = Number(merged.shadow?.points ?? 0);
+      const miserable = Number(merged.hope?.current ?? 0) > 0 ? (shadowPts >= Number(merged.hope?.current ?? 0)) : false;
+
+      merged.conditions = { ...(merged.conditions ?? {}), weary, miserable };
 
       return { ...merged, updatedAt: new Date().toISOString() };
     });
@@ -584,11 +636,11 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                           <div className="miniCard">
                             <div className="miniTitle">Endurance</div>
                             <div className="row" style={{gap:8, alignItems:'center', flexWrap:'wrap'}}>
-                              <input className="input" style={{maxWidth: 92}} type="number" value={hero.endurance?.current ?? 0} onChange={(e)=>updateHero(hero.id,{endurance:{...(hero.endurance??{}),current:Number(e.target.value)}})}/>
+                              <input className="input" style={{maxWidth: 92}} type="number" value={hero.endurance?.current ?? 0} onChange={(e)=>updateHero(hero.id,{endurance:{...(hero.endurance??{}),current:Number(e.target.value)}})}/>{hero.conditions?.weary ? <span title="Weary" style={{marginLeft:8, color:'#ff4d4f'}}>!</span> : null}
                               <span className="muted">/</span>
                               <input className="input" style={{maxWidth: 92}} type="number" value={hero.endurance?.max ?? 0} onChange={(e)=>updateHero(hero.id,{endurance:{...(hero.endurance??{}),max:Number(e.target.value)}})}/>
                               <span className="muted small" style={{marginLeft: 6}}>
-                                Load {derived.loadTotal}{(hero.endurance?.current ?? 0) < derived.loadTotal ? <span title="Weary" style={{marginLeft: 6}}>❗</span> : null}
+                                Load {derived.loadTotal}{hero.conditions?.weary ? <span title="Weary" style={{marginLeft: 6, color: '#ff4d4f'}}>!</span> : null}}>❗</span> : null}
                               </span>
                             </div>
                             <div className="row" style={{gap:8, marginTop:8}}>
@@ -602,7 +654,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                           <div className="miniCard">
                             <div className="miniTitle">Hope</div>
                             <div className="row" style={{gap:8, alignItems:'center', flexWrap:'wrap'}}>
-                              <input className="input" style={{maxWidth: 92}} type="number" value={hero.hope?.current ?? 0} onChange={(e)=>updateHero(hero.id,{hope:{...(hero.hope??{}),current:Number(e.target.value)}})}/>
+                              <input className="input" style={{maxWidth: 92}} type="number" value={hero.hope?.current ?? 0} onChange={(e)=>updateHero(hero.id,{hope:{...(hero.hope??{}),current:Number(e.target.value)}})}/>{hero.conditions?.miserable ? <span title="Miserable" style={{marginLeft:8, color:'#ff4d4f'}}>!</span> : null}
                               <span className="muted">/</span>
                               <input className="input" style={{maxWidth: 92}} type="number" value={hero.hope?.max ?? 0} onChange={(e)=>updateHero(hero.id,{hope:{...(hero.hope??{}),max:Number(e.target.value)}})}/>
                             </div>
@@ -849,6 +901,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                       <div className="small muted">⭐ = Favoured (from Culture selection). Tap name for i. Minimums may be set by Culture.</div>
                       {(() => {
                         const mins = getCultureSkillMins(hero);
+                        const pe = hero.previousExperience ?? {};
                         return (
                           <>
                             {Object.keys(skillsByGroup).map(group => (

@@ -97,8 +97,8 @@
       "description": ""
     },
     {
-      "id": "axe",
-      "name": "Axe",
+      "id": "great-axe",
+      "name": "Great Axe",
       "category": "Weapon",
       "load": 3,
       "damage": 6,
