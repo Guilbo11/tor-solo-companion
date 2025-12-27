@@ -640,7 +640,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                               <span className="muted">/</span>
                               <input className="input" style={{maxWidth: 92}} type="number" value={hero.endurance?.max ?? 0} onChange={(e)=>updateHero(hero.id,{endurance:{...(hero.endurance??{}),max:Number(e.target.value)}})}/>
                               <span className="muted small" style={{marginLeft: 6}}>
-                                Load {derived.loadTotal}{hero.conditions?.weary ? <span title="Weary" style={{marginLeft: 6, color: '#ff4d4f'}}>!</span> : null}}>❗</span> : null}
+                                Load {derived.loadTotal}
                               </span>
                             </div>
                             <div className="row" style={{gap:8, marginTop:8}}>
@@ -818,7 +818,8 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                       <div className="sectionTitle">Combat Proficiencies</div>
                       <div className="small muted">Use + / – to adjust quickly. Minimums may be set by Culture.</div>
                       {(() => {
-	                        const committed = true;
+		                        const committed = true;
+	                        const pe = hero.previousExperience ?? {};
                         const profs = hero.combatProficiencies ?? {};
                         const mins = getCultureCombatMins(hero);
                         const rows: Array<{ key: 'axes'|'bows'|'spears'|'swords'; label: string }> = [

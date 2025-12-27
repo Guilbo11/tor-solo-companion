@@ -152,17 +152,6 @@
       "description": ""
     },
     {
-      "id": "great-axe",
-      "name": "Great Axe",
-      "category": "Weapon",
-      "load": 4,
-      "damage": 7,
-      "injury": "20",
-      "proficiency": "Axes",
-      "notes": "2-handed",
-      "description": ""
-    },
-    {
       "id": "great-bow",
       "name": "Great Bow",
       "category": "Weapon",
