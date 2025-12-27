@@ -144,15 +144,44 @@ export default function JournalPanel({ state, setState }: Props) {
   };
 
   
+  // Extract a chapter title from the *first non-empty block* of content.
+  // We intentionally do NOT concatenate multiple blocks: logs/rolls often append
+  // more text and should not become part of the title.
   const extractChapterTitleFromHtml = (html: string): string => {
     try {
-      const el = document.createElement('div');
-      el.innerHTML = html || '';
-      const raw = (el.innerText || el.textContent || '').replace(/\r/g,'');
-      const lines = raw.split('\n').map(s => s.trim()).filter(Boolean);
-      const first = lines[0] ?? '';
-      // keep it reasonably short for list display
-      return first.length > 80 ? (first.slice(0, 77) + '…') : first;
+      const root = document.createElement('div');
+      root.innerHTML = html || '';
+
+      // Walk elements in DOM order, pick the first element that contains visible text.
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT);
+      let el: Element | null = walker.nextNode() as Element | null;
+      while (el) {
+        const tag = el.tagName?.toLowerCase?.() ?? '';
+        // Skip the root container itself.
+        if (el !== root) {
+          // Prefer headings/paragraph-ish blocks; but fall back to any element with text.
+          const isCandidate =
+            tag === 'h1' || tag === 'h2' || tag === 'h3' || tag === 'p' || tag === 'div' || tag === 'li' || tag === 'blockquote';
+
+          if (isCandidate) {
+            const txt = (el as HTMLElement).innerText ?? (el.textContent ?? '');
+            const cleaned = String(txt).replace(/\r/g, '').trim();
+            if (cleaned) {
+              // Only the first line, so a paragraph doesn't become huge.
+              const firstLine = cleaned.split(/\n/).map(s => s.trim()).filter(Boolean)[0] ?? '';
+              const out = firstLine.replace(/\s+/g, ' ').trim();
+              return out.length > 60 ? (out.slice(0, 57) + '…') : out;
+            }
+          }
+        }
+        el = walker.nextNode() as Element | null;
+      }
+
+      // Fallback: first non-empty line from total text.
+      const raw = (root.innerText || root.textContent || '').replace(/\r/g, '');
+      const first = raw.split(/\n/).map(s => s.trim()).filter(Boolean)[0] ?? '';
+      const out = first.replace(/\s+/g, ' ').trim();
+      return out.length > 60 ? (out.slice(0, 57) + '…') : out;
     } catch {
       return '';
     }

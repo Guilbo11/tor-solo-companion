@@ -78,16 +78,17 @@ export default function OraclesPanel({
     const twistTxt = out.twist ? ' — TWIST/EXTREME' : '';
     const result = `${out.answer}${twistTxt} (feat ${out.feat}, ${likelihood})`;
 
-    setState({
-      ...state,
+    // Functional update so we don't race with other state updates (ex: journal roll logger).
+    setState((prev) => ({
+      ...prev,
       oracle: {
-        ...state.oracle,
+        ...prev.oracle,
         history: [
           { at: new Date().toISOString(), kind: 'Ask' as const, prompt: question.trim(), result },
-          ...state.oracle.history,
+          ...(prev.oracle?.history ?? []),
         ],
       },
-    });
+    }));
 
     if (state.settings?.addRollsToJournal) {
       (window as any).__torcLogRollHtml?.(`<div><b>${result}</b> — Ask: ${question.trim()}</div>`);
@@ -100,16 +101,16 @@ export default function OraclesPanel({
     const t = findTable(state.oracle, id);
     if (!t) return;
     const result = weightedPick(t.entries);
-    setState({
-      ...state,
+    setState((prev) => ({
+      ...prev,
       oracle: {
-        ...state.oracle,
+        ...prev.oracle,
         history: [
           { at: new Date().toISOString(), kind: 'Table' as const, prompt: `Table: ${t.name}`, result },
-          ...state.oracle.history,
+          ...(prev.oracle?.history ?? []),
         ],
       },
-    });
+    }));
 
     if (state.settings?.addRollsToJournal) {
       (window as any).__torcLogRollHtml?.(`<div><b>${result}</b> — ${`Table: ${t.name}`}</div>`);
@@ -134,16 +135,16 @@ export default function OraclesPanel({
       details: `Action: ${row.action} - Aspect: ${row.aspect} - Focus: ${row.focus}`,
     });
 
-    setState({
-      ...state,
+    setState((prev) => ({
+      ...prev,
       oracle: {
-        ...state.oracle,
+        ...prev.oracle,
         history: [
           { at: new Date().toISOString(), kind: 'Table' as const, prompt, result },
-          ...state.oracle.history,
+          ...(prev.oracle?.history ?? []),
         ],
       },
-    });
+    }));
 
     if (state.settings?.addRollsToJournal) {
       (window as any).__torcLogRollHtml?.(`<div><b>${result}</b> — ${prompt}</div>`);
@@ -233,6 +234,14 @@ export default function OraclesPanel({
         <button className="btn" onClick={doAsk} disabled={!question.trim()}>
           Ask
         </button>
+
+        {/* Inline last result (like Roll Lore) */}
+        {lastAsk ? (
+          <div className="small" style={{ marginLeft: 10, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 360 }} title={lastAsk.result}>
+            <span className="badge" style={{ marginRight: 8 }}>Last</span>
+            <b>{lastAsk.result}</b>
+          </div>
+        ) : null}
       </div>
 
       {lastAsk && (

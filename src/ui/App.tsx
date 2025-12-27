@@ -82,40 +82,45 @@ export default function App() {
   // Global roll logger hook (dice + oracles) -> active journal chapter (works from any tab).
   useEffect(() => {
     (window as any).__torcLogRollHtml = (html: string) => {
-      if (!state.settings?.addRollsToJournal) return;
       const clean = String(html ?? '').trim();
       if (!clean) return;
 
-      const campId = state.activeCampaignId ?? 'camp-1';
-      const chapters = (state.journalByCampaign?.[campId] ?? []) as any[];
-      const activeId = state.activeJournalChapterIdByCampaign?.[campId] ?? chapters[0]?.id;
+      // IMPORTANT: use a functional update so we don't clobber other state updates
+      // that may have happened immediately before logging (ex: Oracle history).
+      set((prev) => {
+        if (!prev.settings?.addRollsToJournal) return prev;
 
-      // Ensure we always have a chapter to write into.
-      let nextChapters = chapters;
-      let targetId = activeId;
-      if (!targetId) {
-        targetId = `chap-${crypto.randomUUID()}`;
-        nextChapters = [{ id: targetId, title: 'Chapter 1', html: '', collapsed: false }, ...chapters] as any;
-      }
+        const campId = prev.activeCampaignId ?? 'camp-1';
+        const chapters = (prev.journalByCampaign?.[campId] ?? []) as any[];
+        const activeId = prev.activeJournalChapterIdByCampaign?.[campId] ?? chapters[0]?.id;
 
-      const next = nextChapters.map((c: any) => {
-        if (c.id !== targetId) return c;
-        const base = String(c.html ?? '');
-        const joined = base ? `${base}<br/>${clean}` : clean;
-        return { ...c, html: joined };
+        // Ensure we always have a chapter to write into.
+        let nextChapters = chapters;
+        let targetId = activeId;
+        if (!targetId) {
+          targetId = `chap-${crypto.randomUUID()}`;
+          nextChapters = [{ id: targetId, title: 'Chapter 1', html: '', collapsed: false }, ...chapters] as any;
+        }
+
+        const next = nextChapters.map((c: any) => {
+          if (c.id !== targetId) return c;
+          const base = String(c.html ?? '');
+          const joined = base ? `${base}<br/>${clean}` : clean;
+          return { ...c, html: joined };
+        });
+
+        // Also notify the Journal editor (if mounted) so it can insert at caret / update immediately.
+        window.dispatchEvent(new CustomEvent('torc:journal-insert-html', { detail: { html: clean, chapterId: targetId, campaignId: campId } }));
+
+        return {
+          ...prev,
+          journalByCampaign: { ...(prev.journalByCampaign ?? {}), [campId]: next },
+          activeJournalChapterIdByCampaign: { ...(prev.activeJournalChapterIdByCampaign ?? {}), [campId]: targetId },
+        } as any;
       });
-
-      set({
-        ...state,
-        journalByCampaign: { ...(state.journalByCampaign ?? {}), [campId]: next },
-        activeJournalChapterIdByCampaign: { ...(state.activeJournalChapterIdByCampaign ?? {}), [campId]: targetId },
-      });
-
-      // Also notify the Journal editor (if mounted) so it can insert at caret / update immediately.
-      window.dispatchEvent(new CustomEvent('torc:journal-insert-html', { detail: { html: clean, chapterId: targetId, campaignId: campId } }));
     };
     return () => { (window as any).__torcLogRollHtml = undefined; };
-  }, [state, set]);
+  }, [set]);
 
   return (
     <div className={isCampaignLanding ? 'landingContainer' : 'container'}>
