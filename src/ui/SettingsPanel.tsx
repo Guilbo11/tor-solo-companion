@@ -2,7 +2,10 @@ import React, { useState } from 'react';
 import { Likelihood, StoredState } from '../core/storage';
 
 export default function SettingsPanel({ state, setState, onBackToCampaigns }: { state: StoredState; setState: React.Dispatch<React.SetStateAction<StoredState>>; onBackToCampaigns?: () => void }) {
-  const [draft, setDraft] = useState(() => ({ ...state.oracle.likelihood }));
+  const campaigns = (state as any).campaigns ?? [];
+  const campId = (state as any).activeCampaignId ?? (campaigns[0]?.id ?? 'camp-1');
+  const oracle = (state as any).oracleByCampaign?.[campId] ?? (state as any).oracle;
+  const [draft, setDraft] = useState(() => ({ ...oracle.likelihood }));
 
   const update = (l: Likelihood, field: 'yes'|'maybe', val: number) => {
     setDraft(prev => ({ ...prev, [l]: { ...prev[l], [field]: val } }));
@@ -17,7 +20,16 @@ export default function SettingsPanel({ state, setState, onBackToCampaigns }: { 
         return;
       }
     }
-    setState({ ...state, oracle: { ...state.oracle, likelihood: draft } });
+    setState((prev: any) => {
+      const current = prev.oracleByCampaign?.[campId] ?? prev.oracle;
+      return {
+        ...prev,
+        oracleByCampaign: {
+          ...(prev.oracleByCampaign ?? {}),
+          [campId]: { ...current, likelihood: draft },
+        },
+      };
+    });
     alert('Saved.');
   };
 

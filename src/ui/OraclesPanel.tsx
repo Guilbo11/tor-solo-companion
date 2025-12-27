@@ -48,6 +48,9 @@ export default function OraclesPanel({
   setState: (s: StoredState) => void;
   compact?: boolean;
 }) {
+  const campaigns = (state as any).campaigns ?? [];
+  const campId = (state as any).activeCampaignId ?? (campaigns[0]?.id ?? 'camp-1');
+  const oracle = (state as any).oracleByCampaign?.[campId] ?? (state as any).oracle;
   const [question, setQuestion] = useState('');
   const [likelihood, setLikelihood] = useState<Likelihood>('Possible');
 
@@ -68,27 +71,33 @@ export default function OraclesPanel({
       .catch((e) => setLoreError(e?.message ?? 'Failed to load lore table'));
   }, []);
 
-  const tables = state.oracle.tables;
+  const tables = oracle.tables;
 
   // ✅ UPDATED: Strider Mode Telling Table (Feat Die) output
   const doAsk = () => {
     if (!question.trim()) return;
 
-    const out = askOracle(state.oracle, likelihood);
+    const out = askOracle(oracle, likelihood);
     const twistTxt = out.twist ? ' — TWIST/EXTREME' : '';
     const result = `${out.answer}${twistTxt} (feat ${out.feat}, ${likelihood})`;
 
     // Functional update so we don't race with other state updates (ex: journal roll logger).
-    setState((prev) => ({
-      ...prev,
-      oracle: {
-        ...prev.oracle,
-        history: [
-          { at: new Date().toISOString(), kind: 'Ask' as const, prompt: question.trim(), result },
-          ...(prev.oracle?.history ?? []),
-        ],
-      },
-    }));
+    setState((prev: any) => {
+      const current = prev.oracleByCampaign?.[campId] ?? prev.oracle;
+      return {
+        ...prev,
+        oracleByCampaign: {
+          ...(prev.oracleByCampaign ?? {}),
+          [campId]: {
+            ...current,
+            history: [
+              { at: new Date().toISOString(), kind: 'Ask' as const, prompt: question.trim(), result },
+              ...(current?.history ?? []),
+            ],
+          },
+        },
+      };
+    });
 
     if (state.settings?.addRollsToJournal) {
       (window as any).__torcLogRollHtml?.(`<div><b>${result}</b> — Ask: ${question.trim()}</div>`);
@@ -98,19 +107,25 @@ export default function OraclesPanel({
   };
 
   const doRollTable = (id: string) => {
-    const t = findTable(state.oracle, id);
+    const t = findTable(oracle, id);
     if (!t) return;
     const result = weightedPick(t.entries);
-    setState((prev) => ({
-      ...prev,
-      oracle: {
-        ...prev.oracle,
-        history: [
-          { at: new Date().toISOString(), kind: 'Table' as const, prompt: `Table: ${t.name}`, result },
-          ...(prev.oracle?.history ?? []),
-        ],
-      },
-    }));
+    setState((prev: any) => {
+      const current = prev.oracleByCampaign?.[campId] ?? prev.oracle;
+      return {
+        ...prev,
+        oracleByCampaign: {
+          ...(prev.oracleByCampaign ?? {}),
+          [campId]: {
+            ...current,
+            history: [
+              { at: new Date().toISOString(), kind: 'Table' as const, prompt: `Table: ${t.name}`, result },
+              ...(current?.history ?? []),
+            ],
+          },
+        },
+      };
+    });
 
     if (state.settings?.addRollsToJournal) {
       (window as any).__torcLogRollHtml?.(`<div><b>${result}</b> — ${`Table: ${t.name}`}</div>`);
@@ -135,16 +150,22 @@ export default function OraclesPanel({
       details: `Action: ${row.action} - Aspect: ${row.aspect} - Focus: ${row.focus}`,
     });
 
-    setState((prev) => ({
-      ...prev,
-      oracle: {
-        ...prev.oracle,
-        history: [
-          { at: new Date().toISOString(), kind: 'Table' as const, prompt, result },
-          ...(prev.oracle?.history ?? []),
-        ],
-      },
-    }));
+    setState((prev: any) => {
+      const current = prev.oracleByCampaign?.[campId] ?? prev.oracle;
+      return {
+        ...prev,
+        oracleByCampaign: {
+          ...(prev.oracleByCampaign ?? {}),
+          [campId]: {
+            ...current,
+            history: [
+              { at: new Date().toISOString(), kind: 'Table' as const, prompt, result },
+              ...(current?.history ?? []),
+            ],
+          },
+        },
+      };
+    });
 
     if (state.settings?.addRollsToJournal) {
       (window as any).__torcLogRollHtml?.(`<div><b>${result}</b> — ${prompt}</div>`);
@@ -161,10 +182,10 @@ export default function OraclesPanel({
     setTimeout(() => setCopied(false), 1200);
   };
 
-  const history = useMemo(() => state.oracle.history.slice(0, 30), [state.oracle.history]);
+  const history = useMemo(() => (oracle.history ?? []).slice(0, 30), [oracle.history]);
   const lastAsk = useMemo(
-    () => state.oracle.history.find((h) => h.kind === 'Ask') ?? null,
-    [state.oracle.history]
+    () => (oracle.history ?? []).find((h) => h.kind === 'Ask') ?? null,
+    [oracle.history]
   );
 
   const Container: any = compact ? 'div' : 'div';

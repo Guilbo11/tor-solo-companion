@@ -1,18 +1,23 @@
 export type StoredState = {
-  version: 5;
+  version: 6;
 
   // Legacy notes/journeys (kept for backward compatibility with older saves)
   journal: JournalEntry[];
   journeys: Journey[];
 
+  // Legacy: single fellowship (kept for backward compatibility)
   fellowship: FellowshipState;
+  // Fellowship is per-campaign (NOT shared between campaigns)
+  fellowshipByCampaign: Record<string, FellowshipState>;
 
   // Maps are now per-campaign (multi-map support)
   mapsByCampaign: Record<string, MapDoc[]>;
   activeMapIdByCampaign: Record<string, string | undefined>;
 
-  // Oracles
+  // Legacy: single oracle (kept for backward compatibility)
   oracle: OracleState;
+  // Oracles are per-campaign (NOT shared between campaigns)
+  oracleByCampaign: Record<string, OracleState>;
 
   // Journal v2 (chapters + rich HTML)
   // NOTE: legacy (single journal) fields are kept for backward compatibility.
@@ -254,7 +259,7 @@ export function loadState(): StoredState {
   if (!raw) return defaultState();
   try {
     const parsed = JSON.parse(raw) as StoredState;
-    if (![3,4,5].includes((parsed as any)?.version)) return defaultState();
+    if (![3,4,5,6].includes((parsed as any)?.version)) return defaultState();
 
     // Migrate v3 -> v4 (campaigns)
     if (parsed?.version === 3) {
@@ -264,6 +269,11 @@ export function loadState(): StoredState {
     // Migrate v4 -> v5 (journal chapters, settings, NPCs, multi-map)
     if ((parsed as any)?.version === 4) {
       return ensureDefaults(migrateV4ToV5(parsed as any));
+    }
+
+    // Migrate v5 -> v6 (make fellowship/oracle per-campaign)
+    if ((parsed as any)?.version === 5) {
+      return ensureDefaults(migrateV5ToV6(parsed as any));
     }
 
     // Ensure defaults exist even if older saved state is missing new fields
@@ -293,14 +303,81 @@ export function defaultState(): StoredState {
     pan: { x: 0, y: 0 },
   };
 
+  const defaultFellowship: FellowshipState = { mode: 'company', companyName: '' };
+  const defaultOracle: OracleState = {
+    tables: [
+      {
+        id: "fortune",
+        name: "Fortune Table",
+        entries: [
+        { text: "The Eye of the Enemy focuses elsewhere. Decrease Eye Awareness by 1." },
+        { text: "You may bypass a threat without attracting notice" },
+        { text: "You gain the attention of a potential ally" },
+        { text: "An enemy inadvertently reveals their position" },
+        { text: "You gain favoured ground" },
+        { text: "Enemies run afoul of danger" },
+        { text: "You locate or learn of a useful item" },
+        { text: "Your success instils new hope or renewed resolve" },
+        { text: "You find a moment of comfort or safety" },
+        { text: "You learn or realize something which gives helpful insight into your mission" },
+        { text: "You encounter an opportunity suited to your nature or abilities" },
+        { text: "An unexpected ally appears or sends aid" }
+        ],
+      },
+      {
+        id: "ill-fortune",
+        name: "Ill-Fortune Table",
+        entries: [
+        { text: "Your actions catch the Eye of the Enemy. Increase Eye Awareness by 2." },
+        { text: "You draw unwanted attention" },
+        { text: "Your actions are observed by someone of ill-intent" },
+        { text: "Unexpected enemies emerge or are sighted" },
+        { text: "You are hindered by difficult terrain or an unfavourable environment" },
+        { text: "You find yourself ill-equipped for the circumstances" },
+        { text: "A favoured weapon or item is lost, broken, or sacrificed" },
+        { text: "You are plagued by troubling visions or thoughts" },
+        { text: "An old injury or stress resurfaces" },
+        { text: "You learn or realize something which adds a new complication to your mission" },
+        { text: "You face a test which is contrary to your nature or abilities" },
+        { text: "An ally becomes a hindrance or liability" }
+        ],
+      },
+      {
+        id: "experience-milestones",
+        name: "Experience Milestones",
+        entries: [
+        { text: "Accept a mission from a patron — 1 Adventure Point" },
+        { text: "Achieve a notable personal goal — 1 Adventure Point and 1 Skill Point" },
+        { text: "Complete a patron’s mission — 1 Adventure Point and 1 Skill Point" },
+        { text: "Complete a meaningful journey — 2 Skill Points" },
+        { text: "Face a Noteworthy Encounter during a journey — 1 Skill Point" },
+        { text: "Reveal a significant location or discovery — 1 Adventure Point" },
+        { text: "Overcome a tricky obstacle — 1 Skill Point" },
+        { text: "Participate in a Council — 1 Skill Point" },
+        { text: "Survive a dangerous combat — 1 Adventure Point" },
+        { text: "Face a Revelation Episode — 1 Adventure Point" }
+        ],
+      },
+    ],
+    likelihood: {
+      Certain: { yes: 95, maybe: 99 },
+      Likely: { yes: 70, maybe: 89 },
+      Possible: { yes: 50, maybe: 69 },
+      Unlikely: { yes: 30, maybe: 49 },
+      'Very Unlikely': { yes: 10, maybe: 29 },
+    },
+    history: [],
+  };
+
   return ensureDefaults({
-    version: 5,
+    version: 6,
 
     // legacy
     journal: [],
     journeys: [],
 
-    fellowship: { mode: 'company', companyName: '' },
+    fellowship: defaultFellowship,
+    fellowshipByCampaign: { [campId]: defaultFellowship },
 
     // maps per campaign
     mapsByCampaign: {
@@ -308,71 +385,8 @@ export function defaultState(): StoredState {
     },
     activeMapIdByCampaign: { [campId]: 'map-1' },
 
-    // oracles
-    oracle: {
-      tables: [
-        {
-          id: "fortune",
-          name: "Fortune Table",
-          entries: [
-          { text: "The Eye of the Enemy focuses elsewhere. Decrease Eye Awareness by 1." },
-          { text: "You may bypass a threat without attracting notice" },
-          { text: "You gain the attention of a potential ally" },
-          { text: "An enemy inadvertently reveals their position" },
-          { text: "You gain favoured ground" },
-          { text: "Enemies run afoul of danger" },
-          { text: "You locate or learn of a useful item" },
-          { text: "Your success instils new hope or renewed resolve" },
-          { text: "You find a moment of comfort or safety" },
-          { text: "You learn or realize something which gives helpful insight into your mission" },
-          { text: "You encounter an opportunity suited to your nature or abilities" },
-          { text: "An unexpected ally appears or sends aid" }
-          ],
-        },
-        {
-          id: "ill-fortune",
-          name: "Ill-Fortune Table",
-          entries: [
-          { text: "Your actions catch the Eye of the Enemy. Increase Eye Awareness by 2." },
-          { text: "You draw unwanted attention" },
-          { text: "Your actions are observed by someone of ill-intent" },
-          { text: "Unexpected enemies emerge or are sighted" },
-          { text: "You are hindered by difficult terrain or an unfavourable environment" },
-          { text: "You find yourself ill-equipped for the circumstances" },
-          { text: "A favoured weapon or item is lost, broken, or sacrificed" },
-          { text: "You are plagued by troubling visions or thoughts" },
-          { text: "An old injury or stress resurfaces" },
-          { text: "You learn or realize something which adds a new complication to your mission" },
-          { text: "You face a test which is contrary to your nature or abilities" },
-          { text: "An ally becomes a hindrance or liability" }
-          ],
-        },
-        {
-          id: "experience-milestones",
-          name: "Experience Milestones",
-          entries: [
-          { text: "Accept a mission from a patron — 1 Adventure Point" },
-          { text: "Achieve a notable personal goal — 1 Adventure Point and 1 Skill Point" },
-          { text: "Complete a patron’s mission — 1 Adventure Point and 1 Skill Point" },
-          { text: "Complete a meaningful journey — 2 Skill Points" },
-          { text: "Face a Noteworthy Encounter during a journey — 1 Skill Point" },
-          { text: "Reveal a significant location or discovery — 1 Adventure Point" },
-          { text: "Overcome a tricky obstacle — 1 Skill Point" },
-          { text: "Participate in a Council — 1 Skill Point" },
-          { text: "Survive a dangerous combat — 1 Adventure Point" },
-          { text: "Face a Revelation Episode — 1 Adventure Point" }
-          ],
-        },
-      ],
-      likelihood: {
-        Certain: { yes: 95, maybe: 99 },
-        Likely: { yes: 70, maybe: 89 },
-        Possible: { yes: 50, maybe: 69 },
-        Unlikely: { yes: 30, maybe: 49 },
-        'Very Unlikely': { yes: 10, maybe: 29 },
-      },
-      history: [],
-    },
+    oracle: defaultOracle,
+    oracleByCampaign: { [campId]: defaultOracle },
 
     // journal per campaign
     journalByCampaign: {
@@ -418,6 +432,26 @@ function migrateV3ToV4(s: any): any {
 function migrateV4ToV5(s: any): any {
   // Keep data as-is; ensureDefaults will populate new fields and migrate legacy map/journal.
   return { ...s, version: 5 };
+}
+
+function migrateV5ToV6(s: any): any {
+  // Move global fellowship/oracle into per-campaign maps.
+  const campaigns: any[] = Array.isArray(s?.campaigns) ? s.campaigns : [];
+  const activeCampaignId: string = typeof s?.activeCampaignId === 'string'
+    ? s.activeCampaignId
+    : (campaigns[0]?.id ?? 'camp-1');
+
+  const baseFellowship = s?.fellowship ?? { mode: 'company', companyName: '' };
+  const baseOracle = s?.oracle ?? { tables: [], likelihood: {}, history: [] };
+
+  const fellowshipByCampaign = { ...(s?.fellowshipByCampaign ?? {}) };
+  const oracleByCampaign = { ...(s?.oracleByCampaign ?? {}) };
+
+  // Attach legacy values to the active campaign if that campaign doesn't already have its own.
+  if (!fellowshipByCampaign[activeCampaignId]) fellowshipByCampaign[activeCampaignId] = baseFellowship;
+  if (!oracleByCampaign[activeCampaignId]) oracleByCampaign[activeCampaignId] = baseOracle;
+
+  return { ...s, version: 6, fellowshipByCampaign, oracleByCampaign };
 }
 
 function ensureJournalChapterDefaults(c: any): JournalChapter {
@@ -564,13 +598,15 @@ function ensureDefaults(s: StoredState): StoredState {
   }
 
   const out: StoredState = {
-    version: 5,
+    version: 6,
     journal: Array.isArray((s as any).journal) ? (s as any).journal : [],
     journeys: Array.isArray((s as any).journeys) ? (s as any).journeys.map(ensureJourneyDefaults) : [],
     fellowship: ensureFellowshipDefaults((s as any).fellowship),
+    fellowshipByCampaign: {},
     mapsByCampaign,
     activeMapIdByCampaign,
     oracle: ensureOracleDefaults((s as any).oracle),
+    oracleByCampaign: {},
     journalByCampaign,
     activeJournalChapterIdByCampaign,
 
@@ -584,6 +620,25 @@ function ensureDefaults(s: StoredState): StoredState {
     settings,
     ui: (s as any).ui && typeof (s as any).ui === 'object' ? (s as any).ui : {},
   };
+  // Ensure fellowship/oracles are NOT shared: each campaign gets its own slice.
+  const legacyFellowship = ensureFellowshipDefaults((s as any).fellowship);
+  const legacyOracle = ensureOracleDefaults((s as any).oracle);
+
+  const fellowshipByCampaign: Record<string, FellowshipState> = (s as any).fellowshipByCampaign && typeof (s as any).fellowshipByCampaign === 'object'
+    ? Object.fromEntries(Object.entries((s as any).fellowshipByCampaign).map(([cid, f]: any) => [String(cid), ensureFellowshipDefaults(f)]))
+    : { [activeCampaignId]: legacyFellowship };
+
+  const oracleByCampaign: Record<string, OracleState> = (s as any).oracleByCampaign && typeof (s as any).oracleByCampaign === 'object'
+    ? Object.fromEntries(Object.entries((s as any).oracleByCampaign).map(([cid, o]: any) => [String(cid), ensureOracleDefaults(o)]))
+    : { [activeCampaignId]: legacyOracle };
+
+  for (const c of campaigns) {
+    if (!fellowshipByCampaign[c.id]) fellowshipByCampaign[c.id] = legacyFellowship;
+    if (!oracleByCampaign[c.id]) oracleByCampaign[c.id] = legacyOracle;
+  }
+
+  out.fellowshipByCampaign = fellowshipByCampaign;
+  out.oracleByCampaign = oracleByCampaign;
   return out;
 }
 

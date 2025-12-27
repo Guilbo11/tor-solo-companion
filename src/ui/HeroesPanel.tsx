@@ -277,6 +277,16 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
     const chapId = `chap-${crypto.randomUUID()}`;
 
     setState((s:any) => {
+      const fellowshipByCampaign = { ...((s as any).fellowshipByCampaign ?? {}) };
+      const oracleByCampaign = { ...((s as any).oracleByCampaign ?? {}) };
+
+      // Nothing should be shared between campaigns.
+      if (!fellowshipByCampaign[newCamp.id]) fellowshipByCampaign[newCamp.id] = { mode: 'company', companyName: '' };
+      if (!oracleByCampaign[newCamp.id]) {
+        // Copy tables/likelihood from current oracle, but start with a clean history.
+        const base = (s as any).oracleByCampaign?.[(s as any).activeCampaignId] ?? (s as any).oracle;
+        oracleByCampaign[newCamp.id] = { ...base, history: [] };
+      }
       const mapsByCampaign = { ...((s as any).mapsByCampaign ?? {}) };
       const activeMapIdByCampaign = { ...((s as any).activeMapIdByCampaign ?? {}) };
       if (!mapsByCampaign[newCamp.id] || mapsByCampaign[newCamp.id].length === 0) {
@@ -295,6 +305,8 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
         ...s,
         campaigns: [...((s as any).campaigns ?? []), newCamp],
         activeCampaignId: newCamp.id,
+        fellowshipByCampaign,
+        oracleByCampaign,
         mapsByCampaign,
         activeMapIdByCampaign,
         journalByCampaign,
@@ -316,7 +328,32 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
       const nextCampaigns = ((s as any).campaigns ?? []).filter((c:any)=>c.id!==id);
       const nextHeroes = ((s as any).heroes ?? []).filter((h:any)=> (h.campaignId ?? (s as any).activeCampaignId) !== id);
       const nextActive = (s as any).activeCampaignId===id ? (nextCampaigns[0]?.id ?? 'camp-1') : (s as any).activeCampaignId;
-      const next = { ...s, campaigns: nextCampaigns, heroes: nextHeroes, activeCampaignId: nextActive };
+      const mapsByCampaign = { ...((s as any).mapsByCampaign ?? {}) };
+      const activeMapIdByCampaign = { ...((s as any).activeMapIdByCampaign ?? {}) };
+      const journalByCampaign = { ...((s as any).journalByCampaign ?? {}) };
+      const activeJournalChapterIdByCampaign = { ...((s as any).activeJournalChapterIdByCampaign ?? {}) };
+      const fellowshipByCampaign = { ...((s as any).fellowshipByCampaign ?? {}) };
+      const oracleByCampaign = { ...((s as any).oracleByCampaign ?? {}) };
+
+      delete mapsByCampaign[id];
+      delete activeMapIdByCampaign[id];
+      delete journalByCampaign[id];
+      delete activeJournalChapterIdByCampaign[id];
+      delete fellowshipByCampaign[id];
+      delete oracleByCampaign[id];
+
+      const next = {
+        ...s,
+        campaigns: nextCampaigns,
+        heroes: nextHeroes,
+        activeCampaignId: nextActive,
+        mapsByCampaign,
+        activeMapIdByCampaign,
+        journalByCampaign,
+        activeJournalChapterIdByCampaign,
+        fellowshipByCampaign,
+        oracleByCampaign,
+      };
       saveState(next);
       return next;
     });

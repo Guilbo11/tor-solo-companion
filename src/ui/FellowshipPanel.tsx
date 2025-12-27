@@ -2,11 +2,23 @@ import React from 'react';
 import { compendiums } from '../core/compendiums';
 
 export default function FellowshipPanel({ state, setState }: { state: any; setState: (updater: any)=>void }) {
-  const f = state.fellowship ?? { mode: 'company', companyName: '' };
-  const heroes = state.heroes ?? [];
+  const campaigns = (state as any).campaigns ?? [];
+  const campId = (state as any).activeCampaignId ?? (campaigns[0]?.id ?? 'camp-1');
+  const f = (state as any).fellowshipByCampaign?.[campId] ?? (state as any).fellowship ?? { mode: 'company', companyName: '' };
+  const heroes = ((state as any).heroes ?? []).filter((h:any)=> (h.campaignId ?? campId) === campId);
 
   function patch(p: any) {
-    setState((s:any)=> ({ ...s, fellowship: { ...(s.fellowship ?? { mode: 'company', companyName: '' }), ...p } }));
+    setState((s:any)=> {
+      const prevCampId = (s as any).activeCampaignId ?? campId;
+      const current = (s as any).fellowshipByCampaign?.[prevCampId] ?? (s as any).fellowship ?? { mode: 'company', companyName: '' };
+      return {
+        ...s,
+        fellowshipByCampaign: {
+          ...((s as any).fellowshipByCampaign ?? {}),
+          [prevCampId]: { ...current, ...p },
+        },
+      };
+    });
   }
 
   return (
