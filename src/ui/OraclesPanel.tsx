@@ -161,6 +161,10 @@ export default function OraclesPanel({
   };
 
   const history = useMemo(() => state.oracle.history.slice(0, 30), [state.oracle.history]);
+  const lastAsk = useMemo(
+    () => state.oracle.history.find((h) => h.kind === 'Ask') ?? null,
+    [state.oracle.history]
+  );
 
   const Container: any = compact ? 'div' : 'div';
 
@@ -214,6 +218,9 @@ export default function OraclesPanel({
           className="input"
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') doAsk();
+          }}
           placeholder="Is there a safe shelter nearby?"
         />
         <select className="input" value={likelihood} onChange={(e) => setLikelihood(e.target.value as Likelihood)}>
@@ -227,6 +234,16 @@ export default function OraclesPanel({
           Ask
         </button>
       </div>
+
+      {lastAsk && (
+        <div className="card" style={{ padding: 10, marginTop: 8 }}>
+          <div className="small muted" style={{ marginBottom: 6 }}>
+            Last answer
+          </div>
+          <strong>{lastAsk.prompt}</strong>
+          <div style={{ marginTop: 4 }}>{lastAsk.result}</div>
+        </div>
+      )}
 
       <hr />
 

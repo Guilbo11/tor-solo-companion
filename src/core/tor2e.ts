@@ -165,8 +165,18 @@ export function computeDerived(hero: any, tnBase: number = 20): Tor2eDerived {
   const equippedHelm = invHelm ?? legacyHelm;
   const equippedShield = invShield ?? legacyShield;
 
-  const culture = hero?.cultureId ? findEntryById(compendiums.cultures.entries ?? [], hero.cultureId) : null;
-  const cultureParryBonus = (culture as any)?.derived?.parryBonus ?? 12;
+  // Parry base varies by culture (derived stats in the book).
+  // Prefer compendium value if present, otherwise fall back to the known defaults.
+  const cultureParryBonus = (culture as any)?.derived?.parryBonus ?? (
+    {
+      'bardings': 12,
+      'dwarves-of-durins-folk': 10,
+      'elves-of-lindon': 12,
+      'hobbits-of-the-shire': 12,
+      'men-of-bree': 10,
+      'rangers-of-the-north': 14,
+    } as Record<string, number>
+  )[String(cultureId ?? '')] ?? 12;
   const nimbleness = Array.isArray(hero?.virtueIds) && hero.virtueIds.includes('nimbleness');
   const parryBase = typeof hero?.parry?.base === 'number'
     ? hero.parry.base

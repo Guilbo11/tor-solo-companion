@@ -1854,26 +1854,29 @@ function InventoryEditor({ hero, updateHero, onSeeMore }: { hero: any; updateHer
         {(hero.inventory ?? []).map((it:any, idx:number)=>(
           <div key={it.id ?? idx} className="invRow invRowGrid">
             <div className="invCol invCol1">
-            <button className="btn btn-ghost" style={{textAlign:'left'}} onClick={()=>{
-              if (it.ref?.pack === 'tor2e-equipment' && it.ref?.id) onSeeMore('equipment', it.ref.id);
-            }}>
-              <div className="invName">{it.name}</div>
-              {it.ref?.pack === 'tor2e-equipment' && it.ref?.id ? (
-                (() => {
-                  const e:any = findEntryById(compendiums.equipment.entries ?? [], it.ref.id);
-                  if (!e) return <div className="muted" style={{fontSize: 12}}>i</div>;
-                  const c = String(e.category ?? '');
-                  if (c === 'Weapon') return <div className="muted" style={{fontSize: 12}}>DMG {e.damage ?? '—'} • INJ {e.injury ?? '—'} • Load {e.load ?? 0}</div>;
-                  if (c === 'Armour' || c === 'Headgear') return <div className="muted" style={{fontSize: 12}}>Prot {e.protection ?? '—'} • Load {e.load ?? 0}</div>;
-                  if (c === 'Shield') return <div className="muted" style={{fontSize: 12}}>Parry {e.parryModifier ?? '—'} • Load {e.load ?? 0}</div>;
-                  return <div className="muted" style={{fontSize: 12}}>Load {e.load ?? 0}</div>;
-                })()
-              ) : null}
-            </button>
-          </div>
-        </div>
+              <button
+                className="btn btn-ghost"
+                style={{textAlign:'left'}}
+                onClick={() => {
+                  if (it.ref?.pack === 'tor2e-equipment' && it.ref?.id) onSeeMore('equipment', it.ref.id);
+                }}
+              >
+                <div className="invName">{it.name}</div>
+                {it.ref?.pack === 'tor2e-equipment' && it.ref?.id ? (
+                  (() => {
+                    const e:any = findEntryById(compendiums.equipment.entries ?? [], it.ref.id);
+                    if (!e) return <div className="muted" style={{fontSize: 12}}>i</div>;
+                    const c = String(e.category ?? '');
+                    if (c === 'Weapon') return <div className="muted" style={{fontSize: 12}}>DMG {e.damage ?? '—'} • INJ {e.injury ?? '—'} • Load {e.load ?? 0}</div>;
+                    if (c === 'Armour' || c === 'Headgear') return <div className="muted" style={{fontSize: 12}}>Prot {e.protection ?? '—'} • Load {e.load ?? 0}</div>;
+                    if (c === 'Shield') return <div className="muted" style={{fontSize: 12}}>Parry {e.parryModifier ?? '—'} • Load {e.load ?? 0}</div>;
+                    return <div className="muted" style={{fontSize: 12}}>Load {e.load ?? 0}</div>;
+                  })()
+                ) : null}
+              </button>
+            </div>
 
-          <div className="invCol invCol2">
+            <div className="invCol invCol2">
             <label className="toggle" style={{marginRight: 6}} title="Equip">
               <input type="checkbox" checked={!!it.equipped} disabled={!!it.dropped} onChange={(e)=>updateItem(idx,{equipped: e.target.checked})} />
               <span className="small">Equip</span>
@@ -1894,7 +1897,9 @@ function InventoryEditor({ hero, updateHero, onSeeMore }: { hero: any; updateHer
 
             <input className="input" style={{maxWidth: 72}} type="number" min={1} value={it.qty ?? 1}
               onChange={(e)=>updateItem(idx,{qty: Number(e.target.value)})} />
+          </div>
 
+          <div className="invCol invCol4">
             <button className="btn btn-danger" title="Remove" onClick={()=>{
               const cur = hero.inventory ?? [];
               updateHero({ inventory: cur.filter((_:any, i:number)=>i!==idx) });
