@@ -26,6 +26,32 @@ export type RollResult = {
   degrees?: 'Success'|'Great Success'|'Extraordinary Success';
 };
 
+/**
+ * Formats a TOR 2e roll in the same style used by the UI/journal.
+ * Example: "Axes - PASS — Great Success. Feat 10 (also 10), Success 4, 6(★) (1 ★) Total 20 (TN 15)."
+ */
+export function formatTorRoll(r: RollResult, opts?: { label?: string; tn?: number }): string {
+  const label = String(opts?.label ?? '').trim();
+  const tn = typeof opts?.tn === 'number' ? opts?.tn : undefined;
+
+  const featTxt = r.feat.type === 'Number' ? String(r.feat.value) : (r.feat.type === 'Eye' ? 'Sauron' : 'Gandalf');
+  const feat2Txt = r.feat2 ? (r.feat2.type === 'Number' ? String(r.feat2.value) : (r.feat2.type === 'Eye' ? 'Sauron' : 'Gandalf')) : '';
+  const succList = r.success.map((d:any)=> (d.icon ? `6(★)` : String(d.value))).join(', ');
+  const starTxt = r.icons ? ` (${r.icons} ★)` : '';
+
+  let prefix = '';
+  if (typeof r.passed === 'boolean' && typeof tn === 'number') {
+    if (r.passed) {
+      prefix = `PASS${r.degrees ? ` — ${r.degrees}` : ''}. `;
+    } else {
+      prefix = 'FAIL. ';
+    }
+  }
+  const tnTxt = typeof tn === 'number' ? ` (TN ${tn})` : '';
+  const body = `${prefix}Feat ${featTxt}${feat2Txt ? ` (also ${feat2Txt})` : ''}, Success ${succList || '—'}${starTxt} Total ${r.total}${tnTxt}.`;
+  return label ? `${label} - ${body}` : body;
+}
+
 function randInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }

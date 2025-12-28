@@ -173,7 +173,7 @@ export default function App() {
             <FloatingDieButton onClick={() => setDiceSheetOpen(true)} />
             <FloatingOracleButton onClick={() => setOracleOpen(true)} />
           </div>
-          <FloatingDiceSheet open={diceSheetOpen} onClose={() => setDiceSheetOpen(false)} />
+          <FloatingDiceSheet state={state} open={diceSheetOpen} onClose={() => setDiceSheetOpen(false)} />
           <OracleSidePanel open={oracleOpen} onClose={() => setOracleOpen(false)}>
             <OraclesPanel state={state} setState={set} compact />
           </OracleSidePanel>

@@ -4,7 +4,7 @@ import { compendiums, findEntryById, sortByName } from '../core/compendiums';
 import ErrorBoundary from './ErrorBoundary';
 import { computeDerived, rollNameFallback } from '../core/tor2e';
 import { getSkillAttribute, getSkillTN } from '../core/skills';
-import { rollTOR, RollResult } from '../core/dice';
+import { rollTOR, RollResult, formatTorRoll } from '../core/dice';
 import BottomSheet from './BottomSheet';
 
 type Props = {
@@ -120,6 +120,10 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
   const [showFeatChoices, setShowFeatChoices] = useState(true);
   const [showAddVirtuesRewards, setShowAddVirtuesRewards] = useState(true);
 
+  // Distinctive Features editor
+  const [dfEditHeroId, setDfEditHeroId] = useState<string | null>(null);
+  const [dfDraft, setDfDraft] = useState<string[]>([]);
+
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sheetTitle, setSheetTitle] = useState('');
   const [sheetPack, setSheetPack] = useState<'skills'|'features'|'cultures'|'callings'|'virtues'|'rewards'|'equipment'|'custom'|null>(null);
@@ -147,6 +151,22 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
     for (const k of Object.keys(groups)) groups[k] = sortByName(groups[k]);
     return groups;
   }, []);
+
+  const distinctiveFeatureOptions = useMemo(() => {
+    const feats = (compendiums.features.entries ?? []).filter((f:any)=> String(f?.group ?? '').toLowerCase() === 'distinctive features');
+    return sortByName(feats);
+  }, []);
+
+  const getHeroDistinctiveIds = (hero:any): string[] => {
+    const base = Array.isArray(hero?.distinctiveFeatureIds) ? hero.distinctiveFeatureIds : [];
+    if (base.length) return Array.from(new Set(base.filter(Boolean)));
+    const legacy = Array.from(new Set([
+      ...(Array.isArray(hero?.cultureDistinctiveFeatureIds) ? hero.cultureDistinctiveFeatureIds : []),
+      ...(hero?.callingDistinctiveFeatureId ? [hero.callingDistinctiveFeatureId] : []),
+      ...(hero?.striderMode ? ['strider'] : []),
+    ].filter(Boolean)));
+    return legacy;
+  };
 
   function virtueChoices(hero: any) {
     const cultureId = hero?.cultureId;
@@ -283,9 +303,13 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
       // Nothing should be shared between campaigns.
       if (!fellowshipByCampaign[newCamp.id]) fellowshipByCampaign[newCamp.id] = { mode: 'company', companyName: '' };
       if (!oracleByCampaign[newCamp.id]) {
-        // Copy tables/likelihood from current oracle, but start with a clean history.
+        // Start fresh (deep copy) so nothing is shared between campaigns.
         const base = (s as any).oracleByCampaign?.[(s as any).activeCampaignId] ?? (s as any).oracle;
-        oracleByCampaign[newCamp.id] = { ...base, history: [] };
+        const cloned = (typeof (globalThis as any).structuredClone === 'function')
+          ? (globalThis as any).structuredClone(base)
+          : JSON.parse(JSON.stringify(base));
+        cloned.history = [];
+        oracleByCampaign[newCamp.id] = cloned;
       }
       const mapsByCampaign = { ...((s as any).mapsByCampaign ?? {}) };
       const activeMapIdByCampaign = { ...((s as any).activeMapIdByCampaign ?? {}) };
@@ -808,12 +832,15 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                       </div>
 
                       <div className="section">
-                        <div className="sectionTitle">Distinctive features</div>
+                        <div className="row" style={{justifyContent:'space-between', alignItems:'center'}}>
+                          <div className="sectionTitle" style={{margin:0}}>Distinctive features</div>
+                          <button className="btn btn-ghost" onClick={()=>{
+                            setDfEditHeroId(hero.id);
+                            setDfDraft(getHeroDistinctiveIds(hero));
+                          }}>Edit</button>
+                        </div>
                         {(() => {
-                          const ids = Array.from(new Set([
-                            ...(Array.isArray(hero.cultureDistinctiveFeatureIds) ? hero.cultureDistinctiveFeatureIds : []),
-                            ...(hero.callingDistinctiveFeatureId ? [hero.callingDistinctiveFeatureId] : []),
-                          ].filter(Boolean)));
+                          const ids = getHeroDistinctiveIds(hero);
                           if (!ids.length) return <div className="small muted">—</div>;
                           return (
                             <div className="grid2">
@@ -1028,10 +1055,19 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                                 <div key={r.key} className="skillRow">
                                   <div className="skillName">{r.label}</div>
                                   <div className="skillMeta">{minByCulture ? `Min ${minByCulture} (Culture)${baselineVal !== undefined ? ` · Baseline ${baselineVal}${extra ? ` (+${extra})` : ''}` : ''}` : (baselineVal !== undefined ? `Baseline ${baselineVal}${extra ? ` (+${extra})` : ''}` : '')}</div>
-                                  <div className="row" style={{gap:6}}>
+                                  <div className="row" style={{gap:6, alignItems:'center'}}>
                                     <button className="btn btn-ghost" disabled={!canEdit || cur<=minByCulture} onClick={()=>updateHero(hero.id,{combatProficiencies:{...(profs as any),[r.key]:Math.max(minByCulture,cur-1)}})}>-</button>
                                     <div className="skillNum" style={{minWidth: 24, textAlign:'center'}}>{cur}</div>
                                     <button className="btn btn-ghost" disabled={!canEdit || cur>=maxAllowed || !canIncByBudget} onClick={()=>updateHero(hero.id,{combatProficiencies:{...(profs as any),[r.key]:Math.min(maxAllowed,cur+1)}})}>+</button>
+                                    <button className="btn btn-ghost" disabled={cur<=0} onClick={()=>{
+                                      const txt = window.prompt('Parry rating of the target?', '0');
+                                      if (txt === null) return;
+                                      const parry = Number.parseInt(String(txt).trim() || '0', 10);
+                                      const parryMod = Number.isFinite(parry) ? parry : 0;
+                                      const tn = Number(derived?.strengthTN ?? 0) + parryMod;
+                                      const rr = rollTOR({ dice: cur, featMode: 'normal', weary: !!hero.conditions?.weary, tn });
+                                      try { (window as any).__torcLogRollHtml?.(`<div>${formatTorRoll(rr, { label: r.label, tn })}</div>`); } catch {}
+                                    }}>Roll</button>
                                   </div>
                                 </div>
                               );
@@ -1113,10 +1149,15 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                                           const tn = getSkillTN(hero, s.id, tnBaseHero);
                                           return <div className="skillMeta">{attr} · TN {tn}{minByCulture ? ` · Min ${minByCulture} (Culture)` : ''}{baselineVal !== undefined ? ` · Baseline ${baselineVal}${extra ? ` (+${extra})` : ''}` : ''}</div>;
                                         })()}
-                                        <div className="row" style={{gap:6}}>
+                                        <div className="row" style={{gap:6, alignItems:'center'}}>
                                           <button className="btn btn-ghost" disabled={!canEdit || rating<=minByCulture} onClick={()=>updateHero(hero.id,{skillRatings:{...(hero.skillRatings??{}),[s.id]:Math.max(minByCulture, rating-1)}})}>-</button>
                                           <div className="skillNum" style={{minWidth: 24, textAlign:'center'}}>{rating}</div>
                                           <button className="btn btn-ghost" disabled={!canEdit || rating>=maxAllowed || !canIncByBudget} onClick={()=>updateHero(hero.id,{skillRatings:{...(hero.skillRatings??{}),[s.id]:Math.min(maxAllowed, rating+1)}})}>+</button>
+                                          <button className="btn btn-ghost" disabled={Number(rating)<=0} onClick={()=>{
+                                            const tn = getSkillTN(hero, s.id, tnBaseHero);
+                                            const rr = rollTOR({ dice: Number(rating), featMode: isFav ? 'favoured' : 'normal', weary: !!hero.conditions?.weary, tn });
+                                            try { (window as any).__torcLogRollHtml?.(`<div>${formatTorRoll(rr, { label: s.name, tn })}</div>`); } catch {}
+                                          }}>Roll</button>
                                         </div>
                                       </div>
                                     );
@@ -1733,7 +1774,11 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
 	                  if (vIdFinal === 'nimbleness') {
 	                    parry.base = Number(parry.base ?? 0) + 1;
 	                  }
-	                  const finalized = { ...h, featureIds, inventory: gearInv, skillFavoured, hope, endurance, parry, creationComplete: true };
+	                  const distinctiveFeatureIds = Array.from(new Set([
+	                    ...chosenFeatures.filter(Boolean),
+	                    ...(h.striderMode ? ['strider'] : []),
+	                  ]));
+	                  const finalized = { ...h, featureIds, distinctiveFeatureIds, inventory: gearInv, skillFavoured, hope, endurance, parry, creationComplete: true };
                   const next: StoredState = { ...state, heroes: [finalized, ...heroes] };
                   setState(next);
                   saveState(next);
@@ -1880,6 +1925,62 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
           );
         })()}
       </BottomSheet>
+
+      {dfEditHeroId ? (
+        <div className="modalOverlay" onClick={()=>setDfEditHeroId(null)}>
+          <div className="modal" onClick={(e)=>e.stopPropagation()}>
+            <div className="row" style={{justifyContent:'space-between', alignItems:'center', gap:10}}>
+              <div>
+                <div className="h2" style={{marginTop:0}}>Distinctive Features</div>
+                <div className="small muted">Select the Distinctive Features for this hero.</div>
+              </div>
+              <button className="btn btn-ghost" onClick={()=>setDfEditHeroId(null)}>Close</button>
+            </div>
+            <div className="list" style={{maxHeight:'55vh', overflow:'auto', marginTop:10}}>
+              {distinctiveFeatureOptions.map((f:any)=>{
+                const dfHero = heroes.find((h:any)=>h.id===dfEditHeroId);
+                const locked = !!dfHero?.striderMode && f.id==='strider';
+                const checked = dfDraft.includes(f.id);
+                return (
+                  <label key={f.id} className="toggle" style={{display:'flex', justifyContent:'space-between', gap:10, padding:'10px 8px'}}>
+                    <span style={{display:'flex', gap:10, alignItems:'center'}}>
+                      <input type="checkbox" checked={checked || locked} disabled={locked} onChange={(e)=>{
+                        const on = e.target.checked;
+                        setDfDraft((prev)=>{
+                          const set = new Set(prev);
+                          if (on) set.add(f.id); else set.delete(f.id);
+                          return Array.from(set);
+                        });
+                      }} />
+                      <span>{f.name}</span>
+                    </span>
+                    <button className="btn btn-ghost" type="button" onClick={(e)=>{ e.preventDefault(); e.stopPropagation(); openEntry('features', f.id); }}>i</button>
+                  </label>
+                );
+              })}
+              {distinctiveFeatureOptions.length===0 ? <div className="small muted">No Distinctive Features found in compendium.</div> : null}
+            </div>
+            <div className="row" style={{gap:8, marginTop:12}}>
+              <button className="btn" style={{flex:1}} onClick={()=>{
+                const hero = heroes.find((h:any)=>h.id===dfEditHeroId);
+                if (!hero) { setDfEditHeroId(null); return; }
+                const nextDistinctive = Array.from(new Set([
+                  ...dfDraft.filter(Boolean),
+                  ...(hero.striderMode ? ['strider'] : []),
+                ]));
+                // Keep other featureIds and swap out Distinctive Features group entries.
+                const dfSet = new Set(distinctiveFeatureOptions.map((x:any)=>x.id));
+                const prevFeatureIds = Array.isArray(hero.featureIds) ? hero.featureIds : [];
+                const keep = prevFeatureIds.filter((id:string)=>!dfSet.has(id));
+                const nextFeatureIds = Array.from(new Set([...keep, ...nextDistinctive]));
+                updateHero(hero.id, { distinctiveFeatureIds: nextDistinctive, featureIds: nextFeatureIds });
+                setDfEditHeroId(null);
+              }}>Save</button>
+              <button className="btn btn-ghost" style={{flex:1}} onClick={()=>setDfEditHeroId(null)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -2099,26 +2200,34 @@ function AttackSection({ hero, derived }: { hero: any; derived: any }) {
       <div className="list">
         {weapons.map((w:any)=>{
           const k = profKey(w.combatProficiency ?? w.proficiency ?? w.category);
-          const dice = k ? (hero.combatProficiencies?.[k] ?? 0) : 0;
+          const dice = Number(k ? (hero.combatProficiencies?.[k] ?? 0) : 0);
           return (
-            <div key={w.id} className="invRow" style={{alignItems:'center'}}>
-              <div style={{flex:1}}>
-                <div className="attackLine">
-                  <b>{w.name}</b>
-                  <span className="small muted">&nbsp;—&nbsp;• DMG {w.damage ?? '—'} • INJ {w.injury ?? '—'} • Dice {dice}</span>
-                </div>
+            <div key={w.id} className="attackRow">
+              <div className="attackCol1">
+                <div className="attackName"><b>{w.name}</b></div>
+                <div className="attackStats small muted">DMG {w.damage ?? '—'} • INJ {w.injury ?? '—'} • Dice {dice}</div>
               </div>
-              <button className="btn" onClick={()=>{
-                const r = rollTOR({ dice, featMode, weary });
-                setLast(r);
-              }}>Roll</button>
+              <div className="attackCol2">
+                <button className="btn" disabled={dice<=0} onClick={()=>{
+                  const txt = window.prompt('Parry rating of the target?', '0');
+                  if (txt === null) return;
+                  const parry = Number.parseInt(String(txt).trim() || '0', 10);
+                  const parryMod = Number.isFinite(parry) ? parry : 0;
+                  const tn = Number(derived?.strengthTN ?? 0) + parryMod;
+                  const r = rollTOR({ dice, featMode, weary, tn });
+                  setLast(Object.assign({}, r, { _tn: tn, _label: w.name }));
+                  try {
+                    (window as any).__torcLogRollHtml?.(`<div>${formatTorRoll(r, { label: w.name, tn })}</div>`);
+                  } catch {}
+                }}>Roll</button>
+              </div>
             </div>
           );
         })}
       </div>
       {last ? (
         <div className="small" style={{marginTop:8}}>
-          <b>Last attack roll:</b> Feat {last.feat.type==='Number'?last.feat.value:(last.feat.type==='Eye'?'Sauron':'Gandalf')}{last.feat2?` / ${last.feat2.type==='Number'?last.feat2.value:(last.feat2.type==='Eye'?'Sauron':'Gandalf')}`:''} • Success [{last.success.map(d=>d.icon?`6★`:String(d.value)).join(', ')}] • <b>Total {last.total}</b>
+          <b>Last attack roll:</b> {formatTorRoll(last as any, { label: (last as any)._label ?? '', tn: (last as any)._tn })}
         </div>
       ) : null}
     </div>

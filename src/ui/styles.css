@@ -10,6 +10,24 @@ button, input, select, textarea { font: inherit; }
   padding: calc(16px + env(safe-area-inset-top)) 16px calc(96px + env(safe-area-inset-bottom));
 }
 
+/* Attacks list layout (mobile friendly) */
+.attackRow{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.12);
+}
+.attackCol1{ flex: 1; min-width: 0; }
+.attackName{ white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.attackStats{ white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.attackCol2{ display: flex; align-items: center; }
+
+@media (max-width: 540px){
+  .attackStats{ white-space: normal; }
+}
+
 /* Campaign landing page (Pocketforge-like): no app header/tabs */
 .landingContainer {
   max-width: 1100px;
@@ -206,6 +224,49 @@ canvas { border-radius: 14px; border: 1px solid #1f2a3a; background: #0b0f14; }
   flex-direction: row;
   gap: 10px;
   z-index: 2000;
+}
+
+/* Segmented (3-way) buttons (used for Quick Roll attribute picker) */
+.segRow{
+  display: flex;
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.segRow .seg{
+  flex: 1;
+  padding: 6px 8px;
+  font-size: 12px;
+  background: rgba(255,255,255,0.06);
+  color: inherit;
+  border: none;
+  cursor: pointer;
+}
+.segRow .seg + .seg{
+  border-left: 1px solid rgba(255,255,255,0.12);
+}
+.segRow .seg:hover{
+  background: rgba(255,255,255,0.10);
+}
+
+/* Simple modal overlay (used for hero picker) */
+.modalOverlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.modal{
+  width: min(520px, 100%);
+  background: rgba(26,26,28,0.98);
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 16px;
+  padding: 14px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.35);
 }
 
 .fab-btn{

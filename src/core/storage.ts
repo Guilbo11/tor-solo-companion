@@ -195,6 +195,8 @@ export type Hero = {
   cultureFavouredSkillId?: string;
   cultureDistinctiveFeatureIds?: string[];
   callingDistinctiveFeatureId?: string;
+  // New (Dec 2025): editable list of Distinctive Features (can include Strider if enabled).
+  distinctiveFeatureIds?: string[];
   shadowPathId?: string;
   previousExperienceCommitted?: boolean;
 
@@ -632,9 +634,16 @@ function ensureDefaults(s: StoredState): StoredState {
     ? Object.fromEntries(Object.entries((s as any).oracleByCampaign).map(([cid, o]: any) => [String(cid), ensureOracleDefaults(o)]))
     : { [activeCampaignId]: legacyOracle };
 
+  // IMPORTANT: never share references across campaigns.
   for (const c of campaigns) {
-    if (!fellowshipByCampaign[c.id]) fellowshipByCampaign[c.id] = legacyFellowship;
-    if (!oracleByCampaign[c.id]) oracleByCampaign[c.id] = legacyOracle;
+    if (!fellowshipByCampaign[c.id]) {
+      fellowshipByCampaign[c.id] = ensureFellowshipDefaults(undefined);
+    }
+    if (!oracleByCampaign[c.id]) {
+      const o = ensureOracleDefaults(undefined);
+      o.history = [];
+      oracleByCampaign[c.id] = o;
+    }
   }
 
   out.fellowshipByCampaign = fellowshipByCampaign;

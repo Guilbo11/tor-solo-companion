@@ -152,29 +152,26 @@ export default function JournalPanel({ state, setState }: Props) {
       const root = document.createElement('div');
       root.innerHTML = html || '';
 
-      // Walk elements in DOM order, pick the first element that contains visible text.
-      const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT);
-      let el: Element | null = walker.nextNode() as Element | null;
-      while (el) {
-        const tag = el.tagName?.toLowerCase?.() ?? '';
-        // Skip the root container itself.
-        if (el !== root) {
-          // Prefer headings/paragraph-ish blocks; but fall back to any element with text.
-          const isCandidate =
-            tag === 'h1' || tag === 'h2' || tag === 'h3' || tag === 'p' || tag === 'div' || tag === 'li' || tag === 'blockquote';
-
-          if (isCandidate) {
-            const txt = (el as HTMLElement).innerText ?? (el.textContent ?? '');
-            const cleaned = String(txt).replace(/\r/g, '').trim();
-            if (cleaned) {
-              // Only the first line, so a paragraph doesn't become huge.
-              const firstLine = cleaned.split(/\n/).map(s => s.trim()).filter(Boolean)[0] ?? '';
-              const out = firstLine.replace(/\s+/g, ' ').trim();
-              return out.length > 60 ? (out.slice(0, 57) + '…') : out;
-            }
-          }
+      // Prefer the *first heading* (h1/h2/h3) in document order.
+      const firstHeading = root.querySelector('h1, h2, h3') as HTMLElement | null;
+      if (firstHeading) {
+        const cleaned = String(firstHeading.innerText ?? firstHeading.textContent ?? '').replace(/\r/g, '').trim();
+        if (cleaned) {
+          const firstLine = cleaned.split(/\n/).map(s => s.trim()).filter(Boolean)[0] ?? '';
+          const out = firstLine.replace(/\s+/g, ' ').trim();
+          return out.length > 60 ? (out.slice(0, 57) + '…') : out;
         }
-        el = walker.nextNode() as Element | null;
+      }
+
+      // Otherwise pick the first *block-like* element that contains text.
+      const blocks = root.querySelectorAll('p, blockquote, li, div');
+      for (const el of Array.from(blocks) as HTMLElement[]) {
+        const cleaned = String(el.innerText ?? el.textContent ?? '').replace(/\r/g, '').trim();
+        if (!cleaned) continue;
+        // Only the first line, so a paragraph doesn't become huge.
+        const firstLine = cleaned.split(/\n/).map(s => s.trim()).filter(Boolean)[0] ?? '';
+        const out = firstLine.replace(/\s+/g, ' ').trim();
+        return out.length > 60 ? (out.slice(0, 57) + '…') : out;
       }
 
       // Fallback: first non-empty line from total text.
