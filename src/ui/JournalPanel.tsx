@@ -284,7 +284,7 @@ const updateChapter = () => {
                   onInput={() => setDraftHtml(editorRef.current?.innerHTML ?? '')}
                 />
 
-                <button className="btn" style={{ width: '100%', marginTop: 10 }} onClick={updateChapter}>
+                <button className="btn" style={{ width: '100%', marginTop: 10, marginBottom: 12 }} onClick={updateChapter}>
                   Update journal
                 </button>
               </div>

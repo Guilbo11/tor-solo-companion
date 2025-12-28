@@ -18,6 +18,10 @@ function uid(prefix: string) {
   return prefix + '-' + Math.random().toString(36).slice(2, 10);
 }
 
+function toast(message: string, type: 'info'|'success'|'warning'|'error' = 'info') {
+  (window as any).__torcToast?.({ message, type, durationMs: 4000 });
+}
+
 // --------------------------------------------------------------------------------------
 // Shared helpers
 //
@@ -38,6 +42,7 @@ function solRank(sol: any): number {
   if (v === 'common') return 2;
   if (v === 'prosperous') return 3;
   if (v === 'rich') return 4;
+  if (v === 'very rich') return 5;
   return 0;
 }
 
@@ -47,6 +52,24 @@ function usefulItemLimitBySOL(sol: any): number {
   if (r === 2) return 2;
   if (r === 3) return 3;
   return 4;
+}
+
+function minTreasureForSOL(sol: any): number {
+  const v = String(sol ?? '').trim().toLowerCase();
+  if (v === 'very rich') return 300;
+  if (v === 'rich') return 180;
+  if (v === 'prosperous') return 90;
+  if (v === 'common') return 30;
+  return 0; // Frugal
+}
+
+function solFromTreasureRating(r: any): 'Frugal'|'Common'|'Prosperous'|'Rich'|'Very Rich' {
+  const n = Number(r ?? 0) || 0;
+  if (n >= 300) return 'Very Rich';
+  if (n >= 180) return 'Rich';
+  if (n >= 90) return 'Prosperous';
+  if (n >= 30) return 'Common';
+  return 'Frugal';
 }
 
 const PROF_LABEL_TO_KEY: Record<string, 'axes'|'bows'|'spears'|'swords'> = {
@@ -140,6 +163,16 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
   }, [mode, view]);
 
   const heroes = heroesAll.filter((h:any)=> (h.campaignId ?? activeCampaignId) === activeCampaignId);
+  const heroOrder: string[] = Array.isArray((state as any).ui?.heroOrderByCampaign?.[activeCampaignId])
+    ? (state as any).ui.heroOrderByCampaign[activeCampaignId].map(String)
+    : [];
+  const heroesOrdered = useMemo(() => {
+    if (!heroOrder.length) return heroes;
+    const byId = new Map(heroes.map((h:any)=>[String(h.id), h]));
+    const ordered = heroOrder.map(id=>byId.get(String(id))).filter(Boolean) as any[];
+    const rest = heroes.filter((h:any)=>!heroOrder.includes(String(h.id)));
+    return [...ordered, ...rest];
+  }, [heroes, heroOrder]);
 
   // TN base: normal TOR uses 20; Strider Mode (Fellowship) uses 18.
   const tnBase = 20; // default; per-hero TN base is derived from hero.striderMode
@@ -265,6 +298,32 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
     };
     setState(updated);
     saveState(updated);
+  }
+
+  function setHeroOrder(nextOrder: string[]) {
+    const updated: StoredState = {
+      ...state,
+      ui: {
+        ...(state.ui ?? {}),
+        heroOrderByCampaign: {
+          ...((state.ui as any)?.heroOrderByCampaign ?? {}),
+          [activeCampaignId]: nextOrder,
+        },
+      } as any,
+    };
+    setState(updated);
+    saveState(updated);
+  }
+
+  function reorderHeroes(dragId: string, overId: string) {
+    if (!dragId || !overId || dragId === overId) return;
+    const order = [...heroOrder];
+    // if order isn't initialized (older saves), derive from current list
+    const base = order.length ? order : heroes.map((h:any)=>String(h.id));
+    const ids = base.filter(id=>id!==dragId);
+    const idx = ids.indexOf(overId);
+    if (idx < 0) ids.push(dragId); else ids.splice(idx, 0, dragId);
+    setHeroOrder(ids);
   }
 
 
@@ -654,12 +713,12 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
         Tap a skill or feature name to open <b>i</b> (bottom sheet).
       </div>
 
-      {heroes.length === 0 && (
+      {heroesOrdered.length === 0 && (
         <div className="empty">No heroes yet. Click <b>+ Add</b> to create one.</div>
       )}
 
       <div className="cards">
-        {heroes.map(hero => {
+        {heroesOrdered.map(hero => {
           const isExpanded = expandedId === hero.id;
           const isActive = activeId === hero.id;
 
@@ -670,7 +729,16 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
           const activeTab = heroTab[hero.id] ?? 'Sheet';
 
           return (
-            <div key={hero.id} className={"card " + (isActive ? "active" : "")}>
+            <div
+              key={hero.id}
+              className={"card " + (isActive ? "active" : "")}
+              onDragOver={(e)=>{ e.preventDefault(); }}
+              onDrop={(e)=>{
+                e.preventDefault();
+                const dragId = e.dataTransfer.getData('text/torc-hero-id');
+                if (dragId) reorderHeroes(String(dragId), String(hero.id));
+              }}
+            >
               <div className="cardTop">
                 <div className="cardTopLeft" onClick={() => {
                   const next = isExpanded ? null : hero.id;
@@ -678,17 +746,31 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                   setActiveId(hero.id);
                   persistUI(next, hero.id);
                 }}>
-                  <div className="heroName">{hero.name}</div>
+                  <div className="row" style={{alignItems:'center', gap:8}}>
+                    <div
+                      className="heroDragHandle"
+                      title="Reorder"
+                      draggable
+                      onDragStart={(e)=>{
+                        e.dataTransfer.setData('text/torc-hero-id', String(hero.id));
+                        e.dataTransfer.effectAllowed = 'move';
+                      }}
+                      onClick={(e)=>e.stopPropagation()}
+                    >
+                      ⠿
+                    </div>
+                    <div className="heroName">{hero.name}</div>
+                  </div>
                   <div className="sub">{culture} • {calling}</div>
                 </div>
 
                 <div className="cardTopRight">
-                  <button className={"btn btn-ghost"} onClick={() => {
+                  <button className={"btn btn-ghost"} title={isExpanded ? 'Collapse' : 'Expand'} onClick={() => {
                     const next = isExpanded ? null : hero.id;
                     setExpandedId(next);
                     setActiveId(hero.id);
                     persistUI(next, hero.id);
-                  }}>{isExpanded ? 'Hide' : 'Show'}</button>
+                  }}>{isExpanded ? '▴' : '▾'}</button>
                   <button className="btn btn-danger" title="Delete" onClick={(e)=>{ e.stopPropagation(); deleteHero(hero.id); }}>🗑</button>
                 </div>
               </div>
@@ -748,6 +830,29 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                                 <input className="input" type="number" value={hero.endurance?.fatigue ?? 0} onChange={(e)=>updateHero(hero.id,{endurance:{...(hero.endurance??{}),fatigue:Number(e.target.value)}})}/>
                               </div>
                             </div>
+                            <div className="row" style={{gap:8, marginTop:8}}>
+                              <button className="btn" style={{flex:1}} onClick={()=>{
+                                const cur = Number(hero.endurance?.current ?? 0) || 0;
+                                const max = Number(hero.endurance?.max ?? 0) || 0;
+                                const gain = Number(hero.attributes?.strength ?? 0) || 0;
+                                const next = Math.min(max, cur + gain);
+                                updateHero(hero.id,{endurance:{...(hero.endurance??{}),current: next}});
+                                toast(`Short Rest: Gained ${Math.max(0, next-cur)} Endurance`, 'success');
+                              }}>Short Rest</button>
+                              <button className="btn" style={{flex:1}} onClick={()=>{
+                                const cur = Number(hero.endurance?.current ?? 0) || 0;
+                                const max = Number(hero.endurance?.max ?? 0) || 0;
+                                if (hero.conditions?.wounded) {
+                                  const gain = Number(hero.attributes?.strength ?? 0) || 0;
+                                  const next = Math.min(max, cur + gain);
+                                  updateHero(hero.id,{endurance:{...(hero.endurance??{}),current: next}});
+                                  toast(`Long Rest: Gained ${Math.max(0, next-cur)} Endurance`, 'success');
+                                } else {
+                                  updateHero(hero.id,{endurance:{...(hero.endurance??{}),current: max}});
+                                  toast(`Long Rest: Gained Full Endurance`, 'success');
+                                }
+                              }}>Long Rest</button>
+                            </div>
                           </div>
 
                           <div className="miniCard">
@@ -766,6 +871,21 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                                 <div className="label">Scars</div>
                                 <input className="input" type="number" value={hero.shadow?.scars ?? 0} onChange={(e)=>updateHero(hero.id,{shadow:{...(hero.shadow??{}),scars:Number(e.target.value)}})}/>
                               </div>
+                            </div>
+                            <div className="row" style={{gap:8, marginTop:8}}>
+                              <button className="btn" style={{flex:1}} onClick={()=>{
+                                const cur = Number(hero.hope?.current ?? 0) || 0;
+                                const max = Number(hero.hope?.max ?? 0) || 0;
+                                const gain = Number(hero.attributes?.heart ?? 0) || 0;
+                                const next = Math.min(max, cur + gain);
+                                updateHero(hero.id,{hope:{...(hero.hope??{}),current: next}});
+                                toast(`Recovery: Gained ${Math.max(0, next-cur)} Hope`, 'success');
+                              }}>Recovery</button>
+                              <button className="btn" style={{flex:1}} onClick={()=>{
+                                const max = Number(hero.hope?.max ?? 0) || 0;
+                                updateHero(hero.id,{hope:{...(hero.hope??{}),current: max}});
+                                toast(`Yule: Gained Full Hope`, 'success');
+                              }}>Yule</button>
                             </div>
                           </div>
                         </div>
@@ -1059,14 +1179,17 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                                     <button className="btn btn-ghost" disabled={!canEdit || cur<=minByCulture} onClick={()=>updateHero(hero.id,{combatProficiencies:{...(profs as any),[r.key]:Math.max(minByCulture,cur-1)}})}>-</button>
                                     <div className="skillNum" style={{minWidth: 24, textAlign:'center'}}>{cur}</div>
                                     <button className="btn btn-ghost" disabled={!canEdit || cur>=maxAllowed || !canIncByBudget} onClick={()=>updateHero(hero.id,{combatProficiencies:{...(profs as any),[r.key]:Math.min(maxAllowed,cur+1)}})}>+</button>
-                                    <button className="btn btn-ghost" disabled={cur<=0} onClick={()=>{
+                                    <button className="btn btn-ghost" onClick={()=>{
                                       const txt = window.prompt('Parry rating of the target?', '0');
                                       if (txt === null) return;
                                       const parry = Number.parseInt(String(txt).trim() || '0', 10);
                                       const parryMod = Number.isFinite(parry) ? parry : 0;
                                       const tn = Number(derived?.strengthTN ?? 0) + parryMod;
                                       const rr = rollTOR({ dice: cur, featMode: 'normal', weary: !!hero.conditions?.weary, tn });
-                                      try { (window as any).__torcLogRollHtml?.(`<div>${formatTorRoll(rr, { label: r.label, tn })}</div>`); } catch {}
+                                      const html = `<div>${formatTorRoll(rr, { label: r.label, tn })}</div>`;
+                                      try { (window as any).__torcLogRollHtml?.(html); } catch {}
+                                      const plain = String(html).replace(/<[^>]*>/g,'').replace(/\s+/g,' ').trim();
+                                      toast(plain, rr.pass ? 'success' : 'warning');
                                     }}>Roll</button>
                                   </div>
                                 </div>
@@ -1153,10 +1276,13 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                                           <button className="btn btn-ghost" disabled={!canEdit || rating<=minByCulture} onClick={()=>updateHero(hero.id,{skillRatings:{...(hero.skillRatings??{}),[s.id]:Math.max(minByCulture, rating-1)}})}>-</button>
                                           <div className="skillNum" style={{minWidth: 24, textAlign:'center'}}>{rating}</div>
                                           <button className="btn btn-ghost" disabled={!canEdit || rating>=maxAllowed || !canIncByBudget} onClick={()=>updateHero(hero.id,{skillRatings:{...(hero.skillRatings??{}),[s.id]:Math.min(maxAllowed, rating+1)}})}>+</button>
-                                          <button className="btn btn-ghost" disabled={Number(rating)<=0} onClick={()=>{
+                                          <button className="btn btn-ghost" onClick={()=>{
                                             const tn = getSkillTN(hero, s.id, tnBaseHero);
                                             const rr = rollTOR({ dice: Number(rating), featMode: isFav ? 'favoured' : 'normal', weary: !!hero.conditions?.weary, tn });
-                                            try { (window as any).__torcLogRollHtml?.(`<div>${formatTorRoll(rr, { label: s.name, tn })}</div>`); } catch {}
+                                            const html = `<div>${formatTorRoll(rr, { label: s.name, tn })}</div>`;
+                                            try { (window as any).__torcLogRollHtml?.(html); } catch {}
+                                            const plain = String(html).replace(/<[^>]*>/g,'').replace(/\s+/g,' ').trim();
+                                            toast(plain, rr.pass ? 'success' : 'warning');
                                           }}>Roll</button>
                                         </div>
                                       </div>
@@ -1990,6 +2116,21 @@ function InventoryEditor({ hero, updateHero, onSeeMore }: { hero: any; updateHer
   const [qty, setQty] = useState(1);
   const [equipId, setEquipId] = useState<string>('');
 
+  // Treasures & SOL defaults
+  useEffect(() => {
+    if (hero && hero.treasureRating === undefined) {
+      updateHero({ treasureRating: minTreasureForSOL(hero.standardOfLiving) });
+    }
+    if (hero && hero.carriedTreasure === undefined) {
+      updateHero({ carriedTreasure: 0 });
+    }
+    if (hero && hero.mount && !Array.isArray(hero.mounts)) {
+      // migrate single mount -> mounts array (keeps existing mount even if SOL drops later)
+      updateHero({ mounts: [{ id: uid('m'), ...hero.mount }] });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hero?.id]);
+
   const equipOptions = useMemo(() => sortByName(compendiums.equipment.entries ?? []), []);
 
   function addCustom(itemName: string, itemQty: number) {
@@ -2101,6 +2242,101 @@ function InventoryEditor({ hero, updateHero, onSeeMore }: { hero: any; updateHer
         </div>
         ))}
       </div>
+
+      {/* Treasures & Standard of Living */}
+      <div className="sectionTitle" style={{marginTop: 14}}>Treasures & Standard of Living</div>
+      <div className="row" style={{gap: 10, flexWrap:'wrap'}}>
+        <div className="field" style={{minWidth: 240}}>
+          <div className="label">Treasure Rating</div>
+          <div className="row" style={{gap:8, flexWrap:'nowrap'}}>
+            <button className="btn" onClick={()=>{
+              const cur = Number(hero.treasureRating ?? minTreasureForSOL(hero.standardOfLiving)) || 0;
+              const next = Math.max(0, cur - 1);
+              const sol = solFromTreasureRating(next);
+              updateHero({ treasureRating: next, standardOfLiving: sol });
+            }}>-</button>
+            <input className="input" type="number" min={0} value={Number(hero.treasureRating ?? minTreasureForSOL(hero.standardOfLiving))}
+              onChange={(e)=>{
+                const next = Math.max(0, Number(e.target.value));
+                const sol = solFromTreasureRating(next);
+                updateHero({ treasureRating: next, standardOfLiving: sol });
+              }} />
+            <button className="btn" onClick={()=>{
+              const cur = Number(hero.treasureRating ?? minTreasureForSOL(hero.standardOfLiving)) || 0;
+              const next = cur + 1;
+              const sol = solFromTreasureRating(next);
+              updateHero({ treasureRating: next, standardOfLiving: sol });
+            }}>+</button>
+          </div>
+          <div className="small muted">Frugal 0 • Common 30 • Prosperous 90 • Rich 180 • Very Rich 300+</div>
+        </div>
+        <div className="field" style={{minWidth: 240}}>
+          <div className="label">Standard of Living</div>
+          <div className="input" style={{display:'flex', alignItems:'center'}}>{String(hero.standardOfLiving ?? solFromTreasureRating(hero.treasureRating))}</div>
+        </div>
+        <div className="field" style={{minWidth: 240}}>
+          <div className="label">Carried treasure (adds to Load)</div>
+          <div className="row" style={{gap:8, flexWrap:'nowrap'}}>
+            <button className="btn" onClick={()=>updateHero({ carriedTreasure: Math.max(0, (Number(hero.carriedTreasure ?? 0) || 0) - 1) })}>-</button>
+            <input className="input" type="number" min={0} value={Number(hero.carriedTreasure ?? 0)} onChange={(e)=>updateHero({ carriedTreasure: Math.max(0, Number(e.target.value)) })} />
+            <button className="btn" onClick={()=>updateHero({ carriedTreasure: (Number(hero.carriedTreasure ?? 0) || 0) + 1 })}>+</button>
+          </div>
+        </div>
+      </div>
+
+      {/* Ponies & Horses */}
+      <div className="sectionTitle" style={{marginTop: 14}}>Ponies and Horses</div>
+      <MountsSection hero={hero} updateHero={updateHero} />
+    </div>
+  );
+}
+
+function MountsSection({ hero, updateHero }: { hero: any; updateHero: (patch:any)=>void }) {
+  const mounts = Array.isArray(hero.mounts) ? hero.mounts : [];
+  const maxRank = Math.max(1, solRank(hero.standardOfLiving) || 1);
+  // Allowed qualities up to current SOL (strict at selection time)
+  const allowedQualities = ['Frugal','Common','Prosperous','Rich','Very Rich'].filter((_, idx)=> idx+1 <= maxRank);
+
+  function addMount() {
+    const next = [{ id: uid('m'), name: '', quality: hero.standardOfLiving ?? 'Common', carriedTreasure: 0 }, ...mounts];
+    updateHero({ mounts: next });
+  }
+
+  function updateMount(idx: number, patch: any) {
+    const next = mounts.map((m:any, i:number)=> i===idx ? { ...m, ...patch } : m);
+    updateHero({ mounts: next });
+  }
+
+  return (
+    <div>
+      <div className="row" style={{gap:8, marginBottom: 10}}>
+        <button className="btn" onClick={addMount}>+ Add mount</button>
+        <div className="small muted">When adding, you may choose a quality up to your current Standard of Living. Existing mounts are kept if your SOL drops later.</div>
+      </div>
+      <div className="list">
+        {mounts.map((m:any, idx:number)=> (
+          <div key={m.id ?? idx} className="card" style={{padding:10}}>
+            <div className="row" style={{gap:8, alignItems:'end'}}>
+              <div className="field" style={{minWidth: 220}}>
+                <div className="label">Name</div>
+                <input className="input" value={m.name ?? ''} onChange={(e)=>updateMount(idx,{name:e.target.value})} placeholder="e.g., Bill" />
+              </div>
+              <div className="field" style={{minWidth: 160}}>
+                <div className="label">Quality</div>
+                <select className="input" value={m.quality ?? 'Common'} onChange={(e)=>updateMount(idx,{quality:e.target.value})}>
+                  {allowedQualities.map(o=> <option key={o} value={o}>{o}</option>)}
+                </select>
+              </div>
+              <div className="field" style={{minWidth: 220}}>
+                <div className="label">Carried treasure (0-10, no Load)</div>
+                <input className="input" type="number" min={0} max={10} value={Number(m.carriedTreasure ?? 0)} onChange={(e)=>updateMount(idx,{carriedTreasure: Math.max(0, Math.min(10, Number(e.target.value)))})} />
+              </div>
+              <button className="btn btn-danger" title="Remove" onClick={()=>updateHero({ mounts: mounts.filter((_:any,i:number)=>i!==idx) })}>🗑</button>
+            </div>
+          </div>
+        ))}
+        {mounts.length===0 ? <div className="small muted">No mounts yet.</div> : null}
+      </div>
     </div>
   );
 }
@@ -2158,8 +2394,8 @@ function UsefulItemsEditor({ hero, updateHero }: { hero: any; updateHero: (patch
 
 function AttackSection({ hero, derived }: { hero: any; derived: any }) {
   const [featMode, setFeatMode] = useState<'normal'|'favoured'|'illFavoured'>('normal');
-  const [weary, setWeary] = useState<boolean>(!!hero.conditions?.weary);
   const [last, setLast] = useState<RollResult | null>(null);
+  const weary = !!hero.conditions?.weary;
 
   const weapons = Array.isArray(derived.equippedWeapons) ? derived.equippedWeapons : [];
 
@@ -2192,9 +2428,7 @@ function AttackSection({ hero, derived }: { hero: any; derived: any }) {
             <option value="illFavoured">Ill-favoured (2 Feat dice, keep worst)</option>
           </select>
         </div>
-        <label className="toggle" style={{alignSelf:'end'}}>
-          <input type="checkbox" checked={weary} onChange={(e)=>setWeary(e.target.checked)} /> Weary
-        </label>
+        {/* Weary is computed from Load + Fatigue vs current Endurance; no manual toggle here. */}
       </div>
 
       <div className="list">
@@ -2701,22 +2935,74 @@ function StartingRewardVirtueEditor({ hero, setHero, onSeeMore }: { hero:any; se
 
   const rewardToOverride = (rewardId: string) => {
     switch (rewardId) {
-      case 'improved-armour': return { protectionDelta: 1, notesAppend: 'Improved Armour (+1 PRO)' };
-      case 'close-fitting': return { loadDelta: -1, notesAppend: 'Close-fitting (-1 Load)' };
-      case 'cunning-make': return { loadDelta: -2, notesAppend: 'Cunning Make (-2 Load)' };
-      case 'accurate-weapon': return { piercingThreshold: 10, notesAppend: 'Accurate (PB 10+)' };
-      case 'fell-weapon': return { damageDelta: 1, notesAppend: 'Fell (+1 DMG)' };
+      case 'close-fitting': return { loadDelta: -2, notesAppend: 'Close-fitting (-2 Load)' };
+      case 'cunning-make': return { loadDelta: -1, notesAppend: 'Cunning Make (-1 Load)' };
+      case 'fell-weapon': return { injuryDelta: 2, notesAppend: 'Fell (+2 INJ)' };
+      case 'grievous-weapon': return { damageDelta: 1, notesAppend: 'Grievous (+1 DMG)' };
       case 'keen-weapon': return { piercingThreshold: 9, notesAppend: 'Keen (PB 9+)' };
-      case 'grievous-weapon': return { injuryOverride: '16', notesAppend: 'Grievous (INJ 16)' };
       case 'reinforced-shield': return { parryModifierDelta: 1, notesAppend: 'Reinforced (+1 Parry)' };
       default: return {};
     }
   };
 
+  const eligibleForReward = (rewardId: string, refId: string): boolean => {
+    const e:any = findEntryById(compendiums.equipment.entries ?? [], refId);
+    const cat = String(e?.category ?? '');
+    const nm = String(e?.name ?? '').toLowerCase();
+    const isArmour = cat === 'Armour' || nm.includes('leather shirt') || nm.includes('leather corslet') || nm.includes('mail shirt') || nm.includes('coat of mail');
+    const isHelm = cat === 'Headgear' || nm.includes('helm');
+    const isShield = cat === 'Shield' || nm.includes('buckler') || nm === 'shield' || nm.includes('great shield');
+    const isWeapon = cat === 'Weapon';
+    switch (rewardId) {
+      case 'close-fitting': return isArmour || isHelm;
+      case 'cunning-make': return isArmour || isHelm || isShield;
+      case 'reinforced-shield': return isShield;
+      case 'fell-weapon':
+      case 'grievous-weapon':
+      case 'keen-weapon': return isWeapon;
+      default: return true;
+    }
+  };
+
+  const mergeOverrides = (overrides: any[]): any => {
+    const out:any = { rewards: [] as string[] };
+    let pb: number | null = null;
+    for (const ov of overrides) {
+      if (!ov) continue;
+      if (Array.isArray(ov.rewards)) out.rewards.push(...ov.rewards);
+      if (typeof ov.loadDelta === 'number') out.loadDelta = (out.loadDelta ?? 0) + ov.loadDelta;
+      if (typeof ov.damageDelta === 'number') out.damageDelta = (out.damageDelta ?? 0) + ov.damageDelta;
+      if (typeof ov.injuryDelta === 'number') out.injuryDelta = (out.injuryDelta ?? 0) + ov.injuryDelta;
+      if (typeof ov.parryModifierDelta === 'number') out.parryModifierDelta = (out.parryModifierDelta ?? 0) + ov.parryModifierDelta;
+      if (typeof ov.piercingThreshold === 'number') pb = pb === null ? ov.piercingThreshold : Math.min(pb, ov.piercingThreshold);
+      if (typeof ov.notesAppend === 'string' && ov.notesAppend.trim()) {
+        out.notesAppend = out.notesAppend ? `${out.notesAppend}; ${ov.notesAppend}` : ov.notesAppend;
+      }
+    }
+    if (pb !== null) out.piercingThreshold = pb;
+    out.rewards = Array.from(new Set(out.rewards));
+    return out;
+  };
+
+  const computeOverridesFromAttachments = (ra: Record<string,string>): Record<string, any> => {
+    const byRef: Record<string, string[]> = {};
+    for (const [rid, ref] of Object.entries(ra)) {
+      if (!ref) continue;
+      if (!byRef[ref]) byRef[ref] = [];
+      byRef[ref].push(rid);
+    }
+    const out: Record<string, any> = {};
+    for (const [refId, rids] of Object.entries(byRef)) {
+      const ovs = rids.map(rid => ({ rewards: [rid], ...rewardToOverride(rid) }));
+      out[refId] = mergeOverrides(ovs);
+    }
+    return out;
+  };
+
   const attachToRef = (rewardId: string, refId: string) => {
     setHero((h:any)=>{
       const ra = { ...(h.rewardAttached ?? {}), [rewardId]: refId };
-      const ov = { ...(h.startingGearOverrides ?? {}), [refId]: rewardToOverride(rewardId) };
+      const ov = computeOverridesFromAttachments(ra);
       return { ...h, rewardAttached: ra, startingGearOverrides: ov };
     });
   };
@@ -2802,10 +3088,14 @@ function StartingRewardVirtueEditor({ hero, setHero, onSeeMore }: { hero:any; se
           <select className="input" value={attachedRefId} onChange={(e)=>{
             const refId = e.target.value;
             if (!refId) return;
+            if (!eligibleForReward(selectedReward, refId)) {
+              toast('That Reward cannot be applied to this item.', 'warning');
+              return;
+            }
             attachToRef(selectedReward, refId);
           }}>
             <option value="">(choose an item)</option>
-            {equipable.map((it:any)=>(
+            {equipable.filter((it:any)=>eligibleForReward(selectedReward, it.refId)).map((it:any)=>(
               <option key={it.refId} value={it.refId}>{it.name}</option>
             ))}
           </select>

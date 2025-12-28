@@ -103,6 +103,20 @@ canvas { border-radius: 14px; border: 1px solid #1f2a3a; background: #0b0f14; }
 .heroName{ font-weight: 800; font-size: 16px; }
 .sub{ opacity:.75; font-size: 12px; margin-top: 2px; }
 
+.heroDragHandle{
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(0,0,0,.12);
+  cursor: grab;
+  user-select: none;
+}
+.heroDragHandle:active{ cursor: grabbing; }
+
 .cardBody{ margin-top: 10px; display:flex; flex-direction:column; gap: 12px; }
 .row{ display:flex; gap: 10px; flex-wrap:wrap; }
 .field{ flex:1; min-width: 220px; }
@@ -443,3 +457,23 @@ canvas { border-radius: 14px; border: 1px solid #1f2a3a; background: #0b0f14; }
   .invRowGrid .invCol3 .input{ width: 100%; max-width: 100% !important; }
   .invRowGrid .invCol4{ display:flex; justify-content:center; align-items:center; padding-top: 2px; }
 }
+
+/* Bottom toast */
+.torcToast{
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  z-index: 9999;
+  max-width: calc(100vw - 24px);
+  background: #111;
+  color: #fff;
+  padding: 10px 12px;
+  border-radius: 12px;
+  box-shadow: 0 10px 24px rgba(0,0,0,.22);
+  border: 1px solid rgba(255,255,255,.12);
+}
+.torcToastMsg{ font-size: 13px; white-space: pre-wrap; }
+.torcToast-success{ background: #0b2; }
+.torcToast-warning{ background: #c80; }
+.torcToast-error{ background: #c22; }

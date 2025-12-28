@@ -204,6 +204,9 @@ export function computeDerived(hero: any, tnBase: number = 20): Tor2eDerived {
     loadTotal += l * qty;
   }
 
+  // Carried treasure adds directly to Load (separate from equipment items).
+  loadTotal += Number((hero as any)?.carriedTreasure ?? 0) || 0;
+
   return {
     strengthTN,
     heartTN,

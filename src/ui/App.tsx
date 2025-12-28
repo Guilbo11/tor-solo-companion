@@ -12,6 +12,7 @@ import FloatingDiceSheet from './FloatingDiceSheet';
 import NPCsPanel from './NPCsPanel';
 import FloatingOracleButton from './FloatingOracleButton';
 import OracleSidePanel from './OracleSidePanel';
+import ToastHost from './ToastHost';
 
 type Tab = 'Journal'|'Heroes'|'Map'|'NPCs'|'Fellowship'|'Oracles'|'Settings';
 
@@ -42,7 +43,7 @@ export default function App() {
     return (
       <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <div className="h1">TOR Solo Companion <span className="badge">prototype</span></div>
+          <div className="h1">TOR Companion <span className="badge">prototype</span></div>
           <div className="muted small">Local-only by default. You can export/import your data anytime.</div>
         </div>
         <div className="row" style={{ alignItems: 'center' }}>
@@ -179,6 +180,8 @@ export default function App() {
           </OracleSidePanel>
         </>
       ) : null}
+
+      <ToastHost />
     </div>
   );
 }

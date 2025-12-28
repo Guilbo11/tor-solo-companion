@@ -105,6 +105,7 @@ export type FellowshipState = {
 export type UIState = {
   activeHeroId?: string;
   heroesExpandedId?: string | null;
+  heroOrderByCampaign?: Record<string, string[]>;
 };
 
 
@@ -622,6 +623,18 @@ function ensureDefaults(s: StoredState): StoredState {
     settings,
     ui: (s as any).ui && typeof (s as any).ui === 'object' ? (s as any).ui : {},
   };
+
+  // Hero ordering is per-campaign (drag & drop in Heroes list).
+  const uiAny: any = out.ui ?? {};
+  if (!uiAny.heroOrderByCampaign || typeof uiAny.heroOrderByCampaign !== 'object') uiAny.heroOrderByCampaign = {};
+  for (const c of campaigns) {
+    const cur = Array.isArray(uiAny.heroOrderByCampaign[c.id]) ? uiAny.heroOrderByCampaign[c.id].map(String) : [];
+    const heroIds = heroes.filter((h:any)=>String(h.campaignId ?? activeCampaignId)===c.id).map((h:any)=>String(h.id));
+    // Keep existing order but append any new heroes not present.
+    const next = [...cur.filter((id:string)=>heroIds.includes(id)), ...heroIds.filter(id=>!cur.includes(id))];
+    uiAny.heroOrderByCampaign[c.id] = next;
+  }
+  out.ui = uiAny;
   // Ensure fellowship/oracles are NOT shared: each campaign gets its own slice.
   const legacyFellowship = ensureFellowshipDefaults((s as any).fellowship);
   const legacyOracle = ensureOracleDefaults((s as any).oracle);
@@ -733,8 +746,9 @@ function ensureHeroDefaults(h: any): Hero {
       wounded: typeof h?.conditions?.wounded === 'boolean' ? h.conditions.wounded : false,
     },
     injury: typeof h?.injury === 'string' ? h.injury : '',
-    valour: typeof h?.valour === 'number' ? h.valour : 0,
-    wisdom: typeof h?.wisdom === 'number' ? h.wisdom : 0,
+    // TOR 2e: Valour and Wisdom start at 1.
+    valour: typeof h?.valour === 'number' ? h.valour : 1,
+    wisdom: typeof h?.wisdom === 'number' ? h.wisdom : 1,
     points: {
       adventure: typeof h?.points?.adventure === 'number' ? h.points.adventure : 0,
       skill: typeof h?.points?.skill === 'number' ? h.points.skill : 0,
