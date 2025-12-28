@@ -775,6 +775,61 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                         </div>
                       </div>
 
+                      {/* Cultural Blessings + Distinctive Features */}
+                      <div className="section">
+                        <div className="sectionTitle">Cultural Blessings</div>
+                        {(() => {
+                          const cultureEntry:any = hero.cultureId ? findEntryById(compendiums.cultures.entries ?? [], hero.cultureId) : null;
+                          const cName = String(cultureEntry?.name ?? '').toLowerCase();
+                          const map: Record<string,string[]> = {
+                            'bardings': ['stout-hearted'],
+                            'beornings': ['skin-changer'],
+                            'hobbits': ['hobbit-sense','halflings'],
+                            'elves of lindon': ['elven-skill','the-long-defeat'],
+                            "dwarves of durin's folk": ['redoubtable','naugrim'],
+                            'rangers of the north': ['kings-of-men','allegiance-of-the-dunedain'],
+                            'men of bree': ['bree-blood'],
+                          };
+                          const blessingIds = map[cName] ?? [];
+                          if (!blessingIds.length) return <div className="small muted">—</div>;
+                          return (
+                            <div className="grid2">
+                              {blessingIds.map((fid:string)=>{
+                                const f:any = findEntryById(compendiums.features.entries ?? [], fid);
+                                return (
+                                  <button key={fid} className="pill pillLink" onClick={()=>openEntry('features', fid)} title="See details">
+                                    {f?.name ?? fid}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          );
+                        })()}
+                      </div>
+
+                      <div className="section">
+                        <div className="sectionTitle">Distinctive features</div>
+                        {(() => {
+                          const ids = Array.from(new Set([
+                            ...(Array.isArray(hero.cultureDistinctiveFeatureIds) ? hero.cultureDistinctiveFeatureIds : []),
+                            ...(hero.callingDistinctiveFeatureId ? [hero.callingDistinctiveFeatureId] : []),
+                          ].filter(Boolean)));
+                          if (!ids.length) return <div className="small muted">—</div>;
+                          return (
+                            <div className="grid2">
+                              {ids.map((fid:string)=>{
+                                const f:any = findEntryById(compendiums.features.entries ?? [], fid);
+                                return (
+                                  <button key={fid} className="pill pillLink" onClick={()=>openEntry('features', fid)} title="See details">
+                                    {f?.name ?? fid}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          );
+                        })()}
+                      </div>
+
                       <div className="section">
                         <div className="sectionTitle">Combat</div>
                         <div className="grid2">
@@ -1984,11 +2039,13 @@ function UsefulItemsEditor({ hero, updateHero }: { hero: any; updateHero: (patch
 
       <div className="list" style={{marginTop: 10}}>
         {items.map((it:any, idx:number)=> (
-          <div key={it.id ?? idx} className="invRow" style={{alignItems:'center'}}>
-            <input className="input" value={it.name ?? ''} onChange={(e)=>updateItem(idx,{name:e.target.value})} />
-            <select className="input" style={{minWidth: 160}} value={it.skillId ?? 'scan'} onChange={(e)=>updateItem(idx,{skillId:e.target.value})}>
-              {skillOptions.map((s:any)=> <option key={s.id} value={s.id}>{s.name}</option>)}
-            </select>
+          <div key={it.id ?? idx} className="usefulRow">
+            <div className="usefulMain">
+              <input className="input" value={it.name ?? ''} onChange={(e)=>updateItem(idx,{name:e.target.value})} />
+              <select className="input" value={it.skillId ?? 'scan'} onChange={(e)=>updateItem(idx,{skillId:e.target.value})}>
+                {skillOptions.map((s:any)=> <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+            </div>
             <button className="btn btn-danger" title="Remove" onClick={()=>updateHero({ usefulItems: items.filter((_:any,i:number)=>i!==idx) })}>🗑</button>
           </div>
         ))}
@@ -2046,8 +2103,10 @@ function AttackSection({ hero, derived }: { hero: any; derived: any }) {
           return (
             <div key={w.id} className="invRow" style={{alignItems:'center'}}>
               <div style={{flex:1}}>
-                <div><b>{w.name}</b></div>
-                <div className="small muted">{w.combatProficiency ? `${w.combatProficiency}` : '—'} • DMG {w.damage ?? '—'} • INJ {w.injury ?? '—'} • Dice {dice}</div>
+                <div className="attackLine">
+                  <b>{w.name}</b>
+                  <span className="small muted">&nbsp;—&nbsp;• DMG {w.damage ?? '—'} • INJ {w.injury ?? '—'} • Dice {dice}</span>
+                </div>
               </div>
               <button className="btn" onClick={()=>{
                 const r = rollTOR({ dice, featMode, weary });

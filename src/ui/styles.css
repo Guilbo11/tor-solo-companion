@@ -138,6 +138,10 @@ canvas { border-radius: 14px; border: 1px solid #1f2a3a; background: #0b0f14; }
   cursor:pointer;
   background: rgba(0,0,0,.15);
 }
+.pillLink{
+  width: 100%;
+  justify-content: center;
+}
 .pill.on{ border-color: rgba(255,255,255,.35); background: rgba(255,255,255,.06); }
 .pillName{ text-decoration: underline; text-underline-offset: 2px; }
 
@@ -154,6 +158,26 @@ canvas { border-radius: 14px; border: 1px solid #1f2a3a; background: #0b0f14; }
 .invQty{ opacity:.8; }
 .btn.btn-ghost.on{ border-color: rgba(255,255,255,.35); }
 
+.usefulRow{
+  display:grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items:center;
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 10px;
+  padding: 8px 10px;
+  background: rgba(0,0,0,.12);
+}
+.usefulMain{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+@media (max-width: 700px){
+  .usefulMain{ grid-template-columns: 1fr; }
+}
+
 
 .pillRow{
   display:flex;
@@ -169,6 +193,8 @@ canvas { border-radius: 14px; border: 1px solid #1f2a3a; background: #0b0f14; }
 .invRow .btn-ghost{
   padding:6px 8px;
 }
+
+.attackLine{ display:flex; align-items:baseline; flex-wrap:wrap; }
 
 
 /* Floating buttons */
