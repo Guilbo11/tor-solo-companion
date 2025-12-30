@@ -2515,17 +2515,20 @@ function AttackSection({ hero, derived, updateHero }: { hero: any; derived: any;
       return 'Extraordinary Success';
     })();
 
-    const pb = (r.feat.type === 'Eye') || featNumber >= 10; // adversaries: Eye counts as 10
+    // Piercing Blow only matters on a successful attack. Adversaries score it on 10 or Eye.
+    const pb = passed && ((r.feat.type === 'Eye') || featNumber >= 10);
 
     const baseDmg = Number(w.damage ?? 0) || 0;
     const dmg = baseDmg + (heavyCount ? (heavyCount * Number(e.attributeLevel ?? 0)) : 0);
 
-    // Apply endurance damage immediately.
+    // Apply endurance damage immediately, but only on a successful hit.
     const curEnd = Number(hero?.endurance?.current ?? hero?.enduranceCurrent ?? 0);
     const maxEnd = Number(hero?.endurance?.max ?? hero?.enduranceMax ?? hero?.endurance?.maximum ?? 0);
-    const newEnd = Math.max(0, curEnd - dmg);
-    if (Number.isFinite(curEnd) && dmg > 0) {
-      updateHero({ endurance: { ...(hero.endurance ?? {}), current: newEnd, max: (hero.endurance?.max ?? maxEnd) } });
+    if (passed) {
+      const newEnd = Math.max(0, curEnd - dmg);
+      if (Number.isFinite(curEnd) && dmg > 0) {
+        updateHero({ endurance: { ...(hero.endurance ?? {}), current: newEnd, max: (hero.endurance?.max ?? maxEnd) } });
+      }
     }
 
     // Break Shield (instruction + optional auto-drop)
@@ -2558,7 +2561,9 @@ function AttackSection({ hero, derived, updateHero }: { hero: any; derived: any;
     const label = `${w.name}`;
     const head = `<b>${label} - ${passed ? 'PASS' : 'FAIL'}${passed && degrees ? ` — ${degrees}` : ''}${pb ? ' - PIERCING BLOW' : ''}</b>`;
     const body = formatEnemyRoll(label, { ...r, total, passed, degrees } as any, tn);
-    const dmgLine = `Damage ${dmg}${heavyCount ? ` (HEAVY BLOW ×${heavyCount})` : ''}.`;
+    const dmgLine = passed
+      ? `Damage ${dmg}${heavyCount ? ` (HEAVY BLOW ×${heavyCount})` : ''}.`
+      : `No damage (miss).`;
     const pierceNote = pierceCount ? `PIERCE (+${2*pierceCount} Feat die).` : '';
     const seizeLine = seized ? `SEIZE: The attacker holds on to the target — the victim can only fight in a Forward stance making Brawling attacks. Seized heroes may free themselves spending a special success icon from a successful attack roll.` : '';
 
@@ -2770,9 +2775,6 @@ function AttackSection({ hero, derived, updateHero }: { hero: any; derived: any;
                   </div>
 
                   <div className="row" style={{gap:10, flexWrap:'wrap', marginTop:10}}>
-                    <label className={"toggle " + (enemyWeary ? 'on' : '')}>
-                      <input type="checkbox" checked={enemyWeary} onChange={(e)=>setEnemyWeary(e.target.checked)} /> Weary
-                    </label>
                     <div className="col" style={{minWidth: 220}}>
                       <div className="label">Feat die mode</div>
                       <select className="input" value={enemyFeatMode} onChange={(e)=>setEnemyFeatMode(e.target.value as any)}>
@@ -2780,6 +2782,9 @@ function AttackSection({ hero, derived, updateHero }: { hero: any; derived: any;
                         <option value="favoured">Favoured</option>
                         <option value="illFavoured">Ill-favoured</option>
                       </select>
+                      <label className={"toggle " + (enemyWeary ? 'on' : '')} style={{marginTop:8, display:'inline-flex'}}>
+                        <input type="checkbox" checked={enemyWeary} onChange={(e)=>setEnemyWeary(e.target.checked)} /> Weary
+                      </label>
                     </div>
                   </div>
 
