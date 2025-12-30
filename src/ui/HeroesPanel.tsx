@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { StoredState, saveState } from '../core/storage';
 import { compendiums, findEntryById, sortByName } from '../core/compendiums';
 import ErrorBoundary from './ErrorBoundary';
