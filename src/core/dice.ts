@@ -78,6 +78,29 @@ export function featDieRank(d: FeatDie): number {
   return 999;
 }
 
+export function featDieValueAdversary(d: FeatDie): number {
+  // Adversaries: Eye is the highest (10), Gandalf is 0.
+  if (d.type === 'Eye') return 10;
+  if (d.type === 'Gandalf') return 0;
+  return d.value;
+}
+
+export function featDieRankAdversary(d: FeatDie): number {
+  // For choosing "best" on favoured rolls for adversaries.
+  // Gandalf is worst (0), numbers next, Eye best.
+  if (d.type === 'Gandalf') return 0;
+  if (d.type === 'Number') return d.value;
+  return 999; // Eye
+}
+
+export function pickFeatDieAdversary(a: FeatDie, b: FeatDie, mode: 'favoured'|'illFavoured'): FeatDie {
+  const ra = featDieRankAdversary(a);
+  const rb = featDieRankAdversary(b);
+  if (mode === 'favoured') return rb > ra ? b : a;
+  // illFavoured
+  return rb < ra ? b : a;
+}
+
 export function pickFeatDie(a: FeatDie, b: FeatDie, mode: 'favoured'|'illFavoured'): FeatDie {
   const ra = featDieRank(a);
   const rb = featDieRank(b);
@@ -107,6 +130,39 @@ export function rollTOR(opts: RollOptions): RollResult {
 
   const total = featDieValue(feat) + successSum;
   const isAutomaticSuccess = feat.type === 'Gandalf';
+  const isEye = feat.type === 'Eye';
+
+  let passed: boolean | undefined = undefined;
+  if (typeof opts.tn === 'number') {
+    passed = isAutomaticSuccess ? true : total >= opts.tn;
+  }
+
+  let degrees: RollResult['degrees'] = undefined;
+  if (passed === true || (passed === undefined && isAutomaticSuccess)) {
+    if (icons === 0) degrees = 'Success';
+    else if (icons === 1) degrees = 'Great Success';
+    else degrees = 'Extraordinary Success';
+  }
+
+  return { feat, feat2: featB, success, total, icons, isAutomaticSuccess, isEye, passed, degrees };
+}
+
+export function rollTORAdversary(opts: RollOptions): RollResult {
+  const mode: 'normal'|'favoured'|'illFavoured' = opts.featMode ?? (opts.favoured ? 'favoured' : 'normal');
+  const featA = rollFeatDie();
+  const featB = (mode === 'favoured' || mode === 'illFavoured') ? rollFeatDie() : undefined;
+  const feat = featB ? pickFeatDieAdversary(featA, featB, mode === 'favoured' ? 'favoured' : 'illFavoured') : featA;
+
+  const success: SuccessDie[] = Array.from({ length: Math.max(0, opts.dice) }, () => rollSuccessDie());
+  const icons = success.reduce((a, d) => a + (d.icon ? 1 : 0), 0);
+
+  const successSum = success.reduce((a, d) => {
+    const wearyZero = !!opts.weary && (d.value === 1 || d.value === 2 || d.value === 3);
+    return a + (wearyZero ? 0 : d.value);
+  }, 0);
+
+  const total = featDieValueAdversary(feat) + successSum;
+  const isAutomaticSuccess = feat.type === 'Eye';
   const isEye = feat.type === 'Eye';
 
   let passed: boolean | undefined = undefined;

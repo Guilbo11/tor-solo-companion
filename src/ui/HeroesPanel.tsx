@@ -4,7 +4,7 @@ import { compendiums, findEntryById, sortByName } from '../core/compendiums';
 import ErrorBoundary from './ErrorBoundary';
 import { computeDerived, rollNameFallback } from '../core/tor2e';
 import { getSkillAttribute, getSkillTN } from '../core/skills';
-import { rollTOR, RollResult, formatTorRoll } from '../core/dice';
+import { rollTOR, rollTORAdversary, RollResult, formatTorRoll } from '../core/dice';
 import BottomSheet from './BottomSheet';
 
 type Props = {
@@ -1016,7 +1016,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
 
                       <div className="section">
                         <div className="sectionTitle">Attacks</div>
-                        <AttackSection hero={hero} derived={derived} />
+                        <AttackSection hero={hero} derived={derived} updateHero={(patch:any)=>updateHero(hero.id, patch)} />
                       </div>
 
                       <div className="section">
@@ -2383,12 +2383,30 @@ function UsefulItemsEditor({ hero, updateHero }: { hero: any; updateHero: (patch
   );
 }
 
-function AttackSection({ hero, derived }: { hero: any; derived: any }) {
+function AttackSection({ hero, derived, updateHero }: { hero: any; derived: any; updateHero: (patch:any)=>void }) {
   const [featMode, setFeatMode] = useState<'normal'|'favoured'|'illFavoured'>('normal');
   const [last, setLast] = useState<RollResult | null>(null);
   const weary = !!hero.conditions?.weary;
 
   const weapons = Array.isArray(derived.equippedWeapons) ? derived.equippedWeapons : [];
+  const enemies = Array.isArray((compendiums as any).adversariesCore?.entries) ? (compendiums as any).adversariesCore.entries : [];
+
+  // --- From Enemy state ---
+  const [enemyPickerOpen, setEnemyPickerOpen] = useState(false);
+  const [enemySearch, setEnemySearch] = useState('');
+  const [pickEnemyId, setPickEnemyId] = useState<string>('');
+  const [pickWeaponName, setPickWeaponName] = useState<string>('');
+
+  const [enemyRollOpen, setEnemyRollOpen] = useState(false);
+  const [enemyWeary, setEnemyWeary] = useState(false);
+  const [enemyFeatMode, setEnemyFeatMode] = useState<'normal'|'favoured'|'illFavoured'>('normal');
+  const [enemySpend, setEnemySpend] = useState(0);
+
+  const [specialPickerOpen, setSpecialPickerOpen] = useState(false);
+  const [specialChoices, setSpecialChoices] = useState<string[]>([]);
+
+  const [seq, setSeq] = useState<null | { enemyId: string; weaponName: string; remaining: number }>(null);
+  const pendingRef = useRef<any>(null);
 
   const profKey = (name: string) => {
     const v = String(name || '').toLowerCase();
@@ -2404,13 +2422,231 @@ function AttackSection({ hero, derived }: { hero: any; derived: any }) {
     return null;
   };
 
-  if (weapons.length === 0) {
-    return <div className="small muted">Equip one or more weapons in <b>Gear → Inventory & Equipment</b> to enable attack rolls.</div>;
-  }
+  const heroParryTN = Number(derived?.parry?.total ?? 0);
+  const heroProtectionDice = Number(derived?.protection?.total ?? 0);
+
+  const featEmoji = (d: any, forEnemy: boolean) => {
+    if (!d) return '';
+    if (d.type === 'Eye') return forEnemy ? '🧿' : 'Sauron';
+    if (d.type === 'Gandalf') return forEnemy ? '🧙' : 'Gandalf';
+    return String(d.value);
+  };
+
+  const toHtmlFeat = (txt: string) => {
+    // Make the eye a bit more striking in the journal.
+    if (txt === '🧿') return `<span style="color:#d32f2f">🧿</span>`;
+    return txt;
+  };
+
+  const formatEnemyRoll = (label: string, r: RollResult, tn: number) => {
+    const featTxt = toHtmlFeat(featEmoji(r.feat, true));
+    const feat2Txt = r.feat2 ? toHtmlFeat(featEmoji(r.feat2, true)) : '';
+    const succList = r.success.map((d:any)=> (d.icon ? `6(★)` : String(d.value))).join(', ');
+    const starTxt = r.icons ? ` (${r.icons} ★)` : '';
+    const prefix = r.passed ? `PASS${r.degrees ? ` — ${r.degrees}` : ''}. ` : `FAIL. `;
+    return `${label} - ${prefix}Feat ${featTxt}${feat2Txt ? ` (also ${feat2Txt})` : ''}, Success ${succList || '—'}${starTxt} Total ${r.total} (TN ${tn}).`;
+  };
+
+  const openFromEnemy = () => {
+    setPickEnemyId('');
+    setPickWeaponName('');
+    setEnemySearch('');
+    setEnemyPickerOpen(true);
+  };
+
+  const beginSequence = () => {
+    const e:any = enemies.find((x:any)=>String(x.id)===String(pickEnemyId));
+    if (!e) return;
+    const w:any = (e.combatProficiencies ?? []).find((p:any)=>p.name === pickWeaponName);
+    if (!w) return;
+    setSeq({ enemyId: e.id, weaponName: w.name, remaining: Math.max(1, Number(e.might ?? 1)) });
+    setEnemyPickerOpen(false);
+    setEnemyWeary(false);
+    setEnemyFeatMode('normal');
+    setEnemySpend(0);
+    setEnemyRollOpen(true);
+  };
+
+  const startEnemyAttack = () => {
+    if (!seq) return;
+    const e:any = enemies.find((x:any)=>String(x.id)===String(seq.enemyId));
+    const w:any = (e?.combatProficiencies ?? []).find((p:any)=>p.name === seq.weaponName);
+    if (!e || !w) return;
+    const dice = Number(w.rating ?? 0) + Number(enemySpend ?? 0);
+    const tn = heroParryTN;
+    const r = rollTORAdversary({ dice, featMode: enemyFeatMode, weary: enemyWeary, tn });
+    pendingRef.current = { enemy: e, weapon: w, roll: r, tn, enemySpend: Number(enemySpend ?? 0) };
+    if ((r.icons ?? 0) > 0) {
+      // one dropdown per special success icon
+      setSpecialChoices(Array.from({ length: r.icons }, () => 'None'));
+      setEnemyRollOpen(false);
+      setSpecialPickerOpen(true);
+    } else {
+      finalizeEnemyAttack([]);
+    }
+  };
+
+  const finalizeEnemyAttack = (specials: string[]) => {
+    const ctx = pendingRef.current;
+    if (!ctx) return;
+    const e:any = ctx.enemy;
+    const w:any = ctx.weapon;
+    const r: RollResult = ctx.roll;
+    const tn:number = ctx.tn;
+
+    // Apply special success effects (order chosen freely).
+    const picks = specials.filter(s => s && s !== 'None');
+    const pierceCount = picks.filter(p => p === 'PIERCE').length;
+    const heavyCount = picks.filter(p => p === 'HEAVY BLOW').length;
+    const breakShield = picks.includes('BREAK SHIELD');
+    const seized = picks.includes('SEIZE');
+
+    // Recompute total if PIERCE was selected.
+    let featNumber = (r.feat.type === 'Number') ? r.feat.value : (r.feat.type === 'Eye' ? 10 : 0);
+    if (pierceCount) featNumber = Math.min(10, featNumber + (2 * pierceCount));
+    const succSum = r.success.reduce((a:any, d:any) => a + ((enemyWeary && (d.value===1||d.value===2||d.value===3)) ? 0 : d.value), 0);
+    const total = featNumber + succSum;
+    const passed = (r.feat.type === 'Eye') ? true : total >= tn;
+
+    const degrees = (() => {
+      if (!passed) return undefined;
+      if (r.icons === 0) return 'Success';
+      if (r.icons === 1) return 'Great Success';
+      return 'Extraordinary Success';
+    })();
+
+    const pb = (r.feat.type === 'Eye') || featNumber >= 10; // adversaries: Eye counts as 10
+
+    const baseDmg = Number(w.damage ?? 0) || 0;
+    const dmg = baseDmg + (heavyCount ? (heavyCount * Number(e.attributeLevel ?? 0)) : 0);
+
+    // Apply endurance damage immediately.
+    const curEnd = Number(hero?.endurance?.current ?? hero?.enduranceCurrent ?? 0);
+    const maxEnd = Number(hero?.endurance?.max ?? hero?.enduranceMax ?? hero?.endurance?.maximum ?? 0);
+    const newEnd = Math.max(0, curEnd - dmg);
+    if (Number.isFinite(curEnd) && dmg > 0) {
+      updateHero({ endurance: { ...(hero.endurance ?? {}), current: newEnd, max: (hero.endurance?.max ?? maxEnd) } });
+    }
+
+    // Break Shield (instruction + optional auto-drop)
+    let breakShieldLine = '';
+    if (breakShield) {
+      const inv = Array.isArray(hero.inventory) ? hero.inventory : [];
+      const shieldEntry:any = derived?.equippedShield;
+      const shieldItem:any = shieldEntry ? inv.find((it:any)=>it?.equipped && !it?.dropped && it?.ref?.pack==='tor2e-equipment' && String(it?.ref?.id)===String(shieldEntry.id)) : null;
+      const hasReward = !!shieldItem?.override?.rewards?.length;
+      if (shieldItem && !hasReward) {
+        breakShieldLine = '<b>BREAK SHIELD:</b> Remove your equipped shield (no rewards).';
+        // Offer to auto-drop.
+        try {
+          const ok = window.confirm('BREAK SHIELD: Remove your equipped shield (no rewards). Drop it now?');
+          if (ok) {
+            const idx = inv.indexOf(shieldItem);
+            if (idx >= 0) {
+              const next = inv.slice();
+              next[idx] = { ...shieldItem, equipped: false, dropped: true };
+              updateHero({ inventory: next });
+            }
+          }
+        } catch {}
+      } else {
+        breakShieldLine = '<b>BREAK SHIELD:</b> (no eligible shield to remove, or it has Rewards).';
+      }
+    }
+
+    // Build journal line.
+    const label = `${w.name}`;
+    const head = `<b>${label} - ${passed ? 'PASS' : 'FAIL'}${passed && degrees ? ` — ${degrees}` : ''}${pb ? ' - PIERCING BLOW' : ''}</b>`;
+    const body = formatEnemyRoll(label, { ...r, total, passed, degrees } as any, tn);
+    const dmgLine = `Damage ${dmg}${heavyCount ? ` (HEAVY BLOW ×${heavyCount})` : ''}.`;
+    const pierceNote = pierceCount ? `PIERCE (+${2*pierceCount} Feat die).` : '';
+    const seizeLine = seized ? `SEIZE: The attacker holds on to the target — the victim can only fight in a Forward stance making Brawling attacks. Seized heroes may free themselves spending a special success icon from a successful attack roll.` : '';
+
+    const lines: string[] = [`<div>${head}</div>`, `<div>${body}</div>`, `<div>${dmgLine} ${pierceNote}</div>`];
+    if (breakShieldLine) lines.push(`<div>${breakShieldLine}</div>`);
+    if (seizeLine) lines.push(`<div>${seizeLine}</div>`);
+
+    // Piercing Blow -> automatic protection roll.
+    let extraToast = '';
+    if (pb) {
+      const injTN = Number(w.injury ?? 0) || 0;
+      const pr = rollTOR({ dice: heroProtectionDice, featMode: 'normal', weary: !!hero.conditions?.weary, tn: injTN });
+      const protectTxt = formatTorRoll(pr, { label: 'Piercing', tn: injTN });
+      lines.push(`<div>${protectTxt}</div>`);
+
+      const protFail = pr.passed === false;
+      if (protFail) {
+        if (hero.conditions?.wounded) {
+          updateHero({ conditions: { ...(hero.conditions ?? {}), dying: true } });
+          lines.push(`<div><b>Already wounded! ${String(hero.name || 'This hero')} is now dying.</b></div>`);
+        } else {
+          updateHero({ conditions: { ...(hero.conditions ?? {}), wounded: true } });
+          // Wound severity table
+          const sev = rollTOR({ dice: 0, featMode: 'normal' });
+          const sevFeat = (sev.feat.type === 'Number') ? sev.feat.value : (sev.feat.type === 'Eye' ? 'Sauron' : 'Gandalf');
+          if (sev.feat.type === 'Gandalf') {
+            lines.push(`<div>Gandalf - Moderate Injury - The blow received was violent enough to expose you to the risk of worse consequences if injured again, but no real lasting damage was inflicted. At the end of the combat you will recover fully in a matter of hours (remove the Wounded box check).</div>`);
+          } else if (sev.feat.type === 'Eye') {
+            updateHero({ endurance: { ...(hero.endurance ?? {}), current: 0 }, conditions: { ...(hero.conditions ?? {}), dying: true, wounded: true } });
+            lines.push(`<div>Sauron - Grievous Injury - You are knocked unconscious with zero Endurance and are now Dying (as if Wounded twice).</div>`);
+          } else {
+            const days = sev.feat.value;
+            const currentInjury = String(hero.injury ?? '').trim();
+            updateHero({ injury: currentInjury ? `${currentInjury}; ${days} days` : `${days} days` });
+            lines.push(`<div>${sevFeat} - Severe Injury - The value indicates how long it will take for the injury to mend, expressed in days (write the result in the Injury box on the character sheet).</div>`);
+          }
+        }
+      }
+
+      extraToast = protectTxt;
+    }
+
+    try {
+      (window as any).__torcLogRollHtml?.(lines.join(''));
+    } catch {}
+
+    // Single 2-line recap toast at the end.
+    const toastLine1 = `${w.name} - ${passed ? 'PASS' : 'FAIL'}${passed && degrees ? ` — ${degrees}` : ''}${pb ? ' - PIERCING BLOW' : ''} • Damage ${dmg}`;
+    const toastLine2 = pb ? (extraToast.replace(/<[^>]+>/g,'') || 'Piercing roll logged.') : (pierceCount ? `PIERCE (+${2*pierceCount})` : (seized ? 'SEIZE' : ''));
+    toast(`${toastLine1}\n${toastLine2}`.trim(), passed ? 'warning' : 'warning');
+
+    // sequence management
+    setSpecialPickerOpen(false);
+    setEnemyRollOpen(false);
+    pendingRef.current = null;
+    setLast({ ...r, total, passed, degrees } as any);
+
+    setSeq(prev => {
+      if (!prev) return prev;
+      const left = Math.max(0, (prev.remaining ?? 0) - 1);
+      return { ...prev, remaining: left };
+    });
+  };
+
+  const filteredEnemies = enemies.filter((e:any)=>{
+    const q = enemySearch.trim().toLowerCase();
+    if (!q) return true;
+    return String(e.name||'').toLowerCase().includes(q);
+  });
+
+  const curEnemy:any = pickEnemyId ? enemies.find((e:any)=>String(e.id)===String(pickEnemyId)) : null;
+  const curEnemyWeapons:any[] = curEnemy?.combatProficiencies ?? [];
+
+  const specialOptions = (() => {
+    const ctx = pendingRef.current;
+    const weapon = ctx?.weapon;
+    const opts = new Set<string>();
+    opts.add('None');
+    opts.add('HEAVY BLOW');
+    if (weapon?.specialDamage?.includes('Break Shield')) opts.add('BREAK SHIELD');
+    if (weapon?.specialDamage?.includes('Pierce')) opts.add('PIERCE');
+    if (weapon?.specialDamage?.includes('Seize')) opts.add('SEIZE');
+    return Array.from(opts);
+  })();
 
   return (
     <div>
-      <div className="row" style={{gap:8, flexWrap:'wrap', marginBottom:8}}>
+      <div className="row" style={{gap:8, flexWrap:'wrap', marginBottom:8, alignItems:'flex-end'}}>
         <div className="col" style={{minWidth: 220}}>
           <div className="label">Feat die mode</div>
           <select className="input" value={featMode} onChange={(e)=>setFeatMode(e.target.value as any)}>
@@ -2419,42 +2655,189 @@ function AttackSection({ hero, derived }: { hero: any; derived: any }) {
             <option value="illFavoured">Ill-favoured (2 Feat dice, keep worst)</option>
           </select>
         </div>
-        {/* Weary is computed from Load + Fatigue vs current Endurance; no manual toggle here. */}
+        <button className="btn" onClick={openFromEnemy}>From Enemy</button>
       </div>
 
-      <div className="list">
-        {weapons.map((w:any)=>{
-          const k = profKey(w.combatProficiency ?? w.proficiency ?? w.category);
-          const dice = Number(k ? (hero.combatProficiencies?.[k] ?? 0) : 0);
-          return (
-            <div key={w.id} className="attackRow">
-              <div className="attackCol1">
-                <div className="attackName"><b>{w.name}</b></div>
-                <div className="attackStats small muted">DMG {w.damage ?? '—'} • INJ {w.injury ?? '—'} • Dice {dice}</div>
+      {weapons.length === 0 ? (
+        <div className="small muted">Equip one or more weapons in <b>Gear → Inventory & Equipment</b> to enable attack rolls.</div>
+      ) : (
+        <div className="list">
+          {weapons.map((w:any)=>{
+            const k = profKey(w.combatProficiency ?? w.proficiency ?? w.category);
+            const dice = Number(k ? (hero.combatProficiencies?.[k] ?? 0) : 0);
+            return (
+              <div key={w.id} className="attackRow">
+                <div className="attackCol1">
+                  <div className="attackName"><b>{w.name}</b></div>
+                  <div className="attackStats small muted">DMG {w.damage ?? '—'} • INJ {w.injury ?? '—'} • Dice {dice}</div>
+                </div>
+                <div className="attackCol2">
+                  <button className="btn" onClick={()=>{
+                    const txt = window.prompt('Parry rating of the target?', '0');
+                    if (txt === null) return;
+                    const parry = Number.parseInt(String(txt).trim() || '0', 10);
+                    const parryMod = Number.isFinite(parry) ? parry : 0;
+                    const tn = Number(derived?.strengthTN ?? 0) + parryMod;
+                    const r = rollTOR({ dice, featMode, weary, tn });
+                    // Gandalf = guaranteed success + PB display
+                    const isGandalf = r.feat.type === 'Gandalf';
+                    const pbThreshold = Number((w as any)?.piercingThreshold ?? 10);
+                    const featNum = (r.feat.type === 'Number') ? r.feat.value : (r.feat.type === 'Eye' ? 0 : 10);
+                    const pb = isGandalf || featNum >= pbThreshold;
+                    const degrees = r.degrees;
+                    setLast(Object.assign({}, r, { _tn: tn, _label: w.name }));
+                    const head = `<b>${w.name} - ${(r.passed ? 'PASS' : 'FAIL')}${(r.passed && degrees) ? ` — ${degrees}` : ''}${pb ? ' - PIERCING BLOW' : ''}</b>`;
+                    const body = formatTorRoll(r, { label: w.name, tn });
+                    try { (window as any).__torcLogRollHtml?.(`<div>${head}</div><div>${body}</div>`); } catch {}
+                    toast(`${w.name} - ${(r.passed ? 'PASS' : 'FAIL')}${(r.passed && degrees) ? ` — ${degrees}` : ''}${pb ? ' - PIERCING BLOW' : ''}\n${body}`.replace(/<[^>]+>/g,''), (r.passed ? 'success' : 'warning'));
+                  }}>Roll</button>
+                </div>
               </div>
-              <div className="attackCol2">
-                <button className="btn" onClick={()=>{
-                  const txt = window.prompt('Parry rating of the target?', '0');
-                  if (txt === null) return;
-                  const parry = Number.parseInt(String(txt).trim() || '0', 10);
-                  const parryMod = Number.isFinite(parry) ? parry : 0;
-                  const tn = Number(derived?.strengthTN ?? 0) + parryMod;
-                  const r = rollTOR({ dice, featMode, weary, tn });
-                  setLast(Object.assign({}, r, { _tn: tn, _label: w.name }));
-                  // Bottom toast (4s) like Skills rolls
-                  toast(formatTorRoll(r, { label: w.name, tn }), (r as any)?.pass ? 'success' : 'warning');
-                  try {
-                    (window as any).__torcLogRollHtml?.(`<div>${formatTorRoll(r, { label: w.name, tn })}</div>`);
-                  } catch {}
-                }}>Roll</button>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
+
       {last ? (
         <div className="small" style={{marginTop:8}}>
           <b>Last attack roll:</b> {formatTorRoll(last as any, { label: (last as any)._label ?? '', tn: (last as any)._tn })}
+        </div>
+      ) : null}
+
+      {/* Enemy picker modal */}
+      {enemyPickerOpen ? (
+        <div className="modalOverlay" onMouseDown={()=>setEnemyPickerOpen(false)}>
+          <div className="modal" style={{maxWidth: 520}} onMouseDown={(e)=>e.stopPropagation()}>
+            <div className="modalHeader">
+              <div><b>From Enemy</b></div>
+              <button className="btn btn-ghost" onClick={()=>setEnemyPickerOpen(false)}>Close</button>
+            </div>
+            <div className="row" style={{gap:8, marginTop:10}}>
+              <input className="input" placeholder="Search enemy…" value={enemySearch} onChange={(e)=>setEnemySearch(e.target.value)} style={{flex:1}} />
+            </div>
+            <div style={{maxHeight: 260, overflow:'auto', marginTop:10}}>
+              {filteredEnemies.map((e:any)=>{
+                return (
+                  <div key={e.id} className="row" style={{justifyContent:'space-between', padding:'6px 0', borderBottom:'1px solid #2a2f3a'}}>
+                    <label className="row" style={{gap:8, cursor:'pointer'}}>
+                      <input type="radio" checked={pickEnemyId===e.id} onChange={()=>{setPickEnemyId(e.id); setPickWeaponName('');}} />
+                      <div>
+                        <div><b>{e.name}</b></div>
+                        <div className="small muted">{(e.distinctiveFeatures||[]).join(', ')} • AL {e.attributeLevel} • Might {e.might}</div>
+                      </div>
+                    </label>
+                  </div>
+                );
+              })}
+            </div>
+
+            {curEnemy ? (
+              <div style={{marginTop:10}}>
+                <div className="label">Weapon</div>
+                <select className="input" value={pickWeaponName} onChange={(e)=>setPickWeaponName(e.target.value)}>
+                  <option value="">Choose…</option>
+                  {curEnemyWeapons.map((w:any)=>(
+                    <option key={w.name} value={w.name}>{w.name} — {w.rating} ({w.damage}/{w.injury}{w.specialDamage?.length ? `, ${w.specialDamage.join(', ')}` : ''})</option>
+                  ))}
+                </select>
+              </div>
+            ) : null}
+
+            <div className="row" style={{justifyContent:'flex-end', gap:8, marginTop:12}}>
+              <button className="btn" disabled={!pickEnemyId || !pickWeaponName} onClick={beginSequence}>Start</button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {/* Enemy roll config modal */}
+      {enemyRollOpen && seq ? (
+        <div className="modalOverlay" onMouseDown={()=>setEnemyRollOpen(false)}>
+          <div className="modal" style={{maxWidth: 520}} onMouseDown={(e)=>e.stopPropagation()}>
+            {(() => {
+              const e:any = enemies.find((x:any)=>String(x.id)===String(seq.enemyId));
+              const w:any = (e?.combatProficiencies ?? []).find((p:any)=>p.name === seq.weaponName);
+              const resLabel = e?.hateOrResolve?.type === 'Resolve' ? 'Resolve' : 'Hate';
+              return (
+                <>
+                  <div className="modalHeader">
+                    <div><b>{e?.name}</b> — {w?.name} ({seq.remaining} attack{seq.remaining===1?'':'s'} remaining)</div>
+                    <button className="btn btn-ghost" onClick={()=>{setEnemyRollOpen(false); setSeq(null);}}>Close</button>
+                  </div>
+
+                  <div className="small muted" style={{marginTop:8}}>
+                    Target Number = hero Parry ({heroParryTN}).
+                  </div>
+
+                  <div className="row" style={{gap:10, flexWrap:'wrap', marginTop:10}}>
+                    <label className={"toggle " + (enemyWeary ? 'on' : '')}>
+                      <input type="checkbox" checked={enemyWeary} onChange={(e)=>setEnemyWeary(e.target.checked)} /> Weary
+                    </label>
+                    <div className="col" style={{minWidth: 220}}>
+                      <div className="label">Feat die mode</div>
+                      <select className="input" value={enemyFeatMode} onChange={(e)=>setEnemyFeatMode(e.target.value as any)}>
+                        <option value="normal">Normal</option>
+                        <option value="favoured">Favoured</option>
+                        <option value="illFavoured">Ill-favoured</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="row" style={{gap:8, alignItems:'flex-end', marginTop:10}}>
+                    <div className="col" style={{flex:1}}>
+                      <div className="label">Spend {resLabel} for +1 die</div>
+                      <input className="input" type="number" min={0} max={Number(e?.might ?? 1)} value={enemySpend} onChange={(ev)=>{
+                        const n = parseInt(ev.target.value,10); setEnemySpend(Number.isFinite(n)? Math.max(0, Math.min(Number(e?.might ?? 1), n)) : 0);
+                      }} />
+                      <div className="small muted">(max per round = Might)</div>
+                    </div>
+                    <button className="btn" onClick={startEnemyAttack}>Roll</button>
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+        </div>
+      ) : null}
+
+      {/* Special success picker */}
+      {specialPickerOpen ? (
+        <div className="modalOverlay" onMouseDown={()=>setSpecialPickerOpen(false)}>
+          <div className="modal" style={{maxWidth: 520}} onMouseDown={(e)=>e.stopPropagation()}>
+            <div className="modalHeader">
+              <div><b>Special Success</b></div>
+              <button className="btn btn-ghost" onClick={()=>setSpecialPickerOpen(false)}>Close</button>
+            </div>
+            <div className="small muted" style={{marginTop:8}}>1 choice per success icon (duplicates allowed). Order is yours.</div>
+            <div style={{marginTop:10}}>
+              {specialChoices.map((v, idx)=>(
+                <div key={idx} className="row" style={{gap:8, marginBottom:8, alignItems:'center'}}>
+                  <div className="small" style={{width: 90}}>Icon {idx+1}</div>
+                  <select className="input" value={v} onChange={(e)=>{
+                    const next = specialChoices.slice();
+                    next[idx] = e.target.value;
+                    setSpecialChoices(next);
+                  }} style={{flex:1}}>
+                    {specialOptions.map(op => <option key={op} value={op}>{op}</option>)}
+                  </select>
+                </div>
+              ))}
+            </div>
+            <div className="row" style={{justifyContent:'flex-end', gap:8, marginTop:12}}>
+              <button className="btn" onClick={()=>finalizeEnemyAttack(specialChoices)}>Apply</button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {/* Next attack bar */}
+      {seq && seq.remaining > 0 && !enemyPickerOpen && !enemyRollOpen && !specialPickerOpen ? (
+        <div style={{position:'fixed', left:0, right:0, bottom:10, zIndex: 50, display:'flex', justifyContent:'center', pointerEvents:'none'}}>
+          <div style={{pointerEvents:'auto', background:'#11161f', border:'1px solid #2a2f3a', borderRadius: 12, padding:'10px 12px', boxShadow:'0 8px 24px rgba(0,0,0,0.35)', display:'flex', gap:10, alignItems:'center'}}>
+            <div className="small"><b>Next attack</b> ({seq.remaining} left)</div>
+            <button className="btn" onClick={()=>setEnemyRollOpen(true)}>Next attack</button>
+            <button className="btn btn-danger" onClick={()=>{ setSeq(null); setEnemyRollOpen(false); setSpecialPickerOpen(false); pendingRef.current=null; }}>Skip</button>
+          </div>
         </div>
       ) : null}
     </div>

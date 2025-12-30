@@ -1,0 +1,842 @@
+{
+  "pack": "tor2e-adversaries-core",
+  "type": "adversaries",
+  "version": 1,
+  "entries": [
+    {
+      "id": "southerner-raider",
+      "name": "Southerner Raider",
+      "distinctiveFeatures": [
+        "Canny",
+        "Hardened"
+      ],
+      "attributeLevel": 4,
+      "endurance": 16,
+      "might": 1,
+      "hateOrResolve": {
+        "type": "Resolve",
+        "value": 4
+      },
+      "parry": 1,
+      "armour": 2,
+      "combatProficiencies": [
+        {
+          "name": "Axe",
+          "rating": 3,
+          "damage": 5,
+          "injury": 18,
+          "specialDamage": []
+        },
+        {
+          "name": "Short Spear",
+          "rating": 2,
+          "damage": 3,
+          "injury": 14,
+          "specialDamage": [
+            "Pierce"
+          ]
+        }
+      ],
+      "fellAbilities": [
+        "Fierce. Spend 1 Resolve point to gain (1d) and make the attack roll Favoured."
+      ]
+    },
+    {
+      "id": "southerner-champion",
+      "name": "Southerner Champion",
+      "distinctiveFeatures": [
+        "Cruel",
+        "Tough"
+      ],
+      "attributeLevel": 5,
+      "endurance": 20,
+      "might": 1,
+      "hateOrResolve": {
+        "type": "Resolve",
+        "value": 5
+      },
+      "parry": 2,
+      "armour": 3,
+      "combatProficiencies": [
+        {
+          "name": "Spear",
+          "rating": 3,
+          "damage": 4,
+          "injury": 14,
+          "specialDamage": [
+            "Pierce"
+          ]
+        },
+        {
+          "name": "Long-hafted Axe",
+          "rating": 3,
+          "damage": 6,
+          "injury": 18,
+          "specialDamage": [
+            "Break Shield"
+          ]
+        }
+      ],
+      "fellAbilities": [
+        "Fierce. Spend 1 Resolve point to gain (1d) on an attack and to make the roll Favoured."
+      ]
+    },
+    {
+      "id": "footpad",
+      "name": "Footpad",
+      "distinctiveFeatures": [
+        "Nimble",
+        "Wary"
+      ],
+      "attributeLevel": 2,
+      "endurance": 8,
+      "might": 1,
+      "hateOrResolve": {
+        "type": "Resolve",
+        "value": 2
+      },
+      "parry": 0,
+      "armour": 1,
+      "combatProficiencies": [
+        {
+          "name": "Cudgel",
+          "rating": 2,
+          "damage": 3,
+          "injury": 12,
+          "specialDamage": []
+        },
+        {
+          "name": "Bow",
+          "rating": 2,
+          "damage": 3,
+          "injury": 14,
+          "specialDamage": [
+            "Pierce"
+          ]
+        }
+      ],
+      "fellAbilities": [
+        "Craven. When affected by the Intimidate Foe combat task, the creature also loses 1 Resolve."
+      ]
+    },
+    {
+      "id": "ruffian-chief",
+      "name": "Ruffian Chief",
+      "distinctiveFeatures": [
+        "Ruthless",
+        "Secretive"
+      ],
+      "attributeLevel": 3,
+      "endurance": 12,
+      "might": 1,
+      "hateOrResolve": {
+        "type": "Resolve",
+        "value": 3
+      },
+      "parry": 1,
+      "armour": 2,
+      "combatProficiencies": [
+        {
+          "name": "Short Sword",
+          "rating": 3,
+          "damage": 3,
+          "injury": 16,
+          "specialDamage": []
+        },
+        {
+          "name": "Bow",
+          "rating": 2,
+          "damage": 3,
+          "injury": 14,
+          "specialDamage": [
+            "Pierce"
+          ]
+        }
+      ],
+      "fellAbilities": [
+        "Yell of Triumph. Spend 1 Resolve to restore 1 Resolve to all other Ruffians in the fight."
+      ]
+    },
+    {
+      "id": "highway-robber",
+      "name": "Highway Robber",
+      "distinctiveFeatures": [
+        "Swift",
+        "Vengeful"
+      ],
+      "attributeLevel": 4,
+      "endurance": 16,
+      "might": 1,
+      "hateOrResolve": {
+        "type": "Resolve",
+        "value": 4
+      },
+      "parry": 0,
+      "armour": 2,
+      "combatProficiencies": [
+        {
+          "name": "Spear",
+          "rating": 3,
+          "damage": 4,
+          "injury": 14,
+          "specialDamage": [
+            "Pierce"
+          ]
+        },
+        {
+          "name": "Bow",
+          "rating": 2,
+          "damage": 3,
+          "injury": 14,
+          "specialDamage": [
+            "Pierce"
+          ]
+        }
+      ],
+      "fellAbilities": [
+        "Snake-like Speed. When targeted by an attack, spend 1 Resolve to make the attack roll Ill-favoured."
+      ]
+    },
+    {
+      "id": "great-orc-chief",
+      "name": "Great Orc Chief",
+      "distinctiveFeatures": [
+        "Bold",
+        "Cunning"
+      ],
+      "attributeLevel": 7,
+      "endurance": 48,
+      "might": 2,
+      "hateOrResolve": {
+        "type": "Hate",
+        "value": 7
+      },
+      "parry": 3,
+      "armour": 4,
+      "combatProficiencies": [
+        {
+          "name": "Heavy Scimitar",
+          "rating": 3,
+          "damage": 5,
+          "injury": 18,
+          "specialDamage": [
+            "Break Shield"
+          ]
+        },
+        {
+          "name": "Broad-headed Spear",
+          "rating": 3,
+          "damage": 5,
+          "injury": 16,
+          "specialDamage": [
+            "Pierce"
+          ]
+        }
+      ],
+      "fellAbilities": [
+        "Horrible Strength. If the creature scored a Piercing Blow with a close combat attack, spend 1 Hate to make the target\u2019s Protection roll Ill-favoured.",
+        "Snake-like Speed. When targeted by an attack, spend 1 Hate to make the attack roll Ill-favoured.",
+        "Yell of Triumph. Spend 1 Hate to restore 1 Hate to all other Orcs in the fight."
+      ]
+    },
+    {
+      "id": "great-orc-bodyguard",
+      "name": "Great Orc Bodyguard",
+      "distinctiveFeatures": [
+        "Fierce",
+        "Wary"
+      ],
+      "attributeLevel": 6,
+      "endurance": 24,
+      "might": 2,
+      "hateOrResolve": {
+        "type": "Hate",
+        "value": 6
+      },
+      "parry": 2,
+      "armour": 3,
+      "combatProficiencies": [
+        {
+          "name": "Orc-axe",
+          "rating": 3,
+          "damage": 5,
+          "injury": 18,
+          "specialDamage": [
+            "Break Shield"
+          ]
+        },
+        {
+          "name": "Broad-headed Spear",
+          "rating": 3,
+          "damage": 5,
+          "injury": 16,
+          "specialDamage": [
+            "Pierce"
+          ]
+        }
+      ],
+      "fellAbilities": [
+        "Hideous Toughness. The creature is unaffected by unarmed attacks. Additionally, when an attack inflicts damage to the creature that would cause it to go to zero Endurance, it causes a Piercing Blow instead. Then, if the creature is still alive its Endurance score is set back at half its maximum rating."
+      ]
+    },
+    {
+      "id": "goblin-archer",
+      "name": "Goblin Archer",
+      "distinctiveFeatures": [
+        "Cunning",
+        "Keen-eyed"
+      ],
+      "attributeLevel": 2,
+      "endurance": 8,
+      "might": 1,
+      "hateOrResolve": {
+        "type": "Hate",
+        "value": 2
+      },
+      "parry": 0,
+      "armour": 1,
+      "combatProficiencies": [
+        {
+          "name": "Bow of Horn",
+          "rating": 3,
+          "damage": 3,
+          "injury": 14,
+          "specialDamage": [
+            "Pierce"
+          ]
+        },
+        {
+          "name": "Jagged Knife",
+          "rating": 2,
+          "damage": 2,
+          "injury": 14,
+          "specialDamage": []
+        }
+      ],
+      "fellAbilities": [
+        "Craven. When affected by the Intimidate Foe combat task, the creature also loses 1 Hate.",
+        "Orc-poison. If an attack results in a Wound, the target is also poisoned (see page 134 for the effects of poison)."
+      ]
+    },
+    {
+      "id": "orc-chieftain",
+      "name": "Orc-chieftain",
+      "distinctiveFeatures": [
+        "Cruel",
+        "Hardened"
+      ],
+      "attributeLevel": 5,
+      "endurance": 20,
+      "might": 1,
+      "hateOrResolve": {
+        "type": "Hate",
+        "value": 5
+      },
+      "parry": 3,
+      "armour": 3,
+      "combatProficiencies": [
+        {
+          "name": "Scimitar",
+          "rating": 3,
+          "damage": 3,
+          "injury": 16,
+          "specialDamage": []
+        },
+        {
+          "name": "Spear",
+          "rating": 3,
+          "damage": 3,
+          "injury": 14,
+          "specialDamage": [
+            "Pierce"
+          ]
+        }
+      ],
+      "fellAbilities": [
+        "Great Leap. Spend 1 Hate to attack any Player-hero, in any combat stance, including Rearward.",
+        "Snake-like Speed. When targeted by an attack, spend 1 Hate to make the attack roll Ill-favoured.",
+        "Yell of Triumph. Spend 1 Hate to restore 1 Hate to all other Orcs in the fight."
+      ]
+    },
+    {
+      "id": "orc-guard",
+      "name": "Orc Guard",
+      "distinctiveFeatures": [
+        "Strong",
+        "Vigilant"
+      ],
+      "attributeLevel": 4,
+      "endurance": 16,
+      "might": 1,
+      "hateOrResolve": {
+        "type": "Hate",
+        "value": 4
+      },
+      "parry": 2,
+      "armour": 3,
+      "combatProficiencies": [
+        {
+          "name": "Scimitar",
+          "rating": 3,
+          "damage": 3,
+          "injury": 16,
+          "specialDamage": []
+        },
+        {
+          "name": "Spear",
+          "rating": 3,
+          "damage": 3,
+          "injury": 14,
+          "specialDamage": [
+            "Pierce"
+          ]
+        }
+      ],
+      "fellAbilities": [
+        "\u2014"
+      ]
+    },
+    {
+      "id": "orc-soldier",
+      "name": "Orc Soldier",
+      "distinctiveFeatures": [
+        "Rebellious",
+        "Vengeful"
+      ],
+      "attributeLevel": 3,
+      "endurance": 12,
+      "might": 1,
+      "hateOrResolve": {
+        "type": "Hate",
+        "value": 3
+      },
+      "parry": 1,
+      "armour": 2,
+      "combatProficiencies": [
+        {
+          "name": "Scimitar",
+          "rating": 3,
+          "damage": 3,
+          "injury": 16,
+          "specialDamage": []
+        },
+        {
+          "name": "Spear",
+          "rating": 2,
+          "damage": 3,
+          "injury": 14,
+          "specialDamage": [
+            "Pierce"
+          ]
+        }
+      ],
+      "fellAbilities": [
+        "Craven. When affected by the Intimidate Foe combat task, the creature also loses 1 Hate."
+      ]
+    },
+    {
+      "id": "great-cave-troll",
+      "name": "Great Cave-troll",
+      "distinctiveFeatures": [
+        "Brutish",
+        "Wicked"
+      ],
+      "attributeLevel": 10,
+      "endurance": 80,
+      "might": 2,
+      "hateOrResolve": {
+        "type": "Hate",
+        "value": 10
+      },
+      "parry": 0,
+      "armour": 3,
+      "combatProficiencies": [
+        {
+          "name": "Crush",
+          "rating": 3,
+          "damage": 6,
+          "injury": 12,
+          "specialDamage": [
+            "Seize"
+          ]
+        },
+        {
+          "name": "Bite",
+          "rating": 2,
+          "damage": 6,
+          "injury": 14,
+          "specialDamage": [
+            "Pierce"
+          ]
+        }
+      ],
+      "fellAbilities": [
+        "Strike Fear. Spend 1 Hate to make all Player-heroes in sight gain 2 Shadow points (Dread). Those who fail their Shadow test are daunted and cannot spend Hope for the rest of the fight.",
+        "Thick Hide. Spend 1 Hate point to gain (2d) on a Protection roll."
+      ]
+    },
+    {
+      "id": "cave-troll-slinker",
+      "name": "Cave-troll Slinker",
+      "distinctiveFeatures": [
+        "Stealthy",
+        "Wary"
+      ],
+      "attributeLevel": 6,
+      "endurance": 50,
+      "might": 2,
+      "hateOrResolve": {
+        "type": "Hate",
+        "value": 6
+      },
+      "parry": 0,
+      "armour": 3,
+      "combatProficiencies": [
+        {
+          "name": "Club",
+          "rating": 3,
+          "damage": 6,
+          "injury": 16,
+          "specialDamage": [
+            "Break Shield"
+          ]
+        },
+        {
+          "name": "Bite",
+          "rating": 2,
+          "damage": 6,
+          "injury": 14,
+          "specialDamage": [
+            "Pierce"
+          ]
+        }
+      ],
+      "fellAbilities": [
+        "Denizen of the Dark. All attack rolls are Favoured while in darkness.",
+        "Fear of Fire. The creature loses 1 Hate at the start of each round it is engaged in close combat with an adversary wielding a torch or other burning item.",
+        "Thick Hide. Spend 1 Hate point to gain (2d) on a Protection roll."
+      ]
+    },
+    {
+      "id": "stone-troll-robber",
+      "name": "Stone-troll Robber",
+      "distinctiveFeatures": [
+        "Hungry",
+        "Irritable"
+      ],
+      "attributeLevel": 8,
+      "endurance": 60,
+      "might": 2,
+      "hateOrResolve": {
+        "type": "Hate",
+        "value": 8
+      },
+      "parry": 0,
+      "armour": 3,
+      "combatProficiencies": [
+        {
+          "name": "Club",
+          "rating": 3,
+          "damage": 6,
+          "injury": 16,
+          "specialDamage": [
+            "Break Shield"
+          ]
+        },
+        {
+          "name": "Crush",
+          "rating": 2,
+          "damage": 6,
+          "injury": 12,
+          "specialDamage": [
+            "Seize"
+          ]
+        }
+      ],
+      "fellAbilities": [
+        "Hatred (Dwarves). When fighting Dwarves, all the creature\u2019s rolls are Favoured.",
+        "Horrible Strength. If the creature scores a Piercing Blow, spend 1 Hate to make the target\u2019s Protection roll Ill-favoured."
+      ]
+    },
+    {
+      "id": "stone-troll-chief",
+      "name": "Stone-troll Chief",
+      "distinctiveFeatures": [
+        "Cruel",
+        "Suspicious"
+      ],
+      "attributeLevel": 9,
+      "endurance": 70,
+      "might": 2,
+      "hateOrResolve": {
+        "type": "Hate",
+        "value": 9
+      },
+      "parry": 0,
+      "armour": 3,
+      "combatProficiencies": [
+        {
+          "name": "Club",
+          "rating": 3,
+          "damage": 6,
+          "injury": 16,
+          "specialDamage": [
+            "Break Shield"
+          ]
+        },
+        {
+          "name": "Crush",
+          "rating": 2,
+          "damage": 6,
+          "injury": 12,
+          "specialDamage": [
+            "Seize"
+          ]
+        }
+      ],
+      "fellAbilities": [
+        "Hatred (Dwarves). When fighting Dwarves, all the creature\u2019s rolls are Favoured.",
+        "Horrible Strength. If the creature scores a Piercing Blow, spend 1 Hate to make the target\u2019s Protection roll Ill-favoured.",
+        "Yell of Triumph. Spend 1 Hate to restore 1 Hate to all other Trolls in the fight."
+      ]
+    },
+    {
+      "id": "barrow-wight",
+      "name": "Barrow-wight",
+      "distinctiveFeatures": [
+        "Cunning",
+        "Vengeful"
+      ],
+      "attributeLevel": 6,
+      "endurance": 24,
+      "might": 1,
+      "hateOrResolve": {
+        "type": "Hate",
+        "value": 6
+      },
+      "parry": 0,
+      "armour": 3,
+      "combatProficiencies": [
+        {
+          "name": "Ancient Sword",
+          "rating": 3,
+          "damage": 5,
+          "injury": 16,
+          "specialDamage": [
+            "Pierce"
+          ]
+        },
+        {
+          "name": "Chilling Touch",
+          "rating": 2,
+          "damage": 6,
+          "injury": 12,
+          "specialDamage": [
+            "Seize"
+          ]
+        }
+      ],
+      "fellAbilities": [
+        "Denizen of the Dark. All attack rolls are Favoured while in darkness.",
+        "Dreadful Spells. Spend 1 Hate to make one Player-hero gain 3 Shadow points (Sorcery). Targets who fail their Shadow test or who are Miserable fall unconscious and may be roused only with a SONG roll. Otherwise, they wake up after one hour.",
+        "Hate Sunlight. The creature loses 1 Hate at the start of each round it is exposed to the full light of the sun."
+      ]
+    },
+    {
+      "id": "fell-wraith",
+      "name": "Fell Wraith",
+      "distinctiveFeatures": [
+        "Swift",
+        "Wary"
+      ],
+      "attributeLevel": 4,
+      "endurance": 16,
+      "might": 1,
+      "hateOrResolve": {
+        "type": "Hate",
+        "value": 4
+      },
+      "parry": 1,
+      "armour": 2,
+      "combatProficiencies": [
+        {
+          "name": "Pitted Blade",
+          "rating": 3,
+          "damage": 4,
+          "injury": 16,
+          "specialDamage": []
+        },
+        {
+          "name": "Cruel Spear",
+          "rating": 2,
+          "damage": 4,
+          "injury": 14,
+          "specialDamage": [
+            "Pierce"
+          ]
+        }
+      ],
+      "fellAbilities": [
+        "Denizen of the Dark. All attack rolls are Favoured while in darkness.",
+        "Fear of Fire. The creature loses 1 Hate at the start of each round it is engaged in close combat with an adversary wielding a torch or other sort of burning item."
+      ]
+    },
+    {
+      "id": "marsh-dwellers",
+      "name": "Marsh Dwellers",
+      "distinctiveFeatures": [
+        "Fierce",
+        "Stealthy"
+      ],
+      "attributeLevel": 3,
+      "endurance": 12,
+      "might": 1,
+      "hateOrResolve": {
+        "type": "Hate",
+        "value": 3
+      },
+      "parry": 0,
+      "armour": 1,
+      "combatProficiencies": [
+        {
+          "name": "Bite",
+          "rating": 3,
+          "damage": 3,
+          "injury": 14,
+          "specialDamage": [
+            "Pierce"
+          ]
+        },
+        {
+          "name": "Claws",
+          "rating": 2,
+          "damage": 3,
+          "injury": 14,
+          "specialDamage": [
+            "Seize"
+          ]
+        }
+      ],
+      "fellAbilities": [
+        "Fear of Fire. The creature loses 1 Hate at the start of each round it is engaged in close combat with an adversary wielding a torch or other sort of burning item.",
+        "Hate Sunlight. The creature loses 1 Hate at the start of each round it is exposed to the full light of the sun."
+      ]
+    },
+    {
+      "id": "wild-wolf",
+      "name": "Wild Wolf",
+      "distinctiveFeatures": [
+        "Keen-eyed",
+        "Grim"
+      ],
+      "attributeLevel": 3,
+      "endurance": 12,
+      "might": 1,
+      "hateOrResolve": {
+        "type": "Hate",
+        "value": 3
+      },
+      "parry": 0,
+      "armour": 1,
+      "combatProficiencies": [
+        {
+          "name": "Fangs",
+          "rating": 3,
+          "damage": 3,
+          "injury": 14,
+          "specialDamage": [
+            "Pierce"
+          ]
+        }
+      ],
+      "fellAbilities": [
+        "Fear of Fire. The creature loses 1 Hate at the start of each round it is engaged in close combat with an adversary wielding a torch or other burning item.",
+        "Snake-like Speed. When targeted by an attack, spend 1 Hate to make the attack roll Ill-favoured."
+      ]
+    },
+    {
+      "id": "wolf-chieftain",
+      "name": "Wolf-chieftain",
+      "distinctiveFeatures": [
+        "Swift",
+        "Vicious"
+      ],
+      "attributeLevel": 4,
+      "endurance": 16,
+      "might": 1,
+      "hateOrResolve": {
+        "type": "Hate",
+        "value": 4
+      },
+      "parry": 0,
+      "armour": 1,
+      "combatProficiencies": [
+        {
+          "name": "Fangs",
+          "rating": 3,
+          "damage": 4,
+          "injury": 14,
+          "specialDamage": [
+            "Pierce"
+          ]
+        },
+        {
+          "name": "Claws",
+          "rating": 2,
+          "damage": 4,
+          "injury": 14,
+          "specialDamage": [
+            "Seize"
+          ]
+        }
+      ],
+      "fellAbilities": [
+        "Fear of Fire. The creature loses 1 Hate at the start of each round it is engaged in close combat with an adversary wielding a torch or other burning item.",
+        "Snake-like Speed. When targeted by an attack, spend 1 Hate to make the attack roll Ill-favoured.",
+        "Howl of Triumph. Spend 1 Hate to restore 1 Hate to all other Wargs in the fight."
+      ]
+    },
+    {
+      "id": "hound-of-sauron",
+      "name": "Hound of Sauron",
+      "distinctiveFeatures": [
+        "Cunning",
+        "Fierce"
+      ],
+      "attributeLevel": 5,
+      "endurance": 20,
+      "might": 2,
+      "hateOrResolve": {
+        "type": "Hate",
+        "value": 5
+      },
+      "parry": 1,
+      "armour": 2,
+      "combatProficiencies": [
+        {
+          "name": "Fangs",
+          "rating": 3,
+          "damage": 5,
+          "injury": 14,
+          "specialDamage": [
+            "Pierce"
+          ]
+        },
+        {
+          "name": "Claws",
+          "rating": 3,
+          "damage": 5,
+          "injury": 14,
+          "specialDamage": [
+            "Seize"
+          ]
+        }
+      ],
+      "fellAbilities": [
+        "Deadly Wound. Wounded targets make an Ill-favoured Feat die roll to determine the severity of their injury.",
+        "Hideous Toughness. The creature is unaffected by unarmed attacks. Additionally, when an attack inflicts damage to the creature that would cause it to go to zero Endurance, it causes a Piercing Blow instead. Then, if the creature is still alive its Endurance score is set back at half its maximum rating.",
+        "Strike Fear. Spend 1 Hate to make all Player-heroes in sight gain 2 Shadow points (Dread). Those who fail their Shadow test are daunted and cannot spend Hope for the rest of the fight."
+      ]
+    }
+  ]
+}

@@ -21,6 +21,7 @@ import callingsJson from '../compendiums/tor2e-callings.json';
 import virtuesJson from '../compendiums/tor2e-virtues.json';
 import rewardsJson from '../compendiums/tor2e-rewards.json';
 import equipmentJson from '../compendiums/tor2e-equipment.json';
+import adversariesCoreJson from '../compendiums/tor2e-adversaries-core.json';
 
 export const compendiums = {
   skills: skillsJson as unknown as Compendium<'tor2e-skills'>,
@@ -30,6 +31,7 @@ export const compendiums = {
   virtues: virtuesJson as unknown as Compendium<'tor2e-virtues'>,
   rewards: rewardsJson as unknown as Compendium<'tor2e-rewards'>,
   equipment: equipmentJson as unknown as Compendium<'tor2e-equipment'>,
+  adversariesCore: adversariesCoreJson as unknown as Compendium<'tor2e-adversaries-core'>,
 };
 
 export function findEntryById(list: CompendiumEntry[], id?: string) {
