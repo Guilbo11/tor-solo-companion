@@ -764,7 +764,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                   <div className="sub">{culture} • {calling}</div>
                 </div>
 
-                <div className="cardTopRight">
+                <div className="cardTopRight" style={{display:'flex', gap: 10, alignItems:'center'}}>
                   <button className={"btn btn-ghost"} title={isExpanded ? 'Collapse' : 'Expand'} onClick={() => {
                     const next = isExpanded ? null : hero.id;
                     setExpandedId(next);
@@ -800,16 +800,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                           </div>
                       </div>
 
-                      <div className="row" style={{alignItems:'flex-end', marginTop: 8}}>
-                        <div className="field" style={{flex:1}}>
-                          <div className="label">Valour</div>
-                          <input className="input" type="number" min={0} max={6} value={hero.valour ?? 0} onChange={(e)=>updateHero(hero.id,{valour: Number(e.target.value)})}/>
-                        </div>
-                        <div className="field" style={{flex:1}}>
-                          <div className="label">Wisdom</div>
-                          <input className="input" type="number" min={0} max={6} value={hero.wisdom ?? 0} onChange={(e)=>updateHero(hero.id,{wisdom: Number(e.target.value)})}/>
-                        </div>
-                      </div>
+                      {/* Valour/Wisdom are managed in the Experience tab (not on the Sheet). */}
 
                       <div className="section">
                         <div className="sectionTitle">Resources</div>
@@ -2442,7 +2433,7 @@ function AttackSection({ hero, derived }: { hero: any; derived: any }) {
                 <div className="attackStats small muted">DMG {w.damage ?? '—'} • INJ {w.injury ?? '—'} • Dice {dice}</div>
               </div>
               <div className="attackCol2">
-                <button className="btn" disabled={dice<=0} onClick={()=>{
+                <button className="btn" onClick={()=>{
                   const txt = window.prompt('Parry rating of the target?', '0');
                   if (txt === null) return;
                   const parry = Number.parseInt(String(txt).trim() || '0', 10);
@@ -2450,6 +2441,8 @@ function AttackSection({ hero, derived }: { hero: any; derived: any }) {
                   const tn = Number(derived?.strengthTN ?? 0) + parryMod;
                   const r = rollTOR({ dice, featMode, weary, tn });
                   setLast(Object.assign({}, r, { _tn: tn, _label: w.name }));
+                  // Bottom toast (4s) like Skills rolls
+                  toast(formatTorRoll(r, { label: w.name, tn }), (r as any)?.pass ? 'success' : 'warning');
                   try {
                     (window as any).__torcLogRollHtml?.(`<div>${formatTorRoll(r, { label: w.name, tn })}</div>`);
                   } catch {}

@@ -29,7 +29,8 @@ export default function App() {
   // like Pocketforge. Campaign management only happens there.
   const isCampaignLanding = mode === 'landing';
 
-  const tabs: Tab[] = ['Journal','Heroes','Map','NPCs','Fellowship','Oracles','Settings'];
+  // Settings is accessed via the gear icon (top-right), not as a tab.
+  const tabs: Tab[] = ['Journal','Heroes','Map','NPCs','Fellowship','Oracles'];
 
   const set: React.Dispatch<React.SetStateAction<StoredState>> = (next) => {
     setState((prev) => {
@@ -39,11 +40,20 @@ export default function App() {
     });
   };
 
+  const GearButton = ({ onClick }: { onClick: () => void }) => (
+    <button className="iconBtn" aria-label="Settings" title="Settings" onClick={onClick}>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M19.4 15a1.8 1.8 0 0 0 .36 1.98l.04.04a2.2 2.2 0 0 1-1.56 3.76 2.2 2.2 0 0 1-1.56-.64l-.04-.04a1.8 1.8 0 0 0-1.98-.36 1.8 1.8 0 0 0-1.08 1.64V21a2.2 2.2 0 0 1-4.4 0v-.06a1.8 1.8 0 0 0-1.08-1.64 1.8 1.8 0 0 0-1.98.36l-.04.04a2.2 2.2 0 0 1-3.12 0 2.2 2.2 0 0 1 0-3.12l.04-.04A1.8 1.8 0 0 0 4.6 15a1.8 1.8 0 0 0-1.64-1.08H2.9a2.2 2.2 0 0 1 0-4.4h.06A1.8 1.8 0 0 0 4.6 8.44a1.8 1.8 0 0 0-.36-1.98l-.04-.04a2.2 2.2 0 0 1 3.12-3.12l.04.04a1.8 1.8 0 0 0 1.98.36 1.8 1.8 0 0 0 1.08-1.64V3a2.2 2.2 0 0 1 4.4 0v.06a1.8 1.8 0 0 0 1.08 1.64 1.8 1.8 0 0 0 1.98-.36l.04-.04a2.2 2.2 0 0 1 3.12 3.12l-.04.04a1.8 1.8 0 0 0-.36 1.98 1.8 1.8 0 0 0 1.64 1.08H21.1a2.2 2.2 0 0 1 0 4.4h-.06A1.8 1.8 0 0 0 19.4 15Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    </button>
+  );
+
   const header = useMemo(() => {
     return (
       <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <div className="h1">TOR Companion <span className="badge">prototype</span></div>
+          <div className="h1">TOR Companion</div>
           <div className="muted small">Local-only by default. You can export/import your data anytime.</div>
         </div>
         <div className="row" style={{ alignItems: 'center' }}>
@@ -74,11 +84,24 @@ export default function App() {
             }} />
           </label>
 
+          <GearButton onClick={() => setTab('Settings')} />
+
           {/* Reset removed (too risky) */}
         </div>
       </div>
     );
   }, [state]);
+
+  const landingHeader = (
+    <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between', padding: '14px 14px 8px' }}>
+      <div className="h1" style={{ margin: 0 }}>TOR Companion</div>
+      <GearButton onClick={() => {
+        // Open Settings, then allow returning to campaigns via SettingsPanel.
+        setMode('main');
+        setTab('Settings');
+      }} />
+    </div>
+  );
 
   // Global roll logger hook (dice + oracles) -> active journal chapter (works from any tab).
   useEffect(() => {
@@ -125,7 +148,7 @@ export default function App() {
 
   return (
     <div className={isCampaignLanding ? 'landingContainer' : 'container'}>
-      {!isCampaignLanding ? header : null}
+      {isCampaignLanding ? landingHeader : header}
       {!isCampaignLanding ? (
         <div className="tabs">
           {tabs.map(t => (

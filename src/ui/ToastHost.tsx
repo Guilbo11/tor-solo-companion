@@ -14,9 +14,11 @@ export type ToastPayload = {
  */
 export default function ToastHost() {
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [msg, setMsg] = useState('');
   const [type, setType] = useState<ToastType>('info');
   const [timer, setTimer] = useState<number | null>(null);
+  const [unmountTimer, setUnmountTimer] = useState<number | null>(null);
 
   useEffect(() => {
     (window as any).__torcToast = (p: ToastPayload) => {
@@ -25,24 +27,35 @@ export default function ToastHost() {
 
       setMsg(m);
       setType((p?.type as ToastType) || 'info');
-      setOpen(true);
+      setMounted(true);
+      // If we were fading out, cancel the pending unmount.
+      if (unmountTimer) window.clearTimeout(unmountTimer);
+      // Next tick ensures CSS transition triggers reliably.
+      window.setTimeout(() => setOpen(true), 0);
 
       const ms = typeof p?.durationMs === 'number' ? p.durationMs : 4000;
       if (timer) window.clearTimeout(timer);
-      const id = window.setTimeout(() => setOpen(false), ms);
+      const id = window.setTimeout(() => {
+        setOpen(false);
+        // Allow fade-out transition before unmounting.
+        if (unmountTimer) window.clearTimeout(unmountTimer);
+        const uid = window.setTimeout(() => setMounted(false), 280);
+        setUnmountTimer(uid);
+      }, ms);
       setTimer(id);
     };
     return () => {
       (window as any).__torcToast = undefined;
       if (timer) window.clearTimeout(timer);
+      if (unmountTimer) window.clearTimeout(unmountTimer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timer]);
+  }, [timer, unmountTimer]);
 
-  if (!open) return null;
+  if (!mounted) return null;
 
   return (
-    <div className={`torcToast torcToast-${type}`} role="status" aria-live="polite">
+    <div className={`torcToast torcToast-${type} ${open ? 'isOpen' : ''}`} role="status" aria-live="polite">
       <div className="torcToastMsg">{msg}</div>
     </div>
   );
