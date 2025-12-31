@@ -2867,18 +2867,79 @@ function AttackSection({ hero, derived, updateHero }: { hero: any; derived: any;
 }
 
 function AttributeBox({ label, value, tn, onChange }: { label: string; value: number; tn: number; onChange: (v:number)=>void }) {
-  const v = typeof value === 'number' ? value : 2;
+  // Attributes can be edited after creation; allow a wider range without the input
+  // snapping to a fallback value during transient edits (e.g., when the field is empty).
+  const MIN = 0;
+  const MAX = 10;
+  const vNum = Number.isFinite(value as any) ? Number(value) : 0;
+  const clamp = (n: number) => Math.max(MIN, Math.min(MAX, n));
+
+  const [draft, setDraft] = useState<string>(String(clamp(vNum)));
+  useEffect(() => setDraft(String(clamp(vNum))), [vNum]);
+
+  const commit = (s: string) => {
+    const t = (s ?? '').toString().trim();
+    if (t === '') {
+      const next = MIN;
+      setDraft(String(next));
+      onChange(next);
+      return;
+    }
+    const nRaw = Number(t);
+    if (!Number.isFinite(nRaw)) {
+      // revert to last known value
+      setDraft(String(clamp(vNum)));
+      return;
+    }
+    const n = clamp(Math.round(nRaw));
+    setDraft(String(n));
+    onChange(n);
+  };
+
   return (
     <div className="miniCard">
       <div className="miniTitle">{label}</div>
-      <div className="row" style={{gap:8}}>
-        <input className="input" type="number" min={2} max={8} value={v} onChange={(e)=>{
-          const n = parseInt(e.target.value, 10);
-          if (Number.isNaN(n)) return;
-          onChange(Math.max(2, Math.min(8, n)));
-        }} />
+      <div className="row" style={{gap:8, alignItems:'center'}}>
+        <button
+          className="btn"
+          type="button"
+          aria-label={`Decrease ${label}`}
+          onClick={() => onChange(clamp(vNum - 1))}
+          disabled={vNum <= MIN}
+        >
+          −
+        </button>
+        <input
+          className="input"
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          value={draft}
+          onChange={(e)=>setDraft(e.target.value)}
+          onBlur={()=>commit(draft)}
+          onKeyDown={(e)=>{
+            if (e.key === 'Enter') {
+              (e.currentTarget as any).blur?.();
+            }
+            if (e.key === 'Escape') {
+              setDraft(String(clamp(vNum)));
+              (e.currentTarget as any).blur?.();
+            }
+          }}
+          style={{width: 64, textAlign:'center'}}
+        />
+        <button
+          className="btn"
+          type="button"
+          aria-label={`Increase ${label}`}
+          onClick={() => onChange(clamp(vNum + 1))}
+          disabled={vNum >= MAX}
+        >
+          +
+        </button>
         <div className="tnPill">TN {tn}</div>
       </div>
+      <div className="small muted" style={{marginTop:6}}>Range: {MIN}–{MAX}</div>
     </div>
   );
 }
