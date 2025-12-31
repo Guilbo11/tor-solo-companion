@@ -5,6 +5,7 @@ export type Tor2eDerived = {
   heartTN: number;
   witsTN: number;
   loadTotal: number;
+  protectionPiercingBonus?: number;
   parry: { base: number; shield: number; other: number; total: number };
   protection: { armour: number; helm: number; other: number; total: number };
   favouredSkillSet: Set<string>;
@@ -103,6 +104,18 @@ export function computeDerived(hero: any, tnBase: number = 20): Tor2eDerived {
       const base = findEntryById(equipment, it.ref.id);
       if (!base) return null;
       const o = (it as any)?.override ?? {};
+      const rewardNameFor = (rid: string) => {
+        const id = String(rid);
+        switch (id) {
+          case 'keen-weapon': return 'Keen';
+          case 'fell-weapon': return 'Fell';
+          case 'grievous-weapon': return 'Grievous';
+          case 'cunning-make': return 'Cunning Make';
+          case 'close-fitting': return 'Close-fitting';
+          case 'reinforced-shield': return 'Reinforced';
+          default: return id;
+        }
+      };
       // Apply lightweight overrides (used for Rewards attached to items)
       const merged: any = { ...base };
       if (typeof o.loadDelta === 'number') merged.load = Number(merged.load ?? 0) + Number(o.loadDelta);
@@ -142,6 +155,18 @@ export function computeDerived(hero: any, tnBase: number = 20): Tor2eDerived {
       if (typeof o.notesAppend === 'string' && o.notesAppend.trim()) {
         merged.notes = String(merged.notes ?? '').trim();
         merged.notes = merged.notes ? (merged.notes + ' • ' + o.notesAppend.trim()) : o.notesAppend.trim();
+      }
+
+      // Display: append reward names to the item name.
+      if (Array.isArray(o.rewards) && o.rewards.length) {
+        const rewards = o.rewards.map(rewardNameFor).filter(Boolean);
+        const weaponOrder = ['Keen', 'Fell', 'Grievous'];
+        const isWeapon = String(merged.category ?? '') === 'Weapon';
+        const ordered = isWeapon
+          ? [...weaponOrder.filter(r=>rewards.includes(r)), ...rewards.filter(r=>!weaponOrder.includes(r)).sort()]
+          : rewards.sort();
+        const suffix = ordered.join(', ');
+        merged.name = `${String(merged.name ?? base.name)} (${suffix})`;
       }
       return merged;
     }
@@ -191,27 +216,54 @@ export function computeDerived(hero: any, tnBase: number = 20): Tor2eDerived {
   const protOther = typeof hero?.protectionOther === 'number' ? hero.protectionOther : 0;
   const protTotal = protArmour + protHelm + protOther;
 
-  // Load total: sum all inventory items not dropped, using manual load override when present.
-  let loadTotal = 0;
+  // Load total: sum all inventory items not dropped, applying Reward overrides.
+  // Dwarves: armour + helm (but not shields) count as half Load (round up), applied to the sum of those items.
+  const isDwarf = String(hero?.cultureId ?? '') === 'dwarves-of-durins-folk';
+  let otherLoad = 0;
+  let armourLoad = 0;
   for (const it of inv) {
     if (it?.dropped) continue;
     const qty = typeof it?.qty === 'number' ? it.qty : 1;
     let l = typeof it?.load === 'number' ? it.load : 0;
-    if (typeof it?.load !== 'number' && it?.ref?.pack === 'tor2e-equipment' && it?.ref?.id) {
+    let cat = '';
+    if (it?.ref?.pack === 'tor2e-equipment' && it?.ref?.id) {
       const e: any = findEntryById(equipment, it.ref.id);
-      l = typeof e?.load === 'number' ? e.load : 0;
+      cat = String(e?.category ?? '');
+      if (typeof it?.load !== 'number') {
+        l = typeof e?.load === 'number' ? e.load : 0;
+        const o = (it as any)?.override ?? {};
+        if (typeof o.loadDelta === 'number') l = l + Number(o.loadDelta);
+      }
     }
-    loadTotal += l * qty;
+    const add = l * qty;
+    if (isDwarf && (cat === 'Armour' || cat === 'Headgear')) armourLoad += add;
+    else otherLoad += add;
   }
+  let loadTotal = otherLoad + (isDwarf ? Math.ceil(armourLoad / 2) : armourLoad);
 
   // Carried treasure adds directly to Load (separate from equipment items).
   loadTotal += Number((hero as any)?.carriedTreasure ?? 0) || 0;
+
+  // Close-fitting: +2 to PROTECTION roll vs Piercing Blow (if equipped on armour/helm)
+  let protectionPiercingBonus = 0;
+  for (const it of invEquipped) {
+    if (protectionPiercingBonus) break;
+    if (it?.ref?.pack !== 'tor2e-equipment') continue;
+    const e: any = findEntryById(equipment, it.ref.id);
+    const cat = String(e?.category ?? '');
+    if (cat !== 'Armour' && cat !== 'Headgear') continue;
+    const o = (it as any)?.override ?? {};
+    const rewards = Array.isArray(o.rewards) ? o.rewards.map(String) : [];
+    if (rewards.includes('close-fitting')) protectionPiercingBonus = 2;
+    if (typeof o.protectionPiercingBonus === 'number') protectionPiercingBonus = Math.max(protectionPiercingBonus, Number(o.protectionPiercingBonus));
+  }
 
   return {
     strengthTN,
     heartTN,
     witsTN,
     loadTotal,
+    protectionPiercingBonus,
     parry: { base: parryBase, shield: parryShield, other: parryOther, total: parryTotal },
     protection: { armour: protArmour, helm: protHelm, other: protOther, total: protTotal },
     favouredSkillSet: fav,

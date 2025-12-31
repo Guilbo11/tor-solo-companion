@@ -1190,7 +1190,11 @@
         "female": [],
         "family": []
       },
-      "languages": "The native language of the Dúnedain is the Westron, or\nCommon Speech. Some still learn the Sindarin Elven-tongue,\nas it is handed down from generation to generation. They\nretain an ancient tradition of naming their children using\nthat fair speech."
+      "languages": "The native language of the Dúnedain is the Westron, or\nCommon Speech. Some still learn the Sindarin Elven-tongue,\nas it is handed down from generation to generation. They\nretain an ancient tradition of naming their children using\nthat fair speech.",
+      "culturalBlessings": {
+        "kingsOfMen": "Some say that the lordship of the folk of Arnor is a thing of the past. Yet, the Rangers of the North have inherited the sinews of those Men who wrested the Ring from the burning hand of Sauron.\n\nAdd 1 point to one Attribute of your choice.",
+        "allegianceOfTheDunedain": "The Rangers are devoted to fighting Sauron and his minions by an ancient tradition of war and strife. This obligation makes it harder for them to put their spirit at ease even when enjoying a respite from adventuring. During the Fellowship phase (not Yule) you recover a maximum number of Hope points equal to half your HEART score (rounding fractions up)."
+      }
     }
   ]
 }

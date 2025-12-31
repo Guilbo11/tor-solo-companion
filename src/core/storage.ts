@@ -627,12 +627,16 @@ function ensureDefaults(s: StoredState): StoredState {
   // Hero ordering is per-campaign (drag & drop in Heroes list).
   const uiAny: any = out.ui ?? {};
   if (!uiAny.heroOrderByCampaign || typeof uiAny.heroOrderByCampaign !== 'object') uiAny.heroOrderByCampaign = {};
+  if (!uiAny.recentEnemyTypesByCampaign || typeof uiAny.recentEnemyTypesByCampaign !== 'object') uiAny.recentEnemyTypesByCampaign = {};
   for (const c of campaigns) {
     const cur = Array.isArray(uiAny.heroOrderByCampaign[c.id]) ? uiAny.heroOrderByCampaign[c.id].map(String) : [];
     const heroIds = heroes.filter((h:any)=>String(h.campaignId ?? activeCampaignId)===c.id).map((h:any)=>String(h.id));
     // Keep existing order but append any new heroes not present.
     const next = [...cur.filter((id:string)=>heroIds.includes(id)), ...heroIds.filter(id=>!cur.includes(id))];
     uiAny.heroOrderByCampaign[c.id] = next;
+
+    const rec = Array.isArray(uiAny.recentEnemyTypesByCampaign[c.id]) ? uiAny.recentEnemyTypesByCampaign[c.id].map(String) : [];
+    uiAny.recentEnemyTypesByCampaign[c.id] = rec.slice(0, 3);
   }
   out.ui = uiAny;
   // Ensure fellowship/oracles are NOT shared: each campaign gets its own slice.

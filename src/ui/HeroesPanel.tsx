@@ -140,6 +140,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
   const [createStep, setCreateStep] = useState(0);
   const [createShowAll, setCreateShowAll] = useState(true);
   const [draftHero, setDraftHero] = useState<any | null>(null);
+  const featureLongPressTimer = useRef<any>(null);
   const [showFeatChoices, setShowFeatChoices] = useState(true);
   const [showAddVirtuesRewards, setShowAddVirtuesRewards] = useState(true);
 
@@ -498,6 +499,33 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
     const nextHeroes = heroesAll.map(h => {
       if (h.id !== id) return h;
       const merged = { ...h, ...patch };
+
+      // Enforce culture-based war gear restrictions at all times.
+      const cultureId = String((merged as any).cultureId ?? '');
+      const disallowDwarf = new Set(['great-bow','great-spear','great-shield']);
+      const allowHobbitWeapons = new Set(['axe','bow','club','cudgel','dagger','short-sword','short-spear','spear']);
+      if (Array.isArray((merged as any).inventory) && (cultureId === 'dwarves-of-durins-folk' || cultureId === 'hobbits-of-the-shire')) {
+        (merged as any).inventory = (merged as any).inventory.map((it:any)=>{
+          if (it?.ref?.pack !== 'tor2e-equipment' || !it?.ref?.id) return it;
+          const id = String(it.ref.id);
+          const base:any = findEntryById(compendiums.equipment.entries ?? [], id);
+          const cat = String(base?.category ?? '');
+          let invalid = false;
+          if (cultureId === 'dwarves-of-durins-folk' && disallowDwarf.has(id)) invalid = true;
+          if (cultureId === 'hobbits-of-the-shire') {
+            if (id === 'great-shield') invalid = true;
+            if (cat === 'Weapon' && !allowHobbitWeapons.has(id)) invalid = true;
+          }
+          if (!invalid) return it;
+          // Auto-remove: mark as dropped and unequipped.
+          const next = { ...it, dropped: true, equipped: false };
+          // If a reward was attached to this item, clear it so the player can re-attach elsewhere.
+          if (next.override?.rewards?.length) {
+            next.override = { ...(next.override ?? {}), rewards: [] };
+          }
+          return next;
+        });
+      }
       // keep common nested objects intact when patch provides partials
       if (h.attributes || patch.attributes) merged.attributes = { ...(h.attributes ?? {}), ...(patch.attributes ?? {}) };
       if (h.endurance || patch.endurance) merged.endurance = { ...(h.endurance ?? {}), ...(patch.endurance ?? {}) };
@@ -867,7 +895,11 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                               <button className="btn" style={{flex:1}} onClick={()=>{
                                 const cur = Number(hero.hope?.current ?? 0) || 0;
                                 const max = Number(hero.hope?.max ?? 0) || 0;
-                                const gain = Number(hero.attributes?.heart ?? 0) || 0;
+                                const heart = Number(hero.attributes?.heart ?? 0) || 0;
+                                // Rangers of the North (Allegiance of the Dúnedain): recover at most half HEART (round up)
+                                const gain = hero.cultureId === 'rangers-of-the-north'
+                                  ? Math.ceil(heart / 2)
+                                  : heart;
                                 const next = Math.min(max, cur + gain);
                                 updateHero(hero.id,{hope:{...(hero.hope??{}),current: next}});
                                 toast(`Recovery: Gained ${Math.max(0, next-cur)} Hope`, 'success');
@@ -1016,7 +1048,27 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
 
                       <div className="section">
                         <div className="sectionTitle">Attacks</div>
-                        <AttackSection hero={hero} derived={derived} updateHero={(patch:any)=>updateHero(hero.id, patch)} />
+                        <AttackSection
+                          hero={hero}
+                          derived={derived}
+                          updateHero={(patch:any)=>updateHero(hero.id, patch)}
+                          recentEnemyIds={
+                            Array.isArray((state as any).ui?.recentEnemyTypesByCampaign?.[activeCampaignId])
+                              ? (state as any).ui.recentEnemyTypesByCampaign[activeCampaignId].map(String).slice(0,3)
+                              : []
+                          }
+                          onEnemyUsed={(enemyId: string) => {
+                            setState((prev:any) => {
+                              const ui = { ...(prev.ui ?? {}) };
+                              const m = { ...(ui.recentEnemyTypesByCampaign ?? {}) };
+                              const cur = Array.isArray(m[activeCampaignId]) ? m[activeCampaignId].map(String) : [];
+                              const next = [enemyId, ...cur.filter((x)=>x!==enemyId)].slice(0,3);
+                              m[activeCampaignId] = next;
+                              ui.recentEnemyTypesByCampaign = m;
+                              return { ...prev, ui };
+                            });
+                          }}
+                        />
                       </div>
 
                       <div className="section">
@@ -1443,15 +1495,16 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                   const c:any = findEntryById(compendiums.cultures.entries ?? [], cid);
                   setDraftHero((h:any)=>{
                     const next:any = { ...h, cultureId: cid };
-                    // Apply culture starting skills
-                    const cur = { ...(next.skillRatings ?? {}) };
+                    // Reset Skills then apply culture starting skills (so changing Culture doesn't leave old ranks behind)
                     const starting = c?.startingSkills ?? {};
-                    for (const k of Object.keys(starting)) {
-                      cur[k] = Math.max(Number(cur[k] ?? 0), Number(starting[k] ?? 0));
-                    }
+                    const cur: any = {};
+                    for (const k of Object.keys(starting)) cur[k] = Number(starting[k] ?? 0) || 0;
                     next.skillRatings = cur;
                     // Standard of living
                     next.standardOfLiving = c?.standardOfLiving ?? next.standardOfLiving;
+                    // Reset Kings of Men choice if culture changes
+                    next.kingsOfMenAttribute = '';
+                    next.baseAttributesFromRoll = undefined;
                     // Reset culture-related picks
                     next.cultureFavouredSkillId = '';
                     next.cultureDistinctiveFeatureIds = [];
@@ -1501,6 +1554,8 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                             setDraftHero((h:any)=>({
                               ...h,
                               attributeRollChoice: Number(r.roll),
+                              baseAttributesFromRoll: { strength, heart, wits },
+                              kingsOfMenAttribute: '',
                               attributes: { ...(h.attributes ?? {}), strength, heart, wits },
                               endurance: { ...(h.endurance ?? {}), max: endMax, current: endMax },
                               hope: { ...(h.hope ?? {}), max: hopeMax, current: hopeMax },
@@ -1510,6 +1565,44 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                           </div>
                         );
                       })}
+                    </div>
+                  );
+                })()}
+
+                {(() => {
+                  // Rangers of the North: Kings of Men (choose 1 Attribute to increase by 1)
+                  if (draftHero.cultureId !== 'rangers-of-the-north') return null;
+                  const base = (draftHero as any).baseAttributesFromRoll;
+                  if (!base) return null;
+                  const choice = String((draftHero as any).kingsOfMenAttribute ?? '');
+                  const applyChoice = (attr: string) => {
+                    const bStr = Number(base.strength ?? 0);
+                    const bHea = Number(base.heart ?? 0);
+                    const bWit = Number(base.wits ?? 0);
+                    const add = (a: string) => (a === attr ? 1 : 0);
+                    const strength = bStr + add('Strength');
+                    const heart = bHea + add('Heart');
+                    const wits = bWit + add('Wits');
+                    const c:any = getCultureEntry('rangers-of-the-north');
+                    const endMax = strength + Number(c?.derived?.enduranceBonus ?? 20);
+                    const hopeMax = heart + Number(c?.derived?.hopeBonus ?? 8);
+                    setDraftHero((h:any)=>({
+                      ...h,
+                      kingsOfMenAttribute: attr,
+                      attributes: { ...(h.attributes ?? {}), strength, heart, wits },
+                      endurance: { ...(h.endurance ?? {}), max: endMax, current: Math.min(endMax, Number(h.endurance?.current ?? endMax)) },
+                      hope: { ...(h.hope ?? {}), max: hopeMax, current: Math.min(hopeMax, Number(h.hope?.current ?? hopeMax)) },
+                    }));
+                  };
+                  return (
+                    <div className="field" style={{marginTop:10}}>
+                      <div className="label">Kings of Men. Add 1 point to the Attribute of your choice:</div>
+                      <select className="input" value={choice} onChange={(e)=>applyChoice(e.target.value)}>
+                        <option value="">(choose)</option>
+                        <option value="Strength">Strength</option>
+                        <option value="Heart">Heart</option>
+                        <option value="Wits">Wits</option>
+                      </select>
                     </div>
                   );
                 })()}
@@ -1524,18 +1617,35 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                   const c:any = draftHero.cultureId ? getCultureEntry(draftHero.cultureId) : null;
                   const opts: string[] = Array.isArray(c?.favouredSkillCandidates) ? c.favouredSkillCandidates : [];
                   if (!c || opts.length===0) return <div className="small muted">Select a Culture first.</div>;
+                  const d = c?.derived ?? {};
+                  const endB = Number(d.enduranceBonus ?? 20);
+                  const hopeB = Number(d.hopeBonus ?? 8);
+                  const parryB = Number(d.parryBonus ?? 12);
                   const cur = String(draftHero.cultureFavouredSkillId ?? '');
                   return (
+                    <>
+                      <div className="small" style={{marginBottom:8}}>
+                        <b>Derived Stats:</b>
+                        <div className="small muted">Endurance - Strength + {endB}</div>
+                        <div className="small muted">Hope - Heart + {hopeB}</div>
+                        <div className="small muted">Parry - Wits + {parryB}</div>
+                      </div>
                     <select className="input" value={cur} onChange={(e)=>{
                       const sid = e.target.value;
-                      setDraftHero((h:any)=>({ ...h, cultureFavouredSkillId: sid, skillFavoured: { ...(h.skillFavoured ?? {}), [sid]: true } }));
+                      setDraftHero((h:any)=>({ ...h, cultureFavouredSkillId: sid }));
                     }}>
                       <option value="">(choose)</option>
                       {opts.map((sid)=>{
                         const s:any = findEntryById(compendiums.skills.entries ?? [], sid);
-                        return <option key={sid} value={sid}>{s?.name ?? sid}</option>;
+                        const favSet = new Set<string>([
+                          String(draftHero.cultureFavouredSkillId ?? ''),
+                          ...(Array.isArray(draftHero.callingFavouredSkillIds) ? draftHero.callingFavouredSkillIds.map(String) : []),
+                        ].filter(Boolean));
+                        const star = favSet.has(String(sid)) ? ' ★' : '';
+                        return <option key={sid} value={sid}>{(s?.name ?? sid) + star}</option>;
                       })}
                     </select>
+                    </>
                   );
                 })()}
               </div>
@@ -1618,8 +1728,22 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                     <div className="pillGrid">
                       {opts.map((fid)=>{
                         const selected = cur.includes(fid);
+                        const f:any = findEntryById(compendiums.features.entries ?? [], fid);
+                        const label = f?.name ?? fid;
                         return (
-                          <div key={fid} className={"pill " + (selected ? 'on' : '')} onClick={()=>{
+                          <div
+                            key={fid}
+                            className={"pill " + (selected ? 'on' : '')}
+                            onMouseDown={() => {
+                              featureLongPressTimer.current = setTimeout(() => openEntry('features', fid), 450);
+                            }}
+                            onMouseUp={() => { if (featureLongPressTimer.current) clearTimeout(featureLongPressTimer.current); }}
+                            onMouseLeave={() => { if (featureLongPressTimer.current) clearTimeout(featureLongPressTimer.current); }}
+                            onTouchStart={() => {
+                              featureLongPressTimer.current = setTimeout(() => openEntry('features', fid), 450);
+                            }}
+                            onTouchEnd={() => { if (featureLongPressTimer.current) clearTimeout(featureLongPressTimer.current); }}
+                            onClick={() => {
                             setDraftHero((h:any)=>{
                               const prev: string[] = Array.isArray(h.cultureDistinctiveFeatureIds) ? h.cultureDistinctiveFeatureIds : [];
                               let next = prev;
@@ -1629,7 +1753,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                               return { ...h, cultureDistinctiveFeatureIds: next };
                             });
                           }}>
-                            {fid}
+                            {selected ? (label + ' ★') : label}
                           </div>
                         );
                       })}
@@ -1653,7 +1777,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                 </select>
                 {draftHero.callingId ? (
                   <div className="small muted" style={{marginTop:6}}>
-                    Shadow Path will be set from the Calling.
+                    Shadow Path: <b>{String((findEntryById(compendiums.callings.entries ?? [], draftHero.callingId) as any)?.shadowPath ?? '—')}</b>
                   </div>
                 ) : null}
               </div>
@@ -1685,10 +1809,18 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                               if (prev.includes(sid)) next = prev.filter(x=>x!==sid);
                               else if (prev.length < 2) next = [...prev, sid];
                               else next = [...prev.slice(0,1), sid];
-                              return { ...h, callingFavouredSkillIds: next, skillFavoured: { ...(h.skillFavoured ?? {}), [sid]: true } };
+                              return { ...h, callingFavouredSkillIds: next };
                             });
                           }}>
-                            {String(lab).toLowerCase().replace(/^\w/, (m)=>m.toUpperCase())}
+                            {(() => {
+                              const s:any = findEntryById(compendiums.skills.entries ?? [], sid);
+                              const favSet = new Set<string>([
+                                String(draftHero.cultureFavouredSkillId ?? ''),
+                                ...(Array.isArray(draftHero.callingFavouredSkillIds) ? draftHero.callingFavouredSkillIds.map(String) : []),
+                              ].filter(Boolean));
+                              const star = favSet.has(String(sid)) ? ' ★' : '';
+                              return String(s?.name ?? lab) + star;
+                            })()}
                           </div>
                         );
                       })}
@@ -1776,6 +1908,9 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                   // Required creation fields (when using "show all")
                   if (!h.cultureId) return alert('Choose a Culture.');
                   if (!h.attributeRollChoice) return alert('Choose an Attribute array.');
+                  if (h.cultureId === 'rangers-of-the-north' && !String(h.kingsOfMenAttribute ?? '').trim()) {
+                    return alert('Kings of Men: choose which Attribute gets +1.');
+                  }
                   if (!h.cultureFavouredSkillId) return alert('Choose the Culture favoured skill.');
                   if (!h.cultureCombatProf2 || !h.cultureCombatProf1) return alert('Choose the Culture combat proficiencies (+2 and +1).');
                   if ((Array.isArray(h.cultureDistinctiveFeatureIds) ? h.cultureDistinctiveFeatureIds.length : 0) < 2) return alert('Choose 2 Distinctive Features.');
@@ -2122,7 +2257,22 @@ function InventoryEditor({ hero, updateHero, onSeeMore }: { hero: any; updateHer
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hero?.id]);
 
-  const equipOptions = useMemo(() => sortByName(compendiums.equipment.entries ?? []), []);
+  const equipOptions = useMemo(() => {
+    const cultureId = String(hero?.cultureId ?? '');
+    const disallowDwarf = new Set(['great-bow','great-spear','great-shield']);
+    const allowHobbitWeapons = new Set(['axe','bow','club','cudgel','dagger','short-sword','short-spear','spear']);
+    const list = sortByName(compendiums.equipment.entries ?? []).filter((e:any)=>{
+      const id = String(e.id ?? '');
+      const cat = String(e.category ?? '');
+      if (cultureId === 'dwarves-of-durins-folk' && disallowDwarf.has(id)) return false;
+      if (cultureId === 'hobbits-of-the-shire') {
+        if (id === 'great-shield') return false;
+        if (cat === 'Weapon') return allowHobbitWeapons.has(id);
+      }
+      return true;
+    });
+    return list;
+  }, [hero?.cultureId]);
 
   function addCustom(itemName: string, itemQty: number) {
     const cur = hero.inventory ?? [];
@@ -2383,7 +2533,7 @@ function UsefulItemsEditor({ hero, updateHero }: { hero: any; updateHero: (patch
   );
 }
 
-function AttackSection({ hero, derived, updateHero }: { hero: any; derived: any; updateHero: (patch:any)=>void }) {
+function AttackSection({ hero, derived, updateHero, recentEnemyIds, onEnemyUsed }: { hero: any; derived: any; updateHero: (patch:any)=>void; recentEnemyIds: string[]; onEnemyUsed: (enemyId: string)=>void }) {
   const [featMode, setFeatMode] = useState<'normal'|'favoured'|'illFavoured'>('normal');
   const [last, setLast] = useState<RollResult | null>(null);
   const weary = !!hero.conditions?.weary;
@@ -2489,6 +2639,7 @@ function AttackSection({ hero, derived, updateHero }: { hero: any; derived: any;
   const finalizeEnemyAttack = (specials: string[]) => {
     const ctx = pendingRef.current;
     if (!ctx) return;
+    if (ctx.enemy?.id) onEnemyUsed(String(ctx.enemy.id));
     const e:any = ctx.enemy;
     const w:any = ctx.weapon;
     const r: RollResult = ctx.roll;
@@ -2577,7 +2728,9 @@ function AttackSection({ hero, derived, updateHero }: { hero: any; derived: any;
     let extraToast = '';
     if (pb) {
       const injTN = Number(w.injury ?? 0) || 0;
-      const pr = rollTOR({ dice: heroProtectionDice, featMode: 'normal', weary: !!hero.conditions?.weary, tn: injTN });
+      const prRaw = rollTOR({ dice: heroProtectionDice, featMode: 'normal', weary: !!hero.conditions?.weary, tn: injTN });
+      const bonus = Number((derived as any)?.protectionPiercingBonus ?? 0) || 0;
+      const pr = bonus ? ({ ...prRaw, total: (prRaw.total ?? 0) + bonus, passed: ((prRaw.total ?? 0) + bonus) >= injTN }) : prRaw;
       // Custom formatting for the piercing resistance roll:
       // - Replace PASS/FAIL with RESISTED/NOT RESISTED
       // - Show Feat die names (Gandalf/Sauron) instead of emojis to avoid ambiguity.
@@ -2586,6 +2739,7 @@ function AttackSection({ hero, derived, updateHero }: { hero: any; derived: any;
         .replace(/^Piercing\s-\s(PASS|FAIL)/, `Piercing - ${pr.passed ? 'RESISTED' : 'NOT RESISTED'}`)
         .replace(/🧙/g, 'Gandalf')
         .replace(/🧿/g, 'Sauron');
+      if (bonus) protectTxt += ` (+${bonus} Close-fitting)`;
       lines.push(`<div>${protectTxt}</div>`);
 
       const protFail = pr.passed === false;
@@ -2726,6 +2880,22 @@ function AttackSection({ hero, derived, updateHero }: { hero: any; derived: any;
               <div><b>From Enemy</b></div>
               <button className="btn btn-ghost" onClick={()=>setEnemyPickerOpen(false)}>Close</button>
             </div>
+            {Array.isArray(recentEnemyIds) && recentEnemyIds.length ? (
+              <div style={{marginTop:10}}>
+                <div className="small muted" style={{marginBottom:6}}>Recent:</div>
+                <div className="row" style={{gap:8, flexWrap:'wrap'}}>
+                  {recentEnemyIds.slice(0,3).map((id)=>{
+                    const e:any = (compendiums.adversaries.entries ?? []).find((x:any)=>String(x.id)===String(id));
+                    const label = e?.name ?? id;
+                    return (
+                      <button key={id} className="btn btn-ghost" onClick={()=>{ setPickEnemyId(String(id)); setPickWeaponName(''); }}>
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
             <div className="row" style={{gap:8, marginTop:10}}>
               <input className="input" placeholder="Search enemy…" value={enemySearch} onChange={(e)=>setEnemySearch(e.target.value)} style={{flex:1}} />
             </div>
@@ -2867,79 +3037,21 @@ function AttackSection({ hero, derived, updateHero }: { hero: any; derived: any;
 }
 
 function AttributeBox({ label, value, tn, onChange }: { label: string; value: number; tn: number; onChange: (v:number)=>void }) {
-  // Attributes can be edited after creation; allow a wider range without the input
-  // snapping to a fallback value during transient edits (e.g., when the field is empty).
-  const MIN = 0;
-  const MAX = 10;
-  const vNum = Number.isFinite(value as any) ? Number(value) : 0;
-  const clamp = (n: number) => Math.max(MIN, Math.min(MAX, n));
-
-  const [draft, setDraft] = useState<string>(String(clamp(vNum)));
-  useEffect(() => setDraft(String(clamp(vNum))), [vNum]);
-
-  const commit = (s: string) => {
-    const t = (s ?? '').toString().trim();
-    if (t === '') {
-      const next = MIN;
-      setDraft(String(next));
-      onChange(next);
-      return;
-    }
-    const nRaw = Number(t);
-    if (!Number.isFinite(nRaw)) {
-      // revert to last known value
-      setDraft(String(clamp(vNum)));
-      return;
-    }
-    const n = clamp(Math.round(nRaw));
-    setDraft(String(n));
-    onChange(n);
-  };
-
+  const v = typeof value === 'number' ? value : 0;
+  const clampAttr = (n: number) => Math.max(0, Math.min(10, n));
   return (
     <div className="miniCard">
       <div className="miniTitle">{label}</div>
-      <div className="row" style={{gap:8, alignItems:'center'}}>
-        <button
-          className="btn"
-          type="button"
-          aria-label={`Decrease ${label}`}
-          onClick={() => onChange(clamp(vNum - 1))}
-          disabled={vNum <= MIN}
-        >
-          −
-        </button>
-        <input
-          className="input"
-          type="text"
-          inputMode="numeric"
-          pattern="[0-9]*"
-          value={draft}
-          onChange={(e)=>setDraft(e.target.value)}
-          onBlur={()=>commit(draft)}
-          onKeyDown={(e)=>{
-            if (e.key === 'Enter') {
-              (e.currentTarget as any).blur?.();
-            }
-            if (e.key === 'Escape') {
-              setDraft(String(clamp(vNum)));
-              (e.currentTarget as any).blur?.();
-            }
-          }}
-          style={{width: 64, textAlign:'center'}}
-        />
-        <button
-          className="btn"
-          type="button"
-          aria-label={`Increase ${label}`}
-          onClick={() => onChange(clamp(vNum + 1))}
-          disabled={vNum >= MAX}
-        >
-          +
-        </button>
+      <div className="row" style={{gap:8}}>
+        <button className="btn" onClick={()=>onChange(clampAttr(v-1))} disabled={v<=0}>-</button>
+        <input className="input" type="number" min={0} max={10} value={v} onChange={(e)=>{
+          const n = parseInt(e.target.value, 10);
+          if (Number.isNaN(n)) return;
+          onChange(clampAttr(n));
+        }} style={{maxWidth: 92}} />
+        <button className="btn" onClick={()=>onChange(clampAttr(v+1))} disabled={v>=10}>+</button>
         <div className="tnPill">TN {tn}</div>
       </div>
-      <div className="small muted" style={{marginTop:6}}>Range: {MIN}–{MAX}</div>
     </div>
   );
 }
@@ -3394,7 +3506,7 @@ function StartingRewardVirtueEditor({ hero, setHero, onSeeMore }: { hero:any; se
 
   const rewardToOverride = (rewardId: string) => {
     switch (rewardId) {
-      case 'close-fitting': return { loadDelta: -2, notesAppend: 'Close-fitting (-2 Load)' };
+      case 'close-fitting': return { protectionPiercingBonus: 2, notesAppend: 'Close-fitting (+2 PROTECTION vs Piercing Blow)' };
       case 'cunning-make': return { loadDelta: -1, notesAppend: 'Cunning Make (-1 Load)' };
       case 'fell-weapon': return { injuryDelta: 2, notesAppend: 'Fell (+2 INJ)' };
       case 'grievous-weapon': return { damageDelta: 1, notesAppend: 'Grievous (+1 DMG)' };

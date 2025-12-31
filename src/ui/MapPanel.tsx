@@ -722,6 +722,25 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
           >
             + Map
           </button>
+
+          <button
+            className="btn"
+            onClick={() => {
+              const name = prompt('Duplicate map name?', `${activeMap.name} (copy)`);
+              if (!name) return;
+              const id = crypto.randomUUID();
+              const base = activeMap?.state ?? mstate;
+              const nextDoc = { id, name: name.trim(), state: structuredClone(base) };
+              setSelected('');
+              setState({
+                ...state,
+                mapsByCampaign: { ...state.mapsByCampaign, [campId]: [...maps, nextDoc] },
+                activeMapIdByCampaign: { ...state.activeMapIdByCampaign, [campId]: id },
+              });
+            }}
+          >
+            Duplicate
+          </button>
         </div>
       </div>
 
