@@ -108,6 +108,17 @@
       "description": ""
     },
     {
+      "id": "long-hafted-axe",
+      "name": "Long-hafted Axe",
+      "category": "Weapon",
+      "load": 3,
+      "damage": 6,
+      "injury": "18 (1h)/20 (2h)",
+      "proficiency": "Axes",
+      "notes": "Can be used 1 or 2-handed",
+      "description": ""
+    },
+    {
       "id": "bow",
       "name": "Bow",
       "category": "Weapon",

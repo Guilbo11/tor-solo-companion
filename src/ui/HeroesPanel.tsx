@@ -501,6 +501,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
       const merged = { ...h, ...patch };
 
       // Enforce culture-based war gear restrictions at all times.
+      // Restricted items may be carried, but cannot be equipped.
       const cultureId = String((merged as any).cultureId ?? '');
       const disallowDwarf = new Set(['great-bow','great-spear','great-shield']);
       const allowHobbitWeapons = new Set(['axe','bow','club','cudgel','dagger','short-sword','short-spear','spear']);
@@ -517,13 +518,9 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
             if (cat === 'Weapon' && !allowHobbitWeapons.has(id)) invalid = true;
           }
           if (!invalid) return it;
-          // Auto-remove: mark as dropped and unequipped.
-          const next = { ...it, dropped: true, equipped: false };
-          // If a reward was attached to this item, clear it so the player can re-attach elsewhere.
-          if (next.override?.rewards?.length) {
-            next.override = { ...(next.override ?? {}), rewards: [] };
-          }
-          return next;
+          // Carrying is allowed, but equipping is not.
+          if (!it.equipped) return it;
+          return { ...it, equipped: false };
         });
       }
       // keep common nested objects intact when patch provides partials
@@ -553,6 +550,19 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
       const wits = Number(merged.attributes?.wits ?? 2);
       const nimbleness = Array.isArray(merged.virtueIds) && merged.virtueIds.includes('nimbleness');
       merged.parry = { ...(merged.parry ?? {}), base: wits + parryBonus + (nimbleness ? 1 : 0) };
+
+      // Keep Endurance/Hope maxima dynamically tied to Attributes (and Culture bonuses).
+      // This mirrors how TNs update dynamically when Attributes change.
+      const strength = Number(merged.attributes?.strength ?? 2);
+      const heart = Number(merged.attributes?.heart ?? 2);
+      const endBonus = (culture as any)?.derived?.enduranceBonus ?? 20;
+      const hopeBonus = (culture as any)?.derived?.hopeBonus ?? 8;
+      const nextEndMax = Math.max(0, strength + Number(endBonus));
+      const nextHopeMax = Math.max(0, heart + Number(hopeBonus));
+      const curEnd = Number(merged.endurance?.current ?? nextEndMax);
+      const curHope = Number(merged.hope?.current ?? nextHopeMax);
+      merged.endurance = { ...(merged.endurance ?? {}), max: nextEndMax, current: Math.min(curEnd, nextEndMax) };
+      merged.hope = { ...(merged.hope ?? {}), max: nextHopeMax, current: Math.min(curHope, nextHopeMax) };
 
       // Apply Reward/Starting Gear overrides to inventory items (load/protection/etc.)
       if (merged.startingGearOverrides && Array.isArray(merged.inventory)) {
@@ -1753,7 +1763,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                               return { ...h, cultureDistinctiveFeatureIds: next };
                             });
                           }}>
-                            {selected ? (label + ' ★') : label}
+                            {label}
                           </div>
                         );
                       })}
@@ -1998,6 +2008,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                   if (Number(cp.bows ?? 0) > 0) addGear(weaponByProf.bows);
                   if (Number(cp.spears ?? 0) > 0) addGear(weaponByProf.spears);
                   if (Number(cp.swords ?? 0) > 0) addGear(weaponByProf.swords);
+                  addGear((sg as any).brawlingWeaponId);
                   addGear(sg.armourId);
                   addGear(sg.helmId);
                   addGear(sg.shieldId);
@@ -2257,22 +2268,38 @@ function InventoryEditor({ hero, updateHero, onSeeMore }: { hero: any; updateHer
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hero?.id]);
 
+  // Inventory: allow adding any item (even restricted ones), but enforce restrictions on *equipping*.
   const equipOptions = useMemo(() => {
-    const cultureId = String(hero?.cultureId ?? '');
-    const disallowDwarf = new Set(['great-bow','great-spear','great-shield']);
-    const allowHobbitWeapons = new Set(['axe','bow','club','cudgel','dagger','short-sword','short-spear','spear']);
-    const list = sortByName(compendiums.equipment.entries ?? []).filter((e:any)=>{
-      const id = String(e.id ?? '');
-      const cat = String(e.category ?? '');
-      if (cultureId === 'dwarves-of-durins-folk' && disallowDwarf.has(id)) return false;
-      if (cultureId === 'hobbits-of-the-shire') {
-        if (id === 'great-shield') return false;
-        if (cat === 'Weapon') return allowHobbitWeapons.has(id);
+    return sortByName(compendiums.equipment.entries ?? []);
+  }, []);
+
+  const displayItemName = (it: any) => {
+    const baseName = String(it?.name ?? '').trim();
+    const rewards: string[] = Array.isArray(it?.override?.rewards) ? it.override.rewards.map(String) : [];
+    if (!rewards.length) return baseName;
+    const rewardNameFor = (rid: string) => {
+      switch (String(rid)) {
+        case 'keen-weapon': return 'Keen';
+        case 'fell-weapon': return 'Fell';
+        case 'grievous-weapon': return 'Grievous';
+        case 'cunning-make': return 'Cunning Make';
+        case 'close-fitting': return 'Close-fitting';
+        case 'reinforced-shield': return 'Reinforced';
+        default: return String(rid);
       }
-      return true;
+    };
+    const order = ['Keen','Fell','Grievous'];
+    const names = rewards.map(rewardNameFor);
+    // Order for weapons: Keen, Fell, Grievous; other gear doesn't care.
+    names.sort((a,b)=>{
+      const ia = order.indexOf(a); const ib = order.indexOf(b);
+      if (ia === -1 && ib === -1) return a.localeCompare(b);
+      if (ia === -1) return 1;
+      if (ib === -1) return -1;
+      return ia - ib;
     });
-    return list;
-  }, [hero?.cultureId]);
+    return `${baseName} (${names.join(', ')})`;
+  };
 
   function addCustom(itemName: string, itemQty: number) {
     const cur = hero.inventory ?? [];
@@ -2290,6 +2317,28 @@ function InventoryEditor({ hero, updateHero, onSeeMore }: { hero: any; updateHer
 
   function updateItem(idx: number, patch: any) {
     const cur = hero.inventory ?? [];
+    // Enforce cultural restrictions on EQUIPPING only (restricted items may be carried).
+    if (patch?.equipped === true) {
+      const cultureId = String(hero?.cultureId ?? '');
+      const disallowDwarf = new Set(['great-bow','great-spear','great-shield']);
+      const allowHobbitWeapons = new Set(['axe','bow','club','cudgel','dagger','short-sword','short-spear','spear']);
+      const it = cur[idx];
+      if (it?.ref?.pack === 'tor2e-equipment' && it?.ref?.id && (cultureId === 'dwarves-of-durins-folk' || cultureId === 'hobbits-of-the-shire')) {
+        const eid = String(it.ref.id);
+        const base:any = findEntryById(compendiums.equipment.entries ?? [], eid);
+        const cat = String(base?.category ?? '');
+        let invalid = false;
+        if (cultureId === 'dwarves-of-durins-folk' && disallowDwarf.has(eid)) invalid = true;
+        if (cultureId === 'hobbits-of-the-shire') {
+          if (eid === 'great-shield') invalid = true;
+          if (cat === 'Weapon' && !allowHobbitWeapons.has(eid)) invalid = true;
+        }
+        if (invalid) {
+          toast(`Cannot equip ${base?.name ?? it.name} (restricted for this Culture).`, 'warning');
+          return;
+        }
+      }
+    }
     const equipCategory = (it: any) => {
       if (it?.ref?.pack !== 'tor2e-equipment' || !it?.ref?.id) return null;
       const e: any = findEntryById(compendiums.equipment.entries ?? [], it.ref.id);
@@ -2336,7 +2385,7 @@ function InventoryEditor({ hero, updateHero, onSeeMore }: { hero: any; updateHer
                   if (it.ref?.pack === 'tor2e-equipment' && it.ref?.id) onSeeMore('equipment', it.ref.id);
                 }}
               >
-                <div className="invName">{it.name}</div>
+                <div className="invName">{displayItemName(it)}</div>
                 {it.ref?.pack === 'tor2e-equipment' && it.ref?.id ? (
                   (() => {
                     const e:any = findEntryById(compendiums.equipment.entries ?? [], it.ref.id);
@@ -3204,6 +3253,17 @@ function PreviousExperienceEditor({ hero, setHero }: { hero: any; setHero: (fn:a
   const pe = hero.previousExperience ?? {};
   const budget = hero.striderMode ? 15 : 10;
 
+  // Favoured skills (for ⭐ markers in the creation "Skills" list)
+  const favSet = useMemo(() => {
+    const fav = new Set<string>();
+    if (hero?.cultureFavouredSkillId) fav.add(String(hero.cultureFavouredSkillId));
+    for (const id of (hero?.callingFavouredSkillIds ?? [])) fav.add(String(id));
+    for (const id of (hero?.favouredSkillIds ?? [])) fav.add(String(id));
+    const legacy = hero?.skillFavoured ?? {};
+    for (const [k, v] of Object.entries(legacy)) if (v) fav.add(String(k));
+    return fav;
+  }, [hero?.cultureFavouredSkillId, hero?.callingFavouredSkillIds, hero?.favouredSkillIds, hero?.skillFavoured]);
+
   const skillCost = (toLevel: number) => {
     if (toLevel <= 1) return 1;
     if (toLevel === 2) return 2;
@@ -3297,7 +3357,7 @@ function PreviousExperienceEditor({ hero, setHero }: { hero: any; setHero: (fn:a
             const canInc = incCost <= remaining;
             return (
               <div key={s.id} className="skillRow">
-                <div className="skillName">{s.name}</div>
+                <div className="skillName">{favSet.has(String(s.id)) ? '⭐ ' : ''}{s.name}</div>
                 <div className="row" style={{gap:6}}>
                   <button className="btn btn-ghost" onClick={()=>{
                     setHero((h:any)=>{
@@ -3363,6 +3423,21 @@ function StartingGearEditor({ hero, setHero }: { hero: any; setHero: (fn:any)=>v
   const helms = equipment.filter((e:any)=>e.category==='Headgear');
   const shields = equipment.filter((e:any)=>e.category==='Shield').filter(solOk);
 
+  const cultureId = String(hero?.cultureId ?? '');
+  const disallowDwarf = new Set(['great-bow','great-spear','great-shield']);
+  const allowHobbitWeapons = new Set(['axe','bow','club','cudgel','dagger','short-sword','short-spear','spear']);
+
+  const allowedForStartingSelection = (e:any) => {
+    const id = String(e?.id ?? '');
+    const cat = String(e?.category ?? '');
+    if (cultureId === 'dwarves-of-durins-folk' && disallowDwarf.has(id)) return false;
+    if (cultureId === 'hobbits-of-the-shire') {
+      if (id === 'great-shield') return false;
+      if (cat === 'Weapon') return allowHobbitWeapons.has(id);
+    }
+    return true;
+  };
+
   const profs = hero.combatProficiencies ?? {};
   const profKeys: Array<{key:'axes'|'bows'|'spears'|'swords'; label:string}> = [
     { key:'axes', label:'Axes' },
@@ -3401,7 +3476,11 @@ function StartingGearEditor({ hero, setHero }: { hero: any; setHero: (fn:any)=>v
       </div>
 
       {profKeys.filter(p=>Number(profs[p.key] ?? 0) > 0).map((p:any)=>{
-        const opts = sortByName(weapons.filter((w:any)=>String(w.proficiency ?? '').toLowerCase().includes(p.label.toLowerCase())));
+        const opts = sortByName(
+          weapons
+            .filter(allowedForStartingSelection)
+            .filter((w:any)=>String(w.proficiency ?? '').toLowerCase().includes(p.label.toLowerCase()))
+        );
         const cur = String(weaponByProf[p.key] ?? '');
         return (
           <div key={p.key} className="field" style={{marginTop:10}}>
@@ -3416,6 +3495,28 @@ function StartingGearEditor({ hero, setHero }: { hero: any; setHero: (fn:any)=>v
           </div>
         );
       })}
+
+      {/* Brawling starting weapon (optional) */}
+      {(() => {
+        const brawlingOpts = sortByName(
+          weapons
+            .filter(allowedForStartingSelection)
+            .filter((w:any)=>['dagger','club','cudgel'].includes(String(w.id)))
+        );
+        const cur = String((sg as any).brawlingWeaponId ?? '');
+        return (
+          <div className="field" style={{marginTop:10}}>
+            <div className="label">Brawling weapon (optional)</div>
+            <select className="input" value={cur} onChange={(e)=>setSG({ brawlingWeaponId: e.target.value || undefined })}>
+              <option value="">(none)</option>
+              {brawlingOpts.map((w:any)=> <option key={w.id} value={w.id}>{w.name}</option>)}
+            </select>
+            <div className="small muted" style={{marginTop:6}}>
+              Unarmed, dagger, club, cudgel (or improvised): roll dice equal to your highest Combat Proficiency, but suffer a disadvantage: you lose (1d).
+            </div>
+          </div>
+        );
+      })()}
 
       <div className="grid2" style={{marginTop:12}}>
         <div className="miniCard">
@@ -3439,7 +3540,7 @@ function StartingGearEditor({ hero, setHero }: { hero: any; setHero: (fn:any)=>v
         <div className="miniTitle">Shield</div>
         <select className="input" value={shieldId} onChange={(e)=>setSG({ shieldId: e.target.value || undefined })}>
           <option value="">(none)</option>
-          {sortByName(shields).map((e:any)=> <option key={e.id} value={e.id}>{e.name}</option>)}
+          {sortByName(shields.filter(allowedForStartingSelection)).map((e:any)=> <option key={e.id} value={e.id}>{e.name}</option>)}
         </select>
       </div>
     </div>
@@ -3487,6 +3588,7 @@ function StartingRewardVirtueEditor({ hero, setHero, onSeeMore }: { hero:any; se
   const sg = hero.startingGear ?? {};
   const weaponByProf = sg.weaponByProf ?? {};
   const virtualRefIds: string[] = [
+    (sg as any).brawlingWeaponId,
     weaponByProf.axes,
     weaponByProf.bows,
     weaponByProf.spears,
