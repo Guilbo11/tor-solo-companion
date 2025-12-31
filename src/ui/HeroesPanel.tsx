@@ -2557,10 +2557,12 @@ function AttackSection({ hero, derived, updateHero }: { hero: any; derived: any;
       }
     }
 
-    // Build journal line.
-    const label = `${w.name}`;
-    const head = `<b>${label} - ${passed ? 'PASS' : 'FAIL'}${passed && degrees ? ` — ${degrees}` : ''}${pb ? ' - PIERCING BLOW' : ''}</b>`;
-    const body = formatEnemyRoll(label, { ...r, total, passed, degrees } as any, tn);
+    // Build journal lines.
+    // First line includes the enemy type/name for quick scanning; the detailed line keeps the weapon label.
+    const weaponLabel = `${w.name}`;
+    const headerLabel = `${String(e?.name ?? '').trim()} ${w.name}`.trim();
+    const head = `<b>${headerLabel} - ${passed ? 'PASS' : 'FAIL'}${passed && degrees ? ` — ${degrees}` : ''}${pb ? ' - PIERCING BLOW' : ''}</b>`;
+    const body = formatEnemyRoll(weaponLabel, { ...r, total, passed, degrees } as any, tn);
     const dmgLine = passed
       ? `Damage ${dmg}${heavyCount ? ` (HEAVY BLOW ×${heavyCount})` : ''}.`
       : `No damage (miss).`;
@@ -2576,7 +2578,14 @@ function AttackSection({ hero, derived, updateHero }: { hero: any; derived: any;
     if (pb) {
       const injTN = Number(w.injury ?? 0) || 0;
       const pr = rollTOR({ dice: heroProtectionDice, featMode: 'normal', weary: !!hero.conditions?.weary, tn: injTN });
-      const protectTxt = formatTorRoll(pr, { label: 'Piercing', tn: injTN });
+      // Custom formatting for the piercing resistance roll:
+      // - Replace PASS/FAIL with RESISTED/NOT RESISTED
+      // - Show Feat die names (Gandalf/Sauron) instead of emojis to avoid ambiguity.
+      let protectTxt = formatTorRoll(pr, { label: 'Piercing', tn: injTN });
+      protectTxt = protectTxt
+        .replace(/^Piercing\s-\s(PASS|FAIL)/, `Piercing - ${pr.passed ? 'RESISTED' : 'NOT RESISTED'}`)
+        .replace(/🧙/g, 'Gandalf')
+        .replace(/🧿/g, 'Sauron');
       lines.push(`<div>${protectTxt}</div>`);
 
       const protFail = pr.passed === false;
@@ -2611,7 +2620,7 @@ function AttackSection({ hero, derived, updateHero }: { hero: any; derived: any;
     } catch {}
 
     // Single 2-line recap toast at the end.
-    const toastLine1 = `${w.name} - ${passed ? 'PASS' : 'FAIL'}${passed && degrees ? ` — ${degrees}` : ''}${pb ? ' - PIERCING BLOW' : ''} • Damage ${dmg}`;
+    const toastLine1 = `${headerLabel} - ${passed ? 'PASS' : 'FAIL'}${passed && degrees ? ` — ${degrees}` : ''}${pb ? ' - PIERCING BLOW' : ''} • Damage ${dmg}`;
     const toastLine2 = pb ? (extraToast.replace(/<[^>]+>/g,'') || 'Piercing roll logged.') : (pierceCount ? `PIERCE (+${2*pierceCount})` : (seized ? 'SEIZE' : ''));
     toast(`${toastLine1}\n${toastLine2}`.trim(), passed ? 'warning' : 'warning');
 
@@ -2813,6 +2822,14 @@ function AttackSection({ hero, derived, updateHero }: { hero: any; derived: any;
               <div><b>Special Success</b></div>
               <button className="btn btn-ghost" onClick={()=>setSpecialPickerOpen(false)}>Close</button>
             </div>
+            {(() => {
+              const feat = pendingRef.current?.roll?.feat;
+              if (!feat) return null;
+              const shown = feat.type === 'Number'
+                ? String(feat.value)
+                : (feat.type === 'Eye' ? '🧿 (10)' : '🧙 (0)');
+              return <div className="small" style={{marginTop:8}}>Feat die result: {shown}</div>;
+            })()}
             <div className="small muted" style={{marginTop:8}}>1 choice per success icon (duplicates allowed). Order is yours.</div>
             <div style={{marginTop:10}}>
               {specialChoices.map((v, idx)=>(
