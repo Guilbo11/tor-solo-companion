@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { StoredState, saveState } from '../core/storage';
 import { compendiums, findEntryById, sortByName } from '../core/compendiums';
 import ErrorBoundary from './ErrorBoundary';
-import { computeDerived, rollNameFallback } from '../core/tor2e';
+import { computeDerived, rollName } from '../core/tor2e';
 import { getSkillAttribute, getSkillTN } from '../core/skills';
 import { rollTOR, rollTORAdversary, RollResult, formatTorRoll } from '../core/dice';
 import BottomSheet from './BottomSheet';
@@ -692,8 +692,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                 <button className="btn btn-ghost" onClick={()=>setView('campaigns')}>← Back</button>
               ) : null}
               <div>
-                <div className="panelTitle" style={{margin:0}}>Campaign</div>
-                <div className="small muted">{(campaigns.find((c:any)=>c.id===activeCampaignId)?.name ?? '—')}</div>
+                <div className="panelTitle" style={{margin:0}}>{(campaigns.find((c:any)=>c.id===activeCampaignId)?.name ?? '—')}</div>
               </div>
             </div>
             <div className="row" style={{gap:8, alignItems:'center'}}>
@@ -831,9 +830,9 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                         <div className="label">Name</div>
                         <div className="row nameRow" style={{gap:8}}>
                             <input className="input" value={hero.name} onChange={(e)=>updateHero(hero.id,{name:e.target.value})}/>
-                            <button className="btn" title="Roll a name (fallback generator)" onClick={()=>{
-                              const c:any = getCultureEntry(hero.cultureId);
-                              updateHero(hero.id,{name: rollNameFallback(c?.name)});
+                            <button className="btn" title="Roll a name" onClick={()=>{
+                              const gender = (hero.gender ?? 'Other') as any;
+                              updateHero(hero.id,{name: rollName(hero.cultureId ?? undefined, gender)});
                             }}>🎲</button>
                           </div>
                       </div>
@@ -846,7 +845,17 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                           <div className="miniCard">
                             <div className="miniTitle">Endurance</div>
                             <div className="row" style={{gap:8, alignItems:'center', flexWrap:'wrap'}}>
-                              <input className="input" style={{maxWidth: 92}} type="number" value={hero.endurance?.current ?? 0} onChange={(e)=>updateHero(hero.id,{endurance:{...(hero.endurance??{}),current:Number(e.target.value)}})}/>{hero.conditions?.weary ? <span title="Weary" style={{marginLeft:8, color:'#ff4d4f'}}>!</span> : null}
+                              <button className="btn btn-ghost" onClick={()=>{
+                                const cur = Number(hero.endurance?.current ?? 0) || 0;
+                                updateHero(hero.id,{endurance:{...(hero.endurance??{}),current: Math.max(0, cur-1)}});
+                              }}>-</button>
+                              <input className="input" style={{maxWidth: 92}} type="number" value={hero.endurance?.current ?? 0} onChange={(e)=>updateHero(hero.id,{endurance:{...(hero.endurance??{}),current:Number(e.target.value)}})}/>
+                              <button className="btn btn-ghost" onClick={()=>{
+                                const cur = Number(hero.endurance?.current ?? 0) || 0;
+                                const max = Number(hero.endurance?.max ?? 0) || 0;
+                                updateHero(hero.id,{endurance:{...(hero.endurance??{}),current: Math.min(max, cur+1)}});
+                              }}>+</button>
+                              {hero.conditions?.weary ? <span title="Weary" style={{marginLeft:2, color:'#ff4d4f'}}>!</span> : null}
                               <span className="muted">/</span>
                               <input className="input" style={{maxWidth: 92}} type="number" value={hero.endurance?.max ?? 0} onChange={(e)=>updateHero(hero.id,{endurance:{...(hero.endurance??{}),max:Number(e.target.value)}})}/>
                               <span className="muted small" style={{marginLeft: 6}}>
@@ -887,7 +896,17 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                           <div className="miniCard">
                             <div className="miniTitle">Hope</div>
                             <div className="row" style={{gap:8, alignItems:'center', flexWrap:'wrap'}}>
-                              <input className="input" style={{maxWidth: 92}} type="number" value={hero.hope?.current ?? 0} onChange={(e)=>updateHero(hero.id,{hope:{...(hero.hope??{}),current:Number(e.target.value)}})}/>{hero.conditions?.miserable ? <span title="Miserable" style={{marginLeft:8, color:'#ff4d4f'}}>!</span> : null}
+                              <button className="btn btn-ghost" onClick={()=>{
+                                const cur = Number(hero.hope?.current ?? 0) || 0;
+                                updateHero(hero.id,{hope:{...(hero.hope??{}),current: Math.max(0, cur-1)}});
+                              }}>-</button>
+                              <input className="input" style={{maxWidth: 92}} type="number" value={hero.hope?.current ?? 0} onChange={(e)=>updateHero(hero.id,{hope:{...(hero.hope??{}),current:Number(e.target.value)}})}/>
+                              <button className="btn btn-ghost" onClick={()=>{
+                                const cur = Number(hero.hope?.current ?? 0) || 0;
+                                const max = Number(hero.hope?.max ?? 0) || 0;
+                                updateHero(hero.id,{hope:{...(hero.hope??{}),current: Math.min(max, cur+1)}});
+                              }}>+</button>
+                              {hero.conditions?.miserable ? <span title="Miserable" style={{marginLeft:2, color:'#ff4d4f'}}>!</span> : null}
                               <span className="muted">/</span>
                               <input className="input" style={{maxWidth: 92}} type="number" value={hero.hope?.max ?? 0} onChange={(e)=>updateHero(hero.id,{hope:{...(hero.hope??{}),max:Number(e.target.value)}})}/>
                             </div>
@@ -1902,7 +1921,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                     const female: string[] = Array.isArray(c?.names?.female) ? c.names.female : [];
                     const g = String(draftHero.gender ?? 'Other');
                     const pool = g==='Masculine' ? male : g==='Feminine' ? female : [...male,...female];
-                    const pick = pool.length ? pool[Math.floor(Math.random()*pool.length)] : rollNameFallback(c?.name ?? c?.id);
+                    const pick = pool.length ? pool[Math.floor(Math.random()*pool.length)] : rollName(c?.id ?? c?.name, (draftHero.gender as any) ?? 'Other');
                     setDraftHero((h:any)=>({ ...h, name: pick }));
                   }}>Random</button>
                 </div>
@@ -2894,6 +2913,23 @@ function AttackSection({ hero, derived, updateHero, recentEnemyIds, onEnemyUsed 
                     if (txt === null) return;
                     const parry = Number.parseInt(String(txt).trim() || '0', 10);
                     const parryMod = Number.isFinite(parry) ? parry : 0;
+
+                    // 1h/2h handling for versatile weapons: only Injury changes.
+                    // If a shield is equipped, force 1h.
+                    const injuryRaw = String(w.injury ?? '');
+                    let injuryUsed: string | null = null;
+                    const m = injuryRaw.match(/(\d+)\s*\(1h\)\s*\/\s*(\d+)\s*\(2h\)/i);
+                    if (m) {
+                      const one = m[1];
+                      const two = m[2];
+                      const hasShield = !!(derived as any)?.equippedShield;
+                      if (hasShield) injuryUsed = one;
+                      else {
+                        const ok = window.confirm(`${w.name} can be used 1h or 2h. Use it two-handed? (Injury ${one} → ${two})`);
+                        injuryUsed = ok ? two : one;
+                      }
+                    }
+
                     const tn = Number(derived?.strengthTN ?? 0) + parryMod;
                     const r = rollTOR({ dice, featMode, weary, tn });
                     // Gandalf = guaranteed success + PB display
@@ -2902,8 +2938,9 @@ function AttackSection({ hero, derived, updateHero, recentEnemyIds, onEnemyUsed 
                     const featNum = (r.feat.type === 'Number') ? r.feat.value : (r.feat.type === 'Eye' ? 0 : 10);
                     const pb = isGandalf || featNum >= pbThreshold;
                     const degrees = r.degrees;
-                    setLast(Object.assign({}, r, { _tn: tn, _label: w.name }));
-                    const head = `<b>${w.name} - ${(r.passed ? 'PASS' : 'FAIL')}${(r.passed && degrees) ? ` — ${degrees}` : ''}${pb ? ' - PIERCING BLOW' : ''}</b>`;
+                    setLast(Object.assign({}, r, { _tn: tn, _label: w.name, _inj: injuryUsed ?? undefined }));
+                    const injLine = injuryUsed ? ` • INJ ${injuryUsed}` : '';
+                    const head = `<b>${w.name} - ${(r.passed ? 'PASS' : 'FAIL')}${(r.passed && degrees) ? ` — ${degrees}` : ''}${pb ? ' - PIERCING BLOW' : ''}${injLine}</b>`;
                     const body = formatTorRoll(r, { label: w.name, tn });
                     try { (window as any).__torcLogRollHtml?.(`<div>${head}</div><div>${body}</div>`); } catch {}
                     toast(`${w.name} - ${(r.passed ? 'PASS' : 'FAIL')}${(r.passed && degrees) ? ` — ${degrees}` : ''}${pb ? ' - PIERCING BLOW' : ''}\n${body}`.replace(/<[^>]+>/g,''), (r.passed ? 'success' : 'warning'));
@@ -2917,7 +2954,7 @@ function AttackSection({ hero, derived, updateHero, recentEnemyIds, onEnemyUsed 
 
       {last ? (
         <div className="small" style={{marginTop:8}}>
-          <b>Last attack roll:</b> {formatTorRoll(last as any, { label: (last as any)._label ?? '', tn: (last as any)._tn })}
+          <b>Last attack roll:</b> {formatTorRoll(last as any, { label: (last as any)._label ?? '', tn: (last as any)._tn })}{(last as any)._inj ? ` (INJ ${(last as any)._inj})` : ''}
         </div>
       ) : null}
 
@@ -3344,6 +3381,8 @@ function PreviousExperienceEditor({ hero, setHero }: { hero: any; setHero: (fn:a
         <span className="small muted">You can't increase a rating if it would exceed the budget.</span>
       </div>
 
+      <div className="small muted" style={{marginTop:6}}>Skills marked with a ★ are Favoured.</div>
+
       <div className="miniCard" style={{marginTop:10}}>
         <div className="miniTitle">Skills (cap 4)</div>
         <div className="grid2" style={{marginTop:8}}>
@@ -3357,7 +3396,7 @@ function PreviousExperienceEditor({ hero, setHero }: { hero: any; setHero: (fn:a
             const canInc = incCost <= remaining;
             return (
               <div key={s.id} className="skillRow">
-                <div className="skillName">{favSet.has(String(s.id)) ? '⭐ ' : ''}{s.name}</div>
+                <div className="skillName">{s.name}{favSet.has(String(s.id)) ? ' ★' : ''}</div>
                 <div className="row" style={{gap:6}}>
                   <button className="btn btn-ghost" onClick={()=>{
                     setHero((h:any)=>{

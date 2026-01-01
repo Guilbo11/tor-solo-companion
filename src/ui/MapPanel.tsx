@@ -294,15 +294,22 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
 
       // Background
       if (bgImg && bgImg.complete) {
-        const scale = Math.min(W / bgImg.width, H / bgImg.height);
+        // Draw the background so it stays visible while panning/zooming.
+        // We are in world coordinates (transform already applied), so convert the viewport
+        // size into world units and center the image within the current view.
+        const viewW = W / zoom;
+        const viewH = H / zoom;
+        const scale = Math.min(viewW / bgImg.width, viewH / bgImg.height);
         const dw = bgImg.width * scale;
         const dh = bgImg.height * scale;
-        const dx = (W - dw) / 2;
-        const dy = (H - dh) / 2;
+        const dx = left + (viewW - dw) / 2;
+        const dy = top + (viewH - dh) / 2;
         ctx.drawImage(bgImg, dx, dy, dw, dh);
       } else {
         ctx.fillStyle = '#0b0f14';
-        ctx.fillRect(0, 0, W, H);
+        const viewW = W / zoom;
+        const viewH = H / zoom;
+        ctx.fillRect(left, top, viewW, viewH);
       }
 
       const size = map.hexSize;
@@ -668,9 +675,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
 
   return (
     <div className="card">
-      <div className="row" style={{justifyContent:'space-between', alignItems:'center', gap: 10, flexWrap:'wrap'}}>
-        <div className="h2">Map</div>
-
+      <div className="row" style={{justifyContent:'flex-start', alignItems:'center', gap: 10, flexWrap:'wrap'}}>
         <div className="row" style={{gap: 8, alignItems:'center', flexWrap:'wrap'}}>
           <select
             className="input"
