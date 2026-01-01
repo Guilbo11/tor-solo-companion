@@ -62,6 +62,23 @@ function pointFromMouseLike(ev: { clientX: number; clientY: number }, canvas: HT
   return { x, y };
 }
 
+function computeFitView(
+  canvas: HTMLCanvasElement,
+  imgW: number,
+  imgH: number,
+  paddingFactor = 0.95
+): { zoom: number; pan: { x: number; y: number } } {
+  const W = canvas.width;
+  const H = canvas.height;
+  const fit = Math.min(W / Math.max(1, imgW), H / Math.max(1, imgH));
+  const zoom = clamp(fit * paddingFactor, 0.05, 8);
+  const pan = {
+    x: (W - imgW * zoom) / 2,
+    y: (H - imgH * zoom) / 2,
+  };
+  return { zoom, pan };
+}
+
 const CALIB_DIRS: { id: CalibDir; label: string; unit: { x: number; y: number } }[] = [
   { id: 'E', label: 'East / West (horizontal)', unit: { x: Math.sqrt(3), y: 0 } },
   { id: 'NE', label: 'North-East', unit: { x: Math.sqrt(3) / 2, y: -1.5 } },
@@ -135,6 +152,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
       calibDir: 'E' as CalibDir,
       zoom: 1,
       pan: { x: 0, y: 0 },
+      backgroundFitDone: true,
     };
     const newId = `map-${crypto.randomUUID()}`;
     setState({
@@ -219,6 +237,19 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
     return img;
   }, [map.backgroundDataUrl]);
 
+  // When a new background is imported, initialize the view so the image and grid
+  // start aligned in the same zoom/pan space ("Fit" as 100% baseline).
+  useEffect(() => {
+    const c = canvasRef.current;
+    if (!c) return;
+    if (!bgImg || !bgImg.complete) return;
+    if (map.backgroundFitDone) return;
+
+    const { zoom: nextZoom, pan: nextPan } = computeFitView(c, bgImg.width, bgImg.height, 0.95);
+    patchActiveMap({ zoom: nextZoom, pan: nextPan, backgroundFitDone: true } as any);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bgImg, map.backgroundFitDone]);
+
   const pointersRef = useRef<Map<number, PointerInfo>>(new Map());
 
   const dragRef = useRef<{
@@ -294,17 +325,12 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
 
       // Background
       if (bgImg && bgImg.complete) {
-        // Draw the background so it stays visible while panning/zooming.
-        // We are in world coordinates (transform already applied), so convert the viewport
-        // size into world units and center the image within the current view.
-        const viewW = W / zoom;
-        const viewH = H / zoom;
-        const scale = Math.min(viewW / bgImg.width, viewH / bgImg.height);
-        const dw = bgImg.width * scale;
-        const dh = bgImg.height * scale;
-        const dx = left + (viewW - dw) / 2;
-        const dy = top + (viewH - dh) / 2;
-        ctx.drawImage(bgImg, dx, dy, dw, dh);
+        // Draw in *world coordinates* at the image's native size.
+        // The shared view transform (zoom/pan) is applied once via ctx.setTransform(...)
+        // so the background, grid and overlays always zoom/pan together.
+        ctx.fillStyle = '#0b0f14';
+        ctx.fillRect(left, top, W / zoom, H / zoom);
+        ctx.drawImage(bgImg, 0, 0, bgImg.width, bgImg.height);
       } else {
         ctx.fillStyle = '#0b0f14';
         const viewW = W / zoom;
@@ -459,7 +485,7 @@ export default function MapPanel({ state, setState }: { state: StoredState; setS
 
   const onPickBackground = async (file: File) => {
     const dataUrl = await fileToCompressedDataUrl(file, { maxWidth: 1600, quality: 0.82 });
-    patchActiveMap({ backgroundDataUrl: dataUrl });
+    patchActiveMap({ backgroundDataUrl: dataUrl, backgroundFitDone: false } as any);
   };
 
   const handleCanvasClick = (screenP: { x: number; y: number }) => {

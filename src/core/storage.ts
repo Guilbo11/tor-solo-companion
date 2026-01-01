@@ -227,6 +227,10 @@ export type MapState = {
   // view transform (persisted)
   zoom?: number;
   pan?: { x: number; y: number };
+
+  // Internal: set true after we auto-fit a newly imported background so we don't
+  // keep overriding the user's camera.
+  backgroundFitDone?: boolean;
 };
 
 export type MapDoc = {
