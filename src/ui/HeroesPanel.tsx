@@ -2604,10 +2604,34 @@ function UsefulItemsEditor({ hero, updateHero }: { hero: any; updateHero: (patch
 function AttackSection({ hero, derived, updateHero, recentEnemyIds, onEnemyUsed }: { hero: any; derived: any; updateHero: (patch:any)=>void; recentEnemyIds: string[]; onEnemyUsed: (enemyId: string)=>void }) {
   const [featMode, setFeatMode] = useState<'normal'|'favoured'|'illFavoured'>('normal');
   const [last, setLast] = useState<RollResult | null>(null);
+  // For weapons that can be wielded 1-handed or 2-handed (only Injury changes).
+  // We keep a per-weapon toggle state so the user doesn't have to confirm every roll.
+  const [wieldByWeaponId, setWieldByWeaponId] = useState<Record<string,'1h'|'2h'>>({});
   const weary = !!hero.conditions?.weary;
 
   const weapons = Array.isArray(derived.equippedWeapons) ? derived.equippedWeapons : [];
   const enemies = Array.isArray((compendiums as any).adversariesCore?.entries) ? (compendiums as any).adversariesCore.entries : [];
+
+  // If a shield is equipped, force all versatile weapons to 1H.
+  useEffect(() => {
+    const hasShield = !!(derived as any)?.equippedShield;
+    if (!hasShield) return;
+    setWieldByWeaponId(prev => {
+      let changed = false;
+      const next: any = { ...prev };
+      for (const w of weapons) {
+        const injuryRaw = String((w as any)?.injury ?? '');
+        const m = injuryRaw.match(/(\d+)\s*\(1h\)\s*\/\s*(\d+)\s*\(2h\)/i);
+        if (m) {
+          const id = String((w as any).id);
+          if (next[id] === '2h') { next[id] = '1h'; changed = true; }
+          if (!next[id]) { next[id] = '1h'; changed = true; }
+        }
+      }
+      return changed ? next : prev;
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [!!(derived as any)?.equippedShield, weapons.length]);
 
   // --- From Enemy state ---
   const [enemyPickerOpen, setEnemyPickerOpen] = useState(false);
@@ -2901,6 +2925,14 @@ function AttackSection({ hero, derived, updateHero, recentEnemyIds, onEnemyUsed 
           {weapons.map((w:any)=>{
             const k = profKey(w.combatProficiency ?? w.proficiency ?? w.category);
             const dice = Number(k ? (hero.combatProficiencies?.[k] ?? 0) : 0);
+            const injuryRaw = String(w.injury ?? '');
+            const versMatch = injuryRaw.match(/(\d+)\s*\(1h\)\s*\/\s*(\d+)\s*\(2h\)/i);
+            const isVersatile = !!versMatch;
+            const oneHandInj = versMatch ? versMatch[1] : null;
+            const twoHandInj = versMatch ? versMatch[2] : null;
+            const hasShield = !!(derived as any)?.equippedShield;
+            const mode = (wieldByWeaponId[String(w.id)] ?? '1h');
+            const modeEffective: '1h'|'2h' = hasShield ? '1h' : mode;
             return (
               <div key={w.id} className="attackRow">
                 <div className="attackCol1">
@@ -2908,27 +2940,32 @@ function AttackSection({ hero, derived, updateHero, recentEnemyIds, onEnemyUsed 
                   <div className="attackStats small muted">DMG {w.damage ?? '—'} • INJ {w.injury ?? '—'} • Dice {dice}</div>
                 </div>
                 <div className="attackCol2">
-                  <button className="btn" onClick={()=>{
+                  <div className="row" style={{gap:8, alignItems:'center', justifyContent:'flex-end', flexWrap:'wrap'}}>
+                    {isVersatile ? (
+                      <div className="row" style={{gap:4, alignItems:'center'}}>
+                        <button
+                          className={modeEffective === '1h' ? 'btn' : 'btn btn-ghost'}
+                          onClick={() => setWieldByWeaponId(prev => ({ ...prev, [String(w.id)]: '1h' }))}
+                        >1H</button>
+                        <button
+                          className={modeEffective === '2h' ? 'btn' : 'btn btn-ghost'}
+                          disabled={hasShield}
+                          title={hasShield ? 'A shield is equipped: forced to 1H' : 'Wield two-handed'}
+                          onClick={() => setWieldByWeaponId(prev => ({ ...prev, [String(w.id)]: '2h' }))}
+                        >2H</button>
+                      </div>
+                    ) : null}
+
+                    <button className="btn" onClick={()=>{
                     const txt = window.prompt('Parry rating of the target?', '0');
                     if (txt === null) return;
                     const parry = Number.parseInt(String(txt).trim() || '0', 10);
                     const parryMod = Number.isFinite(parry) ? parry : 0;
 
                     // 1h/2h handling for versatile weapons: only Injury changes.
-                    // If a shield is equipped, force 1h.
-                    const injuryRaw = String(w.injury ?? '');
-                    let injuryUsed: string | null = null;
-                    const m = injuryRaw.match(/(\d+)\s*\(1h\)\s*\/\s*(\d+)\s*\(2h\)/i);
-                    if (m) {
-                      const one = m[1];
-                      const two = m[2];
-                      const hasShield = !!(derived as any)?.equippedShield;
-                      if (hasShield) injuryUsed = one;
-                      else {
-                        const ok = window.confirm(`${w.name} can be used 1h or 2h. Use it two-handed? (Injury ${one} → ${two})`);
-                        injuryUsed = ok ? two : one;
-                      }
-                    }
+                    const injuryUsed: string | null = isVersatile
+                      ? (modeEffective === '2h' ? twoHandInj : oneHandInj)
+                      : null;
 
                     const tn = Number(derived?.strengthTN ?? 0) + parryMod;
                     const r = rollTOR({ dice, featMode, weary, tn });
@@ -2945,6 +2982,7 @@ function AttackSection({ hero, derived, updateHero, recentEnemyIds, onEnemyUsed 
                     try { (window as any).__torcLogRollHtml?.(`<div>${head}</div><div>${body}</div>`); } catch {}
                     toast(`${w.name} - ${(r.passed ? 'PASS' : 'FAIL')}${(r.passed && degrees) ? ` — ${degrees}` : ''}${pb ? ' - PIERCING BLOW' : ''}\n${body}`.replace(/<[^>]+>/g,''), (r.passed ? 'success' : 'warning'));
                   }}>Roll</button>
+                  </div>
                 </div>
               </div>
             );
