@@ -263,6 +263,15 @@ canvas { border-radius: 14px; border: 1px solid #1f2a3a; background: #0b0f14; }
   background: rgba(255,255,255,0.10);
 }
 
+.segRow .seg.active{
+  background: rgba(255,255,255,0.18);
+  font-weight: 700;
+}
+.segRow .seg:disabled{
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 /* Simple modal overlay (used for hero picker) */
 .modalOverlay{
   position: fixed;

@@ -2942,15 +2942,16 @@ function AttackSection({ hero, derived, updateHero, recentEnemyIds, onEnemyUsed 
                 <div className="attackCol2">
                   <div className="row" style={{gap:8, alignItems:'center', justifyContent:'flex-end', flexWrap:'wrap'}}>
                     {isVersatile ? (
-                      <div className="row" style={{gap:4, alignItems:'center'}}>
+                      <div className="segRow" title={hasShield ? 'A shield is equipped: forced to 1H' : 'Choose 1H/2H for Injury value'}>
                         <button
-                          className={modeEffective === '1h' ? 'btn' : 'btn btn-ghost'}
+                          type="button"
+                          className={`seg ${modeEffective === '1h' ? 'active' : ''}`}
                           onClick={() => setWieldByWeaponId(prev => ({ ...prev, [String(w.id)]: '1h' }))}
                         >1H</button>
                         <button
-                          className={modeEffective === '2h' ? 'btn' : 'btn btn-ghost'}
+                          type="button"
+                          className={`seg ${modeEffective === '2h' ? 'active' : ''}`}
                           disabled={hasShield}
-                          title={hasShield ? 'A shield is equipped: forced to 1H' : 'Wield two-handed'}
                           onClick={() => setWieldByWeaponId(prev => ({ ...prev, [String(w.id)]: '2h' }))}
                         >2H</button>
                       </div>
