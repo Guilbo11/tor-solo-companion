@@ -6,6 +6,7 @@ import MapPanel from './MapPanel';
 import OraclesPanel from './OraclesPanel';
 import SettingsPanel from './SettingsPanel';
 import HeroesPanel from './HeroesPanel';
+import CombatPanel from './CombatPanel';
 import FellowshipPanel from './FellowshipPanel';
 import FloatingDieButton from './FloatingDieButton';
 import FloatingDiceSheet from './FloatingDiceSheet';
@@ -14,7 +15,7 @@ import FloatingOracleButton from './FloatingOracleButton';
 import OracleSidePanel from './OracleSidePanel';
 import ToastHost from './ToastHost';
 
-type Tab = 'Journal'|'Heroes'|'Map'|'NPCs'|'Fellowship'|'Oracles'|'Settings';
+type Tab = 'Journal'|'Heroes'|'Combat'|'Map'|'NPCs'|'Fellowship'|'Oracles'|'Settings';
 
 type AppMode = 'landing' | 'main';
 
@@ -30,7 +31,7 @@ export default function App() {
   const isCampaignLanding = mode === 'landing';
 
   // Settings is a tab (after Oracles).
-  const tabs: Tab[] = ['Journal','Heroes','Map','NPCs','Fellowship','Oracles','Settings'];
+  const tabs: Tab[] = ['Journal','Heroes','Combat','Map','NPCs','Fellowship','Oracles','Settings'];
 
   const set: React.Dispatch<React.SetStateAction<StoredState>> = (next) => {
     setState((prev) => {
@@ -162,6 +163,7 @@ export default function App() {
         <>
           {tab === 'Journal' && <JournalPanel state={state} setState={set} />}
           {tab === 'Heroes' && <HeroesPanel state={state} setState={set} mode="main" />}
+          {tab === 'Combat' && <CombatPanel state={state} setState={set} />}
           {tab === 'Map' && <MapPanel state={state} setState={set} />}
           {tab === 'NPCs' && <NPCsPanel state={state} setState={set} />}
           {tab === 'Fellowship' && <FellowshipPanel state={state} setState={set} />}

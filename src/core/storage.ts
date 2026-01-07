@@ -1,5 +1,5 @@
 export type StoredState = {
-  version: 6;
+  version: 7;
 
   // Legacy notes/journeys (kept for backward compatibility with older saves)
   journal: JournalEntry[];
@@ -38,6 +38,11 @@ export type StoredState = {
 
   // Settings
   settings: SettingsState;
+
+  // Combat (per-campaign). Stored per-campaign so nothing is shared across campaigns.
+  // The concrete type lives in src/combat/types.ts, but we keep this as `any` here
+  // to avoid a circular dependency between core storage and combat engine.
+  combatByCampaign?: Record<string, any | null>;
 
   ui?: UIState;
 };
@@ -266,7 +271,7 @@ export function loadState(): StoredState {
   if (!raw) return defaultState();
   try {
     const parsed = JSON.parse(raw) as StoredState;
-    if (![3,4,5,6].includes((parsed as any)?.version)) return defaultState();
+    if (![3,4,5,6,7].includes((parsed as any)?.version)) return defaultState();
 
     // Migrate v3 -> v4 (campaigns)
     if (parsed?.version === 3) {
@@ -281,6 +286,11 @@ export function loadState(): StoredState {
     // Migrate v5 -> v6 (make fellowship/oracle per-campaign)
     if ((parsed as any)?.version === 5) {
       return ensureDefaults(migrateV5ToV6(parsed as any));
+    }
+
+    // Migrate v6 -> v7 (combat per-campaign)
+    if ((parsed as any)?.version === 6) {
+      return ensureDefaults(migrateV6ToV7(parsed as any));
     }
 
     // Ensure defaults exist even if older saved state is missing new fields
@@ -377,7 +387,7 @@ export function defaultState(): StoredState {
   };
 
   return ensureDefaults({
-    version: 6,
+    version: 7,
 
     // legacy
     journal: [],
@@ -414,6 +424,8 @@ export function defaultState(): StoredState {
     ui: {},
 
     settings: { addRollsToJournal: false },
+
+    combatByCampaign: { [campId]: null },
   });
 }
 
@@ -459,6 +471,17 @@ function migrateV5ToV6(s: any): any {
   if (!oracleByCampaign[activeCampaignId]) oracleByCampaign[activeCampaignId] = baseOracle;
 
   return { ...s, version: 6, fellowshipByCampaign, oracleByCampaign };
+}
+
+function migrateV6ToV7(s: any): any {
+  const campaigns: any[] = Array.isArray(s?.campaigns) ? s.campaigns : [];
+  const combatByCampaign = { ...(s?.combatByCampaign ?? {}) };
+  for (const c of campaigns) {
+    const id = String(c?.id ?? '');
+    if (!id) continue;
+    if (!(id in combatByCampaign)) combatByCampaign[id] = null;
+  }
+  return { ...s, version: 7, combatByCampaign };
 }
 
 function ensureJournalChapterDefaults(c: any): JournalChapter {
@@ -605,7 +628,7 @@ function ensureDefaults(s: StoredState): StoredState {
   }
 
   const out: StoredState = {
-    version: 6,
+    version: 7,
     journal: Array.isArray((s as any).journal) ? (s as any).journal : [],
     journeys: Array.isArray((s as any).journeys) ? (s as any).journeys.map(ensureJourneyDefaults) : [],
     fellowship: ensureFellowshipDefaults((s as any).fellowship),
@@ -625,6 +648,9 @@ function ensureDefaults(s: StoredState): StoredState {
     activeCampaignId,
     heroes,
     settings,
+    combatByCampaign: (s as any).combatByCampaign && typeof (s as any).combatByCampaign === 'object'
+      ? { ...(s as any).combatByCampaign }
+      : {},
     ui: (s as any).ui && typeof (s as any).ui === 'object' ? (s as any).ui : {},
   };
 
@@ -669,6 +695,15 @@ function ensureDefaults(s: StoredState): StoredState {
 
   out.fellowshipByCampaign = fellowshipByCampaign;
   out.oracleByCampaign = oracleByCampaign;
+
+  // Combat is per-campaign (same rule: never share references).
+  const combatByCampaign: Record<string, any | null> = (out as any).combatByCampaign && typeof (out as any).combatByCampaign === 'object'
+    ? { ...(out as any).combatByCampaign }
+    : {};
+  for (const c of campaigns) {
+    if (!(c.id in combatByCampaign)) combatByCampaign[c.id] = null;
+  }
+  (out as any).combatByCampaign = combatByCampaign;
   return out;
 }
 
