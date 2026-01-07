@@ -33,6 +33,8 @@ export type CombatEnemy = {
   might: number;
   attributeLevel: number;
   parry?: number;
+  armour?: number;
+  wounded?: boolean;
   hateOrResolve?: { type: 'Hate' | 'Resolve'; value: number };
   combatProficiencies?: Array<{ name: string; rating: number; damage: number; injury: number; specialDamage?: string[] }>;
   distinctiveFeatures?: string[];
@@ -81,4 +83,5 @@ export type CombatEvent =
   | { type: 'HERO_ACTION_USED'; kind: 'attack' | 'task' | 'escape'; data?: any }
   | { type: 'ENEMY_ACTION_USED'; enemyId: string; kind: 'attack' | 'other'; data?: any }
   | { type: 'APPLY_ENEMY_ENDURANCE'; enemyId: string; delta: number; reason?: string; data?: any }
+  | { type: 'APPLY_ENEMY_WOUND'; enemyId: string; injuryTN: number; resisted: boolean; data?: any }
   | { type: 'LOG'; text: string; data?: any };

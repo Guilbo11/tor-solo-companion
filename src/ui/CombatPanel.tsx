@@ -35,6 +35,8 @@ function toCombatEnemy(e: any): CombatEnemy {
     might: Number(e?.might ?? 1) || 1,
     attributeLevel: Number(e?.attributeLevel ?? 0) || 0,
     parry: typeof e?.parry === 'number' ? e.parry : Number(e?.parry ?? 0) || 0,
+    armour: typeof e?.armour === 'number' ? e.armour : Number(e?.armour ?? 0) || 0,
+    wounded: false,
     hateOrResolve: e?.hateOrResolve?.type ? { type: e.hateOrResolve.type, value: Number(e.hateOrResolve.value ?? 0) || 0 } : undefined,
     combatProficiencies: Array.isArray(e?.combatProficiencies)
       ? e.combatProficiencies.map((p: any) => ({
@@ -169,6 +171,10 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
     const total = featNumber + succSum;
     const passed = (r.feat.type === 'Eye') ? true : total >= tn;
 
+    // Piercing Blow (core): only on a successful attack, triggered on Feat die 10 or Eye.
+    // We keep the same logic as the existing "From Enemy" flow in Heroes.
+    const piercingBlow = passed && ((r.feat.type === 'Eye') || featNumber >= 10);
+
     const baseDmg = Number(w.damage ?? 0) || 0;
     const dmg = passed ? (baseDmg + (heavyCount ? (heavyCount * Number(enemy.attributeLevel ?? 0)) : 0)) : 0;
 
@@ -186,17 +192,70 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
       });
     }
 
+    // If Piercing Blow was scored, roll Protection against Injury and record Wounded/Injury on the hero.
+    // This mirrors the core book flow used elsewhere in the app.
+    let piercingToastLine = '';
+    if (piercingBlow) {
+      const injTN = Number(w.injury ?? 0) || 0;
+      const protectionDice = Number((derived as any)?.protection?.total ?? 0) || 0;
+      const bonus = Number((derived as any)?.protectionPiercingBonus ?? 0) || 0; // Close-fitting etc.
+      const prRaw = rollTOR({ dice: protectionDice, featMode: 'normal', weary: !!activeHero?.conditions?.weary, tn: injTN });
+      const pr = bonus
+        ? ({ ...prRaw, total: (prRaw.total ?? 0) + bonus, passed: ((prRaw.total ?? 0) + bonus) >= injTN } as any)
+        : prRaw;
+
+      const resisted = pr.passed === true;
+      piercingToastLine = `Piercing - ${resisted ? 'RESISTED' : 'NOT RESISTED'} (TN ${injTN})${bonus ? ` (+${bonus})` : ''}`;
+
+      if (!resisted) {
+        // Apply Wounded + Injury severity tracking.
+        setState((prev: any) => {
+          const nextHeroes = (prev.heroes ?? []).map((h: any) => {
+            if (String(h.id) !== String(activeHero.id)) return h;
+            const alreadyWounded = !!h?.conditions?.wounded;
+            const nextConditions = { ...(h.conditions ?? {}), wounded: true };
+            // If already wounded, now Dying (core).
+            if (alreadyWounded) {
+              nextConditions.dying = true;
+              return { ...h, conditions: nextConditions };
+            }
+
+            // Roll severity (Feat die only) and store in Injury field similarly to the Heroes sheet flow.
+            const sev = rollTOR({ dice: 0, featMode: 'normal' });
+            if (sev.feat.type === 'Eye') {
+              // Grievous: drop to 0 Endurance and Dying.
+              const curEnd = Number(h?.endurance?.current ?? 0) || 0;
+              const maxEnd = Number(h?.endurance?.max ?? h?.endurance?.maximum ?? 0) || 0;
+              return { ...h, endurance: { ...(h.endurance ?? {}), current: 0, max: maxEnd || (h.endurance?.max ?? 0) }, conditions: { ...nextConditions, dying: true } };
+            }
+            if (sev.feat.type === 'Gandalf') {
+              // Moderate: Wounded clears after the combat; we still mark Wounded now.
+              return { ...h, conditions: nextConditions };
+            }
+
+            // Severe: store N days in Injury box (append).
+            const days = Number(sev.feat.value ?? 0) || 0;
+            const currentInjury = String(h?.injury ?? '').trim();
+            const nextInjury = days > 0 ? (currentInjury ? `${currentInjury}; ${days} days` : `${days} days`) : currentInjury;
+            return { ...h, conditions: nextConditions, injury: nextInjury };
+          });
+          return { ...prev, heroes: nextHeroes };
+        });
+      }
+    }
+
     // Log
     const deg = passed ? (r.icons === 0 ? 'Success' : r.icons === 1 ? 'Great Success' : 'Extraordinary Success') : 'FAIL';
     const txt = passed
-      ? `${enemy.name} - PASS — ${deg}${picks.length ? ` • ${picks.join(', ')}` : ''} • Damage ${dmg}`
+      ? `${enemy.name} - PASS — ${deg}${piercingBlow ? ' - PIERCING BLOW' : ''}${picks.length ? ` • ${picks.join(', ')}` : ''} • Damage ${dmg}`
       : `${enemy.name} - FAIL — Miss`;
     let next = combatReducer(combat, { type: 'LOG', text: txt, data: { enemyId: enemy.id, weapon: w.name, total, tn, specials: picks } } as any);
     next = next ? (combatReducer(next as any, { type: 'ENEMY_ACTION_USED', enemyId: enemy.id, kind: 'attack', data: { weapon: w.name } } as any) as any) : next;
     setCombat(next as any);
 
     // Toast (4s, colored) like elsewhere.
-    toast(txt, passed ? 'warning' : 'success');
+    // Toast recap (2 lines when Piercing Blow happened).
+    toast(piercingToastLine ? `${txt}\n${piercingToastLine}` : txt, passed ? 'warning' : 'success');
 
     pendingRef.current = null;
     setSpecialPickerOpen(false);
@@ -334,16 +393,34 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
     const r = rollTOR({ dice: Number(rating ?? 0), tn, featMode: heroFeatMode, weary: !!activeHero?.conditions?.weary });
     const dmg = r.passed ? (Number(w?.damage ?? 0) || 0) : 0;
 
+    // Piercing Blow (hero): on a successful attack, when the Feat die shows 10 or Gandalf.
+    const heroFeatNumber = (r.feat.type === 'Number') ? r.feat.value : (r.feat.type === 'Gandalf' ? 10 : 0);
+    const piercingBlow = !!r.passed && ((r.feat.type === 'Gandalf') || heroFeatNumber >= 10);
+
     // Apply enemy Endurance damage on hit.
     if (r.passed && dmg > 0) {
       dispatch({ type: 'APPLY_ENEMY_ENDURANCE', enemyId: target.id, delta: -dmg, reason: 'Hit', data: { weapon: w.name } });
     }
+
+    // If Piercing Blow was scored, roll Protection (enemy armour) vs Injury and apply Wounded.
+    let piercingLine = '';
+    if (piercingBlow) {
+      const injTN = Number((w as any)?.injury ?? 0) || 0;
+      const armourDice = Number((target as any)?.armour ?? 0) || 0;
+      if (injTN > 0 && armourDice >= 0) {
+        const pr = rollTOR({ dice: armourDice, tn: injTN, featMode: 'normal', weary: false });
+        const resisted = pr.passed === true;
+        piercingLine = `Piercing - ${resisted ? 'RESISTED' : 'NOT RESISTED'} (TN ${injTN})`;
+        dispatch({ type: 'APPLY_ENEMY_WOUND', enemyId: target.id, injuryTN: injTN, resisted, data: { weapon: w.name, armourDice } } as any);
+      }
+    }
     dispatch({ type: 'HERO_ACTION_USED', kind: 'attack', data: { weapon: w.name, targetId: target.id } });
 
     const degrees = r.passed ? (r.icons === 0 ? 'Success' : r.icons === 1 ? 'Great Success' : 'Extraordinary Success') : 'FAIL';
-    const txt = `${w.name} - ${r.passed ? 'PASS' : 'FAIL'} — ${degrees} • TN ${tn}${r.passed ? ` • Damage ${dmg}` : ''}`;
+    const txt = `${w.name} - ${r.passed ? 'PASS' : 'FAIL'} — ${degrees}${piercingBlow ? ' - PIERCING BLOW' : ''} • TN ${tn}${r.passed ? ` • Damage ${dmg}` : ''}`;
     dispatch({ type: 'LOG', text: txt, data: { weapon: w.name, tn, passed: r.passed } });
-    toast(txt, r.passed ? 'success' : 'warning');
+    if (piercingLine) dispatch({ type: 'LOG', text: piercingLine, data: { weapon: w.name, targetId: target.id } });
+    toast(piercingLine ? `${txt}\n${piercingLine}` : txt, r.passed ? 'success' : 'warning');
     (window as any).__torcLogRollHtml?.(txt);
     setHeroAttackOpen(false);
   };
@@ -447,7 +524,7 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
               <div key={e.id} className="row" style={{ justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #2a2f3a' }}>
                 <div>
                   <b>{e.name}</b>
-                  <div className="small muted">Parry {e.parry ?? '—'} • End {e.endurance.current}/{e.endurance.max}</div>
+                  <div className="small muted">Parry {e.parry ?? '—'} • Armour {e.armour ?? '—'} • End {e.endurance.current}/{e.endurance.max}{e.wounded ? ' • Wounded' : ''}</div>
                 </div>
               </div>
             ))}

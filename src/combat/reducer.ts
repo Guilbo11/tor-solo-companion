@@ -157,6 +157,35 @@ export function combatReducer(state: CombatState | null, event: CombatEvent): Co
       };
     }
 
+    case 'APPLY_ENEMY_WOUND': {
+      if (!state) return null;
+      const target = state.enemies.find((e) => String(e.id) === String(event.enemyId));
+      const label = target?.name ?? 'Enemy';
+      const resisted = !!event.resisted;
+      const alreadyWounded = !!target?.wounded;
+
+      // If not resisted: mark Wounded; if already Wounded -> the enemy is defeated (set Endurance to 0).
+      const nextEnemies = state.enemies.map((e) => {
+        if (String(e.id) !== String(event.enemyId)) return e;
+        if (resisted) return e;
+        const already = !!e.wounded;
+        const max = Number(e.endurance?.max ?? 0) || 0;
+        const cur = Number(e.endurance?.current ?? 0) || 0;
+        const nextCur = already ? 0 : cur;
+        return { ...e, wounded: true, endurance: { max, current: nextCur } };
+      });
+
+      const msg = resisted
+        ? `${label} resists the Piercing Blow (TN ${event.injuryTN}).`
+        : `${label} suffers a Piercing Blow (TN ${event.injuryTN})${alreadyWounded ? ' — already wounded, defeated!' : ' — Wounded.'}`;
+
+      return {
+        ...state,
+        enemies: nextEnemies,
+        log: [...state.log, { id: uid('log'), at: nowIso(), text: msg, data: event.data }],
+      };
+    }
+
     case 'LOG': {
       if (!state) return null;
       return { ...state, log: [...state.log, { id: uid('log'), at: nowIso(), text: event.text, data: event.data }] };
