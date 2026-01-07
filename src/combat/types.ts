@@ -62,6 +62,12 @@ export type CombatState = {
   options: CombatOptions;
 
   log: CombatLogEntry[];
+
+  // One main action per combatant, per round.
+  actionsUsed: {
+    hero: boolean;
+    enemies: Record<string, boolean>; // enemyId -> used
+  };
 };
 
 export type CombatEvent =
@@ -72,4 +78,7 @@ export type CombatEvent =
   | { type: 'AUTO_ENGAGE' }
   | { type: 'SET_ENGAGEMENT'; engagement: EngagementState }
   | { type: 'ATTEMPT_ESCAPE'; mode: 'FREE' | 'ROLL'; rollPassed?: boolean }
+  | { type: 'HERO_ACTION_USED'; kind: 'attack' | 'task' | 'escape'; data?: any }
+  | { type: 'ENEMY_ACTION_USED'; enemyId: string; kind: 'attack' | 'other'; data?: any }
+  | { type: 'APPLY_ENEMY_ENDURANCE'; enemyId: string; delta: number; reason?: string; data?: any }
   | { type: 'LOG'; text: string; data?: any };

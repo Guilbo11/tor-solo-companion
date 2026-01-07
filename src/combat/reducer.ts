@@ -29,6 +29,7 @@ export function combatReducer(state: CombatState | null, event: CombatEvent): Co
         engagement: emptyEngagement(),
         options: event.options,
         log: [{ id: uid('log'), at: nowIso(), text: 'Combat started.' }],
+        actionsUsed: { hero: false, enemies: {} },
       };
       return s;
     }
@@ -49,6 +50,7 @@ export function combatReducer(state: CombatState | null, event: CombatEvent): Co
         round: state.round + 1,
         phase: 'roundStart',
         engagement: emptyEngagement(),
+        actionsUsed: { hero: false, enemies: {} },
         log: [...state.log, { id: uid('log'), at: nowIso(), text: `Round ${state.round + 1} begins.` }],
       };
     }
@@ -93,6 +95,7 @@ export function combatReducer(state: CombatState | null, event: CombatEvent): Co
         return {
           ...state,
           phase: 'combatEnd',
+          actionsUsed: { ...state.actionsUsed, hero: true },
           log: [...state.log, { id: uid('log'), at: nowIso(), text: 'Escaped combat (Rearward stance).' }],
         };
       }
@@ -101,6 +104,7 @@ export function combatReducer(state: CombatState | null, event: CombatEvent): Co
       if (!passed) {
         return {
           ...state,
+          actionsUsed: { ...state.actionsUsed, hero: true },
           log: [...state.log, { id: uid('log'), at: nowIso(), text: 'Escape attempt failed (remains engaged).' }],
         };
       }
@@ -108,7 +112,48 @@ export function combatReducer(state: CombatState | null, event: CombatEvent): Co
       return {
         ...state,
         phase: 'combatEnd',
+        actionsUsed: { ...state.actionsUsed, hero: true },
         log: [...state.log, { id: uid('log'), at: nowIso(), text: 'Escaped combat (Defensive stance success).' }],
+      };
+    }
+
+    case 'HERO_ACTION_USED': {
+      if (!state) return null;
+      return {
+        ...state,
+        actionsUsed: { ...state.actionsUsed, hero: true },
+        log: event.kind ? [...state.log, { id: uid('log'), at: nowIso(), text: `Hero action: ${event.kind}.`, data: event.data }] : state.log,
+      };
+    }
+
+    case 'ENEMY_ACTION_USED': {
+      if (!state) return null;
+      return {
+        ...state,
+        actionsUsed: {
+          ...state.actionsUsed,
+          enemies: { ...(state.actionsUsed?.enemies ?? {}), [event.enemyId]: true },
+        },
+        log: [...state.log, { id: uid('log'), at: nowIso(), text: `Enemy action (${event.enemyId}): ${event.kind}.`, data: event.data }],
+      };
+    }
+
+    case 'APPLY_ENEMY_ENDURANCE': {
+      if (!state) return null;
+      const nextEnemies = state.enemies.map((e) => {
+        if (String(e.id) !== String(event.enemyId)) return e;
+        const cur = Number(e.endurance?.current ?? 0) || 0;
+        const max = Number(e.endurance?.max ?? 0) || 0;
+        const nextCur = Math.max(0, Math.min(max, cur + Number(event.delta ?? 0)));
+        return { ...e, endurance: { max, current: nextCur } };
+      });
+      const target = state.enemies.find((e) => String(e.id) === String(event.enemyId));
+      const label = target?.name ?? 'Enemy';
+      const reason = event.reason ? ` (${event.reason})` : '';
+      return {
+        ...state,
+        enemies: nextEnemies,
+        log: [...state.log, { id: uid('log'), at: nowIso(), text: `${label} Endurance ${event.delta >= 0 ? '+' : ''}${event.delta}${reason}.`, data: event.data }],
       };
     }
 

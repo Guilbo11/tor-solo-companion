@@ -102,14 +102,30 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
   const [specialChoices, setSpecialChoices] = useState<SpecialPick[]>([]);
   const pendingRef = React.useRef<any>(null);
 
+  // --- Hero actions ---
+  const [heroAttackOpen, setHeroAttackOpen] = useState(false);
+  const [heroAttackTargetId, setHeroAttackTargetId] = useState('');
+  const [heroFeatMode, setHeroFeatMode] = useState<'normal' | 'favoured' | 'illFavoured'>('normal');
+  const [heroWeaponName, setHeroWeaponName] = useState('');
+
+  const [heroTaskOpen, setHeroTaskOpen] = useState(false);
+  const [heroTaskFeatMode, setHeroTaskFeatMode] = useState<'normal' | 'favoured' | 'illFavoured'>('normal');
+  const [heroTaskWeary, setHeroTaskWeary] = useState(false);
+
   const beginEnemyAttack = () => {
     if (!combat) return;
-    setEnemyAttackEnemyId(combat.enemies[0]?.id ?? '');
+    const alive = (combat.enemies ?? []).filter((e) => (Number(e.endurance?.current ?? 0) || 0) > 0);
+    const firstAvailable = alive.find((e) => !combat.actionsUsed?.enemies?.[e.id]) ?? alive[0] ?? combat.enemies[0];
+    setEnemyAttackEnemyId(firstAvailable?.id ?? '');
     setEnemyAttackWeaponName('');
     setEnemyFeatMode('normal');
     setEnemyWeary(false);
     setEnemySpend(0);
     setEnemyAttackOpen(true);
+  };
+
+  const toast = (message: string, type: 'info'|'success'|'warning'|'error' = 'info') => {
+    (window as any).__torcToast?.({ message, type, durationMs: 4000 });
   };
 
   const startEnemyAttackRoll = () => {
@@ -128,6 +144,7 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
       setEnemyAttackOpen(false);
       setSpecialPickerOpen(true);
     } else {
+      setEnemyAttackOpen(false);
       finalizeEnemyAttack([]);
     }
   };
@@ -172,9 +189,14 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
     // Log
     const deg = passed ? (r.icons === 0 ? 'Success' : r.icons === 1 ? 'Great Success' : 'Extraordinary Success') : 'FAIL';
     const txt = passed
-      ? `${enemy.name} hits (${deg}) for ${dmg} Endurance.`
-      : `${enemy.name} misses.`;
-    setCombat(combatReducer(combat, { type: 'LOG', text: txt, data: { enemyId: enemy.id, weapon: w.name, total, tn, specials: picks } } as any));
+      ? `${enemy.name} - PASS — ${deg}${picks.length ? ` • ${picks.join(', ')}` : ''} • Damage ${dmg}`
+      : `${enemy.name} - FAIL — Miss`;
+    let next = combatReducer(combat, { type: 'LOG', text: txt, data: { enemyId: enemy.id, weapon: w.name, total, tn, specials: picks } } as any);
+    next = next ? (combatReducer(next as any, { type: 'ENEMY_ACTION_USED', enemyId: enemy.id, kind: 'attack', data: { weapon: w.name } } as any) as any) : next;
+    setCombat(next as any);
+
+    // Toast (4s, colored) like elsewhere.
+    toast(txt, passed ? 'warning' : 'success');
 
     pendingRef.current = null;
     setSpecialPickerOpen(false);
@@ -190,6 +212,12 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
 
   const endCombat = () => {
     if (!combat) return;
+    const enemiesLeft = (combat.enemies ?? []).some(e => (Number(e.endurance?.current ?? 0) || 0) > 0);
+    const escaped = combat.phase === 'combatEnd' && (combat.log ?? []).some(l => String(l.text ?? '').toLowerCase().includes('escaped combat'));
+    if (enemiesLeft && !escaped) {
+      const ok = window.confirm("There are still enemies left and you didn't escape. Want to end the combat anyways?");
+      if (!ok) return;
+    }
     setCombat(null);
   };
 
@@ -262,6 +290,105 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
   const engagedEnemyIds = combat.engagement.heroToEnemies?.[combat.heroId] ?? [];
   const engagedEnemies = combat.enemies.filter(e => engagedEnemyIds.includes(e.id));
 
+  const enemiesAlive = combat.enemies.filter(e => (Number(e.endurance?.current ?? 0) || 0) > 0);
+  const heroActionUsed = !!combat.actionsUsed?.hero;
+
+  const stanceTask = (() => {
+    const s = combat.hero.stance;
+    if (s === 'forward') return { id: 'intimidateFoe', name: 'Intimidate Foe', skill: 'awe', attr: 'heart' } as const;
+    if (s === 'open') return { id: 'rallyComrades', name: 'Rally Comrades', skill: 'enhearten', attr: 'heart' } as const;
+    if (s === 'defensive') return { id: 'protectCompanion', name: 'Protect Companion', skill: 'athletics', attr: 'strength' } as const;
+    if (s === 'rearward') return { id: 'prepareShot', name: 'Prepare Shot', skill: 'scan', attr: 'wits' } as const;
+    if (s === 'skirmish') return { id: 'gainGround', name: 'Gain Ground', skill: 'athleticsOrScan', attr: 'strengthOrWits' } as const;
+    return null;
+  })();
+
+  const beginHeroAttack = () => {
+    if (!combat || !activeHero || !derived) return;
+    const defaultTarget = (engagedEnemies[0]?.id ?? enemiesAlive[0]?.id ?? '');
+    setHeroAttackTargetId(defaultTarget);
+    const w = derived.equippedWeapons?.[0];
+    setHeroWeaponName(String(w?.name ?? ''));
+    setHeroFeatMode('normal');
+    setHeroAttackOpen(true);
+  };
+
+  const resolveHeroAttack = () => {
+    if (!combat || !activeHero || !derived) return;
+    const target = combat.enemies.find(e => String(e.id) === String(heroAttackTargetId));
+    if (!target) return;
+    const w: any = (derived.equippedWeapons ?? []).find((x: any) => String(x?.name ?? '') === String(heroWeaponName)) ?? null;
+    if (!w) return;
+
+    const prof = String(w?.proficiency ?? '').toLowerCase();
+    const cp = derived?.combatProficiencies ?? {};
+    const rating = (() => {
+      if (prof.startsWith('axe')) return cp.axes ?? 0;
+      if (prof.startsWith('bow')) return cp.bows ?? 0;
+      if (prof.startsWith('spear')) return cp.spears ?? 0;
+      if (prof.startsWith('sword')) return cp.swords ?? 0;
+      return 0;
+    })();
+
+    const tn = Number(target.parry ?? 0) || 0;
+    const r = rollTOR({ dice: Number(rating ?? 0), tn, featMode: heroFeatMode, weary: !!activeHero?.conditions?.weary });
+    const dmg = r.passed ? (Number(w?.damage ?? 0) || 0) : 0;
+
+    // Apply enemy Endurance damage on hit.
+    if (r.passed && dmg > 0) {
+      dispatch({ type: 'APPLY_ENEMY_ENDURANCE', enemyId: target.id, delta: -dmg, reason: 'Hit', data: { weapon: w.name } });
+    }
+    dispatch({ type: 'HERO_ACTION_USED', kind: 'attack', data: { weapon: w.name, targetId: target.id } });
+
+    const degrees = r.passed ? (r.icons === 0 ? 'Success' : r.icons === 1 ? 'Great Success' : 'Extraordinary Success') : 'FAIL';
+    const txt = `${w.name} - ${r.passed ? 'PASS' : 'FAIL'} — ${degrees} • TN ${tn}${r.passed ? ` • Damage ${dmg}` : ''}`;
+    dispatch({ type: 'LOG', text: txt, data: { weapon: w.name, tn, passed: r.passed } });
+    toast(txt, r.passed ? 'success' : 'warning');
+    (window as any).__torcLogRollHtml?.(txt);
+    setHeroAttackOpen(false);
+  };
+
+  const beginHeroTask = () => {
+    if (!combat || !activeHero || !derived || !stanceTask) return;
+    // Default feat mode to favoured if the underlying skill is favoured.
+    const fav = derived.favouredSkillSet?.has?.(stanceTask.skill) ?? false;
+    setHeroTaskFeatMode(fav ? 'favoured' : 'normal');
+    setHeroTaskWeary(!!activeHero?.conditions?.weary);
+    setHeroTaskOpen(true);
+  };
+
+  const resolveHeroTask = () => {
+    if (!combat || !activeHero || !derived || !stanceTask) return;
+
+    const tn = (() => {
+      if (stanceTask.attr === 'strength') return Number(derived.strengthTN ?? 0) || 0;
+      if (stanceTask.attr === 'heart') return Number(derived.heartTN ?? 0) || 0;
+      if (stanceTask.attr === 'wits') return Number(derived.witsTN ?? 0) || 0;
+      // Gain Ground: use STR TN if Athletics is higher, else WITS TN (simple and player-friendly).
+      const a = Number(activeHero?.skillRatings?.athletics ?? 0) || 0;
+      const s = Number(activeHero?.skillRatings?.scan ?? 0) || 0;
+      return (a >= s) ? (Number(derived.strengthTN ?? 0) || 0) : (Number(derived.witsTN ?? 0) || 0);
+    })();
+
+    const dice = (() => {
+      if (stanceTask.skill === 'athleticsOrScan') {
+        const a = Number(activeHero?.skillRatings?.athletics ?? 0) || 0;
+        const s = Number(activeHero?.skillRatings?.scan ?? 0) || 0;
+        return Math.max(a, s);
+      }
+      return Number(activeHero?.skillRatings?.[stanceTask.skill] ?? 0) || 0;
+    })();
+
+    const r = rollTOR({ dice, tn, featMode: heroTaskFeatMode, weary: heroTaskWeary });
+    dispatch({ type: 'HERO_ACTION_USED', kind: 'task', data: { taskId: stanceTask.id, stance: combat.hero.stance } });
+    const degrees = r.passed ? (r.icons === 0 ? 'Success' : r.icons === 1 ? 'Great Success' : 'Extraordinary Success') : 'FAIL';
+    const txt = `${stanceTask.name} - ${r.passed ? 'PASS' : 'FAIL'} — ${degrees} • TN ${tn}`;
+    dispatch({ type: 'LOG', text: txt, data: { taskId: stanceTask.id, tn, passed: r.passed } });
+    toast(txt, r.passed ? 'success' : 'warning');
+    (window as any).__torcLogRollHtml?.(txt);
+    setHeroTaskOpen(false);
+  };
+
   const canFreeEscape = combat.hero.stance === 'rearward';
   const canRollEscape = combat.hero.stance === 'defensive' && engagedEnemies.length > 0 && (derived?.equippedWeapons?.length ?? 0) > 0;
 
@@ -331,10 +458,32 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
       </div>
 
       <div className="card" style={{ marginTop: 12 }}>
+        <div className="label">Hero actions</div>
+        <div className="small muted" style={{ marginTop: 6 }}>
+          One main action per round. Choose an attack (like in Sheet) or the Combat Task tied to your stance.
+        </div>
+
+        <div className="row" style={{ gap: 10, marginTop: 10, flexWrap: 'wrap' }}>
+          <button className="btn" disabled={heroActionUsed || enemiesAlive.length === 0 || !(derived?.equippedWeapons?.length)} onClick={beginHeroAttack}>Attack</button>
+          <button className="btn" disabled={heroActionUsed || !stanceTask} onClick={beginHeroTask}>{stanceTask ? `Combat Task: ${stanceTask.name}` : 'Combat Task'}</button>
+        </div>
+
+        <div className="small muted" style={{ marginTop: 10 }}>
+          Targeting uses the enemy Parry TN. Damage is applied to enemy Endurance on a hit.
+        </div>
+      </div>
+
+      <div className="card" style={{ marginTop: 12 }}>
         <div className="label">Enemy actions</div>
         <div className="small muted" style={{ marginTop: 6 }}>Hero Parry TN: <b>{heroParryTN}</b></div>
         <div className="row" style={{ justifyContent: 'flex-end', gap: 8, marginTop: 10 }}>
-          <button className="btn" onClick={beginEnemyAttack}>From Enemy</button>
+          <button
+            className="btn"
+            disabled={enemiesAlive.length === 0 || enemiesAlive.every(e => !!combat.actionsUsed?.enemies?.[e.id])}
+            onClick={beginEnemyAttack}
+          >
+            {enemiesAlive.every(e => !!combat.actionsUsed?.enemies?.[e.id]) ? 'All enemies acted' : 'From Enemy'}
+          </button>
         </div>
       </div>
 
@@ -344,8 +493,8 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
           Rearward: escape on your turn, no roll. Defensive: make an attack; success lets you leave.
         </div>
         <div className="row" style={{ justifyContent: 'flex-end', gap: 8, marginTop: 10 }}>
-          <button className="btn" disabled={!canFreeEscape} onClick={doFreeEscape}>Escape (Rearward)</button>
-          <button className="btn" disabled={!canRollEscape} onClick={doRollEscape}>Escape (Defensive roll)</button>
+          <button className="btn" disabled={heroActionUsed || !canFreeEscape} onClick={doFreeEscape}>Escape (Rearward)</button>
+          <button className="btn" disabled={heroActionUsed || !canRollEscape} onClick={doRollEscape}>Escape (Defensive roll)</button>
         </div>
       </div>
 
@@ -411,11 +560,83 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
                   </div>
 
                   <div className="row" style={{ justifyContent: 'flex-end', gap: 8, marginTop: 12 }}>
-                    <button className="btn" disabled={!enemyAttackWeaponName} onClick={startEnemyAttackRoll}>Roll</button>
+                    <button
+                      className="btn"
+                      disabled={!enemyAttackWeaponName || (Number(enemy?.endurance?.current ?? 0) <= 0) || !!combat.actionsUsed?.enemies?.[enemyAttackEnemyId]}
+                      onClick={startEnemyAttackRoll}
+                    >
+                      {(Number(enemy?.endurance?.current ?? 0) <= 0) ? 'Defeated' : (combat.actionsUsed?.enemies?.[enemyAttackEnemyId] ? 'Already acted' : 'Roll')}
+                    </button>
                   </div>
                 </>
               );
             })()}
+          </div>
+        </div>
+      ) : null}
+
+      {/* Hero attack modal */}
+      {heroAttackOpen ? (
+        <div className="modalOverlay" onMouseDown={() => setHeroAttackOpen(false)}>
+          <div className="modal" style={{ maxWidth: 520 }} onMouseDown={(e) => e.stopPropagation()}>
+            <div className="modalHeader">
+              <div><b>Hero Attack</b></div>
+              <button className="btn btn-ghost" onClick={() => setHeroAttackOpen(false)}>Close</button>
+            </div>
+
+            <div className="label" style={{ marginTop: 10 }}>Target</div>
+            <select className="input" value={heroAttackTargetId} onChange={(e) => setHeroAttackTargetId(e.target.value)}>
+              {enemiesAlive.map((e) => <option key={e.id} value={e.id}>{e.name} (Parry {e.parry ?? '—'}, End {e.endurance.current}/{e.endurance.max})</option>)}
+            </select>
+
+            <div className="label" style={{ marginTop: 10 }}>Weapon</div>
+            <select className="input" value={heroWeaponName} onChange={(e) => setHeroWeaponName(e.target.value)}>
+              <option value="">Choose…</option>
+              {(derived?.equippedWeapons ?? []).map((w: any) => (
+                <option key={w.name} value={w.name}>{w.name} — {w.damage}/{w.injury} ({w.proficiency})</option>
+              ))}
+            </select>
+
+            <div className="label" style={{ marginTop: 10 }}>Feat die mode</div>
+            <select className="input" value={heroFeatMode} onChange={(e) => setHeroFeatMode(e.target.value as any)}>
+              <option value="normal">Normal</option>
+              <option value="favoured">Favoured</option>
+              <option value="illFavoured">Ill-favoured</option>
+            </select>
+
+            <div className="row" style={{ justifyContent: 'flex-end', gap: 8, marginTop: 12 }}>
+              <button className="btn" disabled={!heroWeaponName} onClick={resolveHeroAttack}>Roll</button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {/* Hero task modal */}
+      {heroTaskOpen && stanceTask ? (
+        <div className="modalOverlay" onMouseDown={() => setHeroTaskOpen(false)}>
+          <div className="modal" style={{ maxWidth: 520 }} onMouseDown={(e) => e.stopPropagation()}>
+            <div className="modalHeader">
+              <div><b>{stanceTask.name}</b></div>
+              <button className="btn btn-ghost" onClick={() => setHeroTaskOpen(false)}>Close</button>
+            </div>
+            <div className="small muted" style={{ marginTop: 8 }}>
+              This is the stance-specific Combat Task. One main action per round.
+            </div>
+
+            <div className="label" style={{ marginTop: 10 }}>Feat die mode</div>
+            <select className="input" value={heroTaskFeatMode} onChange={(e) => setHeroTaskFeatMode(e.target.value as any)}>
+              <option value="normal">Normal</option>
+              <option value="favoured">Favoured</option>
+              <option value="illFavoured">Ill-favoured</option>
+            </select>
+
+            <label className={"toggle " + (heroTaskWeary ? 'on' : '')} style={{ marginTop: 10, display: 'inline-flex' }}>
+              <input type="checkbox" checked={heroTaskWeary} onChange={(e) => setHeroTaskWeary(e.target.checked)} /> Weary
+            </label>
+
+            <div className="row" style={{ justifyContent: 'flex-end', gap: 8, marginTop: 12 }}>
+              <button className="btn" onClick={resolveHeroTask}>Roll</button>
+            </div>
           </div>
         </div>
       ) : null}
