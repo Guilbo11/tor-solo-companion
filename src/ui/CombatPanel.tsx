@@ -111,9 +111,29 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
     return h ?? null;
   }, [heroes, combat?.heroId, heroId]);
 
-  const derived = useMemo(() => (activeHero ? computeDerived(activeHero, (combat?.options?.striderMode ? 18 : 20)) : null), [activeHero, combat?.options?.striderMode]);
-  const heroParryTN = (Number(derived?.parry?.total ?? 0) || 0) + (Number(combat?.roundMods?.heroParryBonus ?? 0) || 0);
+  const derived = useMemo(
+    () => (activeHero ? computeDerived(activeHero, (combat?.options?.striderMode ? 18 : 20)) : null),
+    [activeHero, combat?.options?.striderMode]
+  );
 
+  // Parry TN used to resolve incoming attacks.
+  // During Opening Volleys, if the hero carries a shield and was NOT caught off-guard by an ambush,
+  // double the shield's Parry contribution (core rule).
+  const heroParryTNStandard = (Number(derived?.parry?.total ?? 0) || 0) + (Number(combat?.roundMods?.heroParryBonus ?? 0) || 0);
+
+  const heroParryTNForIncomingAttack = (isOpeningVolley: boolean): number => {
+    if (!isOpeningVolley) return heroParryTNStandard;
+
+    // If the hero was caught off-guard by an enemy ambush, do not apply the doubled-shield benefit.
+    const heroCaughtOffGuard = !!(combat as any)?.surprise?.heroCaughtOffGuard;
+    const shieldBonus = Number((derived as any)?.parry?.shield ?? 0) || 0;
+    if (heroCaughtOffGuard || shieldBonus <= 0) return heroParryTNStandard;
+
+    const base = Number((derived as any)?.parry?.base ?? 0) || 0;
+    const other = Number((derived as any)?.parry?.other ?? 0) || 0;
+    const roundBonus = Number((combat as any)?.roundMods?.heroParryBonus ?? 0) || 0;
+    return base + other + (shieldBonus * 2) + roundBonus;
+  };
   /**
    * IMPORTANT: Combat updates must be reduced against the latest combat state.
    * Using the render-time `combat` in multiple sequential dispatches would drop updates
@@ -203,6 +223,10 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
   const [heroAttackDropItemId, setHeroAttackDropItemId] = useState<string | null>(null);
   const [enemyAttackIsOpeningVolley, setEnemyAttackIsOpeningVolley] = useState(false);
 
+  // --- Engagement selection (solo) ---
+  const [engagementPickerOpen, setEngagementPickerOpen] = useState(false);
+  const [engagementSelection, setEngagementSelection] = useState<string[]>([]);
+
   const beginEnemyAttack = (forceEnemyId?: string) => {
     if (!combat) return;
     const aliveAll = (combat.enemies ?? []).filter((e) => (Number(e.endurance?.current ?? 0) || 0) > 0);
@@ -230,7 +254,7 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
     const baseDice = Number(weapon.rating ?? 0) + Number(enemySpend ?? 0);
     const pen = Number(combat.roundMods?.enemyDicePenalty?.[String(enemy.id)] ?? 0) || 0;
     const dice = Math.max(0, baseDice + pen);
-    const tn = heroParryTN;
+    const tn = heroParryTNForIncomingAttack(!!enemyAttackIsOpeningVolley);
     const r = rollTORAdversary({ dice, featMode: enemyFeatMode, weary: enemyWeary, tn });
     pendingRef.current = { enemy, weapon, roll: r, tn };
 
@@ -529,6 +553,44 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
   const enemyActionList = (combat?.hero?.stance === 'rearward') ? enemiesAlive.filter(enemyHasRangedWeapon) : enemiesAlive;
   const heroActionUsed = !!combat?.actionsUsed?.hero;
 
+  const enemyRequiredStanceLabel = (enemy: any): string => {
+    const pos = String(enemy?.position ?? 'melee');
+    if (pos === 'ranged') return (combat?.options?.striderMode ? 'Rearward or Skirmish' : 'Rearward');
+    return 'Forward/Open/Defensive';
+  };
+
+  const enemyIsEngageableInHeroStance = (enemy: any): boolean => {
+    const s = combat?.hero?.stance;
+    if (!s) return false;
+    const pos = String(enemy?.position ?? 'melee');
+    if (s === 'rearward' || s === 'skirmish') return false; // ranged stances do not engage
+    return pos !== 'ranged';
+  };
+
+  const openEngagementPicker = (prefillEnemyId?: string) => {
+    if (!combat) return;
+    const engageables = enemiesAlive.filter(enemyIsEngageableInHeroStance);
+    if (combat.hero.stance === 'rearward' || combat.hero.stance === 'skirmish') {
+      // No engagement selection in ranged stances.
+      dispatch({ type: 'SET_ENGAGEMENT', engagement: { heroToEnemies: { [combat.heroId]: [] }, enemyToHeroes: {} } } as any);
+      return;
+    }
+    if (engageables.length <= 1) {
+      const eid = engageables[0]?.id;
+      const heroToEnemies = { [combat.heroId]: eid ? [eid] : [] };
+      const enemyToHeroes: any = {};
+      for (const e of (combat.enemies ?? [])) {
+        enemyToHeroes[e.id] = (eid && String(e.id) === String(eid)) ? [combat.heroId] : [];
+      }
+      dispatch({ type: 'SET_ENGAGEMENT', engagement: { heroToEnemies, enemyToHeroes } } as any);
+      return;
+    }
+
+    const pre = prefillEnemyId ? [String(prefillEnemyId)] : (engageables.slice(0, 1).map((e) => String(e.id)));
+    setEngagementSelection(pre);
+    setEngagementPickerOpen(true);
+  };
+
   // Opening Volleys summary - must not rely on combat being non-null across renders.
   useEffect(() => {
     if (!combat || combat.phase !== 'openingVolleys') return;
@@ -545,6 +607,28 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
     parts.push(`Opening volley allowed: Hero ${allowHeroOV ? '✅' : '❌'} / Enemies ${allowEnemyOV ? '✅' : '❌'}`);
     setOvSummary(parts.join(' • '));
   }, [combat?.id, combat?.phase]);
+
+  // If we are in the engagement phase and multiple enemies are engageable, prompt the player to choose.
+  useEffect(() => {
+    if (!combat) return;
+    if (combat.phase !== 'engagement') return;
+    if (engagementPickerOpen) return;
+    if (combat.hero.stance === 'rearward' || combat.hero.stance === 'skirmish') {
+      // Ranged stances: proceed with empty engagement.
+      dispatch({ type: 'SET_ENGAGEMENT', engagement: { heroToEnemies: { [combat.heroId]: [] }, enemyToHeroes: {} } } as any);
+      return;
+    }
+    const engageables = enemiesAlive.filter(enemyIsEngageableInHeroStance);
+    if (engageables.length === 0) {
+      dispatch({ type: 'SET_ENGAGEMENT', engagement: { heroToEnemies: { [combat.heroId]: [] }, enemyToHeroes: {} } } as any);
+      return;
+    }
+    if (engageables.length === 1) {
+      openEngagementPicker(String(engageables[0].id));
+      return;
+    }
+    openEngagementPicker();
+  }, [combat?.phase, combat?.hero?.stance, combat?.id, enemiesAlive.length, engagementPickerOpen]);
 
   const stanceTask = (() => {
     const s = combat?.hero?.stance;
@@ -1015,13 +1099,16 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
           Potential targets and required stance:
           <div style={{ marginTop: 6 }}>
             {enemiesAlive.length ? enemiesAlive.map((e) => {
-              const pos = (e.position ?? 'melee');
-              const req = pos === 'ranged'
-                ? (combat.options.striderMode ? 'Rearward or Skirmish' : 'Rearward')
-                : 'Forward/Open/Defensive';
+              const req = enemyRequiredStanceLabel(e);
+              const canTargetForEngagement = enemyIsEngageableInHeroStance(e);
               return (
-                <div key={e.id} className="small">
-                  • {e.name} — {req}
+                <div key={e.id} className="row small" style={{ justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+                  <div>• {e.name} — {req}</div>
+                  {canTargetForEngagement ? (
+                    <button className="btn btn-ghost" style={{ padding: '4px 8px' }} onClick={() => openEngagementPicker(String(e.id))}>
+                      Target
+                    </button>
+                  ) : null}
                 </div>
               );
             }) : <div className="small">• (none)</div>}
@@ -1029,7 +1116,7 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
         </div>
 
         <div className="row" style={{ justifyContent: 'flex-start', gap: 8, marginTop: 10 }}>
-          <button className="btn" onClick={() => dispatch({ type: 'AUTO_ENGAGE' })}>Engagement</button>
+          <button className="btn" onClick={() => openEngagementPicker()}>Engagement</button>
           <button className="btn" onClick={() => dispatch({ type: 'ROUND_BEGIN' })}>Next round</button>
         </div>
       </div>
@@ -1149,7 +1236,7 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
 
       <div className="card" style={{ marginTop: 12 }}>
         <div className="label">Enemy actions</div>
-        <div className="small muted" style={{ marginTop: 6 }}>Hero Parry TN: <b>{heroParryTN}</b></div>
+        <div className="small muted" style={{ marginTop: 6 }}>Hero Parry TN: <b>{heroParryTNStandard}</b></div>
         {enemyActionList.length ? (
           <div className="list" style={{ marginTop: 8 }}>
             {enemyActionList.map((e) => {
@@ -1297,6 +1384,88 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
         </div>
       ) : null}
 
+      {/* Engagement picker modal */}
+      {engagementPickerOpen ? (
+        <div className="modalOverlay" onMouseDown={() => setEngagementPickerOpen(false)}>
+          <div className="modal" style={{ maxWidth: 560 }} onMouseDown={(e) => e.stopPropagation()}>
+            <div className="modalHeader">
+              <div><b>Choose engagement</b></div>
+              <button className="btn btn-ghost" onClick={() => setEngagementPickerOpen(false)}>Close</button>
+            </div>
+
+            {(() => {
+              const engageables = enemiesAlive.filter(enemyIsEngageableInHeroStance);
+              const selected = new Set(engagementSelection.map(String));
+              const selectedEnemies = engageables.filter((e) => selected.has(String(e.id)));
+              const humanCount = selectedEnemies.filter((e) => (e.size ?? 'human') === 'human').length;
+              const largeCount = selectedEnemies.filter((e) => (e.size ?? 'human') === 'large').length;
+              const tooMany = humanCount > 3 || largeCount > 2;
+
+              const toggle = (id: string) => {
+                setEngagementSelection((prev) => {
+                  const has = prev.includes(id);
+                  if (has) return prev.filter((x) => x !== id);
+                  return [...prev, id];
+                });
+              };
+
+              const confirm = () => {
+                if (!combat) return;
+                const engageables2 = enemiesAlive.filter(enemyIsEngageableInHeroStance);
+                const sel = new Set(engagementSelection.map(String));
+                const finalIds = engageables2
+                  .filter((e) => sel.has(String(e.id)))
+                  .map((e) => String(e.id));
+                const finalEnemies = engageables2.filter((e) => finalIds.includes(String(e.id)));
+                const hc = finalEnemies.filter((e) => (e.size ?? 'human') === 'human').length;
+                const lc = finalEnemies.filter((e) => (e.size ?? 'human') === 'large').length;
+                if (hc > 3 || lc > 2) return;
+
+                const heroToEnemies = { [combat.heroId]: finalIds } as any;
+                const enemyToHeroes: any = {};
+                for (const e of (combat.enemies ?? [])) {
+                  enemyToHeroes[e.id] = finalIds.includes(String(e.id)) ? [combat.heroId] : [];
+                }
+                dispatch({ type: 'SET_ENGAGEMENT', engagement: { heroToEnemies, enemyToHeroes } } as any);
+                setEngagementPickerOpen(false);
+              };
+
+              return (
+                <>
+                  <div className="small muted" style={{ marginTop: 10 }}>
+                    Select who you engage this round (max 3 human-sized, max 2 large).
+                  </div>
+                  <div className="list" style={{ marginTop: 10 }}>
+                    {engageables.map((e) => {
+                      const checked = selected.has(String(e.id));
+                      return (
+                        <label key={e.id} className="row" style={{ justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid #2a2f3a', cursor: 'pointer' }}>
+                          <span>
+                            <input type="checkbox" checked={checked} onChange={() => toggle(String(e.id))} />{' '}
+                            <b>{e.name}</b> <span className="small muted">({(e.size ?? 'human') === 'large' ? 'large' : 'human'})</span>
+                          </span>
+                          <span className="small muted">End {e.endurance.current}/{e.endurance.max}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+
+                  <div className="small" style={{ marginTop: 10 }}>
+                    Selected: <b>{humanCount}</b>/3 human • <b>{largeCount}</b>/2 large
+                    {tooMany ? <span className="small" style={{ marginLeft: 8, color: '#ff8b8b' }}>(too many)</span> : null}
+                  </div>
+
+                  <div className="row" style={{ justifyContent: 'flex-end', gap: 8, marginTop: 12 }}>
+                    <button className="btn btn-ghost" onClick={() => setEngagementSelection([])}>Reset</button>
+                    <button className="btn" disabled={tooMany} onClick={confirm}>Confirm</button>
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+        </div>
+      ) : null}
+
       {/* Opening Volleys (pre-combat) */}
       {combat.phase === 'openingVolleys' ? (
         <div className="modalOverlay" onMouseDown={() => { /* block click-through */ }}>
@@ -1336,7 +1505,7 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
                   setEnemyAttackIsOpeningVolley(true);
                   setEnemyAttackEnemyId(en.id);
                   setEnemyAttackWeaponName(weapon.name);
-                  const tn = heroParryTN;
+                  const tn = heroParryTNForIncomingAttack(true);
                   const r = rollTORAdversary({ dice: Number(weapon.rating ?? 0), featMode: 'normal', weary: false, tn });
                   pendingRef.current = { enemy: en, weapon, roll: r, tn };
                   if ((r.icons ?? 0) > 0) {
