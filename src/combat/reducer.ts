@@ -17,6 +17,16 @@ export function combatReducer(state: CombatState | null, event: CombatEvent): Co
   switch (event.type) {
     case 'START_COMBAT': {
       const id = createCombatId();
+      // Normalise enemies (ensure endurance current/max exist and wounds counter starts at 0).
+      const enemies = (event.enemies ?? []).map((e) => {
+        const max = Number((e as any)?.endurance?.max ?? (e as any)?.endurance ?? 0) || 0;
+        const cur = Number((e as any)?.endurance?.current ?? max) || 0;
+        return {
+          ...e,
+          endurance: { max, current: Math.max(0, Math.min(max, cur)) },
+          wounds: Number((e as any)?.wounds ?? 0) || 0,
+        };
+      });
       const s: CombatState = {
         id,
         campaignId: event.campaignId,
@@ -25,7 +35,7 @@ export function combatReducer(state: CombatState | null, event: CombatEvent): Co
         round: 1,
         distance: 'close',
         hero: { stance: 'open' },
-        enemies: event.enemies,
+        enemies,
         engagement: emptyEngagement(),
         options: event.options,
         log: [{ id: uid('log'), at: nowIso(), text: 'Combat started.' }],
@@ -142,8 +152,8 @@ export function combatReducer(state: CombatState | null, event: CombatEvent): Co
       if (!state) return null;
       const nextEnemies = state.enemies.map((e) => {
         if (String(e.id) !== String(event.enemyId)) return e;
-        const cur = Number(e.endurance?.current ?? 0) || 0;
-        const max = Number(e.endurance?.max ?? 0) || 0;
+        const max = Number((e as any)?.endurance?.max ?? (e as any)?.endurance ?? 0) || 0;
+        const cur = Number((e as any)?.endurance?.current ?? max) || 0;
         const nextCur = Math.max(0, Math.min(max, cur + Number(event.delta ?? 0)));
         return { ...e, endurance: { max, current: nextCur } };
       });
@@ -162,22 +172,29 @@ export function combatReducer(state: CombatState | null, event: CombatEvent): Co
       const target = state.enemies.find((e) => String(e.id) === String(event.enemyId));
       const label = target?.name ?? 'Enemy';
       const resisted = !!event.resisted;
-      const alreadyWounded = !!target?.wounded;
+      const prevWounds = Number((target as any)?.wounds ?? 0) || 0;
+      const might = Math.max(1, Number((target as any)?.might ?? 1) || 1);
 
-      // If not resisted: mark Wounded; if already Wounded -> the enemy is defeated (set Endurance to 0).
+      // Core: Might indicates the number of Wounds required to slay a foe outright.
+      // If not resisted: increment wounds; if wounds >= might -> defeated (Endurance 0).
       const nextEnemies = state.enemies.map((e) => {
         if (String(e.id) !== String(event.enemyId)) return e;
         if (resisted) return e;
-        const already = !!e.wounded;
-        const max = Number(e.endurance?.max ?? 0) || 0;
-        const cur = Number(e.endurance?.current ?? 0) || 0;
-        const nextCur = already ? 0 : cur;
-        return { ...e, wounded: true, endurance: { max, current: nextCur } };
+        const max = Number((e as any)?.endurance?.max ?? (e as any)?.endurance ?? 0) || 0;
+        const cur = Number((e as any)?.endurance?.current ?? max) || 0;
+        const wPrev = Number((e as any)?.wounds ?? 0) || 0;
+        const wNext = wPrev + 1;
+        const slain = wNext >= Math.max(1, Number((e as any)?.might ?? 1) || 1);
+        return {
+          ...e,
+          wounds: wNext,
+          endurance: { max, current: slain ? 0 : cur },
+        };
       });
 
       const msg = resisted
         ? `${label} resists the Piercing Blow (TN ${event.injuryTN}).`
-        : `${label} suffers a Piercing Blow (TN ${event.injuryTN})${alreadyWounded ? ' — already wounded, defeated!' : ' — Wounded.'}`;
+        : `${label} suffers a Wound (TN ${event.injuryTN}) — Wounds ${prevWounds + 1}/${might}${prevWounds + 1 >= might ? ' — slain!' : ''}`;
 
       return {
         ...state,

@@ -36,7 +36,7 @@ function toCombatEnemy(e: any): CombatEnemy {
     attributeLevel: Number(e?.attributeLevel ?? 0) || 0,
     parry: typeof e?.parry === 'number' ? e.parry : Number(e?.parry ?? 0) || 0,
     armour: typeof e?.armour === 'number' ? e.armour : Number(e?.armour ?? 0) || 0,
-    wounded: false,
+    wounds: 0,
     hateOrResolve: e?.hateOrResolve?.type ? { type: e.hateOrResolve.type, value: Number(e.hateOrResolve.value ?? 0) || 0 } : undefined,
     combatProficiencies: Array.isArray(e?.combatProficiencies)
       ? e.combatProficiencies.map((p: any) => ({
@@ -80,16 +80,29 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
   const derived = useMemo(() => (activeHero ? computeDerived(activeHero, (combat?.options?.striderMode ? 18 : 20)) : null), [activeHero, combat?.options?.striderMode]);
   const heroParryTN = Number(derived?.parry?.total ?? 0) || 0;
 
-  const setCombat = (nextCombat: CombatState | null) => {
+  /**
+   * IMPORTANT: Combat updates must be reduced against the latest combat state.
+   * Using the render-time `combat` in multiple sequential dispatches would drop updates
+   * (ex: Endurance deltas not sticking). Always reduce functionally.
+   */
+  const dispatch = (ev: any) => {
     setState((prev: any) => {
+      const current: CombatState | null = (prev.combatByCampaign?.[campId] ?? null) as any;
+      const next = combatReducer(current, ev as any) as any;
       const by = { ...(prev.combatByCampaign ?? {}) };
-      by[campId] = nextCombat;
+      by[campId] = next;
       return { ...prev, combatByCampaign: by };
     });
   };
 
-  const dispatch = (ev: any) => {
-    setCombat(combatReducer(combat ?? null, ev as any));
+  const dispatchMany = (events: any[]) => {
+    setState((prev: any) => {
+      let current: CombatState | null = (prev.combatByCampaign?.[campId] ?? null) as any;
+      for (const ev of events) current = combatReducer(current, ev as any) as any;
+      const by = { ...(prev.combatByCampaign ?? {}) };
+      by[campId] = current;
+      return { ...prev, combatByCampaign: by };
+    });
   };
 
   // --- Enemy attack modal (re-uses the "From Enemy" logic but scoped to combat) ---
@@ -249,9 +262,10 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
     const txt = passed
       ? `${enemy.name} - PASS — ${deg}${piercingBlow ? ' - PIERCING BLOW' : ''}${picks.length ? ` • ${picks.join(', ')}` : ''} • Damage ${dmg}`
       : `${enemy.name} - FAIL — Miss`;
-    let next = combatReducer(combat, { type: 'LOG', text: txt, data: { enemyId: enemy.id, weapon: w.name, total, tn, specials: picks } } as any);
-    next = next ? (combatReducer(next as any, { type: 'ENEMY_ACTION_USED', enemyId: enemy.id, kind: 'attack', data: { weapon: w.name } } as any) as any) : next;
-    setCombat(next as any);
+    dispatchMany([
+      { type: 'LOG', text: txt, data: { enemyId: enemy.id, weapon: w.name, total, tn, specials: picks } },
+      { type: 'ENEMY_ACTION_USED', enemyId: enemy.id, kind: 'attack', data: { weapon: w.name } },
+    ]);
 
     // Toast (4s, colored) like elsewhere.
     // Toast recap (2 lines when Piercing Blow happened).
@@ -266,7 +280,7 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
     const selected = ((compendiums as any).adversariesCore?.entries ?? []).filter((e: any) => enemyIds.includes(String(e.id)));
     const enemies = selected.map(toCombatEnemy);
     const options: CombatOptions = { striderMode, enemyAutomation };
-    setCombat(combatReducer(null, { type: 'START_COMBAT', campaignId: campId, heroId: pickedHeroId, enemies, options } as any));
+    dispatch({ type: 'START_COMBAT', campaignId: campId, heroId: pickedHeroId, enemies, options } as any);
   };
 
   const endCombat = () => {
@@ -277,7 +291,11 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
       const ok = window.confirm("There are still enemies left and you didn't escape. Want to end the combat anyways?");
       if (!ok) return;
     }
-    setCombat(null);
+    setState((prev: any) => {
+      const by = { ...(prev.combatByCampaign ?? {}) };
+      by[campId] = null;
+      return { ...prev, combatByCampaign: by };
+    });
   };
 
   const toggleEnemy = (id: string) => {
@@ -374,6 +392,10 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
 
   const resolveHeroAttack = () => {
     if (!combat || !activeHero || !derived) return;
+    if (combat.actionsUsed?.hero) {
+      toast('You already used your main action this round.', 'warning');
+      return;
+    }
     const target = combat.enemies.find(e => String(e.id) === String(heroAttackTargetId));
     if (!target) return;
     const w: any = (derived.equippedWeapons ?? []).find((x: any) => String(x?.name ?? '') === String(heroWeaponName)) ?? null;
@@ -397,9 +419,10 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
     const heroFeatNumber = (r.feat.type === 'Number') ? r.feat.value : (r.feat.type === 'Gandalf' ? 10 : 0);
     const piercingBlow = !!r.passed && ((r.feat.type === 'Gandalf') || heroFeatNumber >= 10);
 
+    const events: any[] = [];
     // Apply enemy Endurance damage on hit.
     if (r.passed && dmg > 0) {
-      dispatch({ type: 'APPLY_ENEMY_ENDURANCE', enemyId: target.id, delta: -dmg, reason: 'Hit', data: { weapon: w.name } });
+      events.push({ type: 'APPLY_ENEMY_ENDURANCE', enemyId: target.id, delta: -dmg, reason: 'Hit', data: { weapon: w.name } });
     }
 
     // If Piercing Blow was scored, roll Protection (enemy armour) vs Injury and apply Wounded.
@@ -411,15 +434,16 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
         const pr = rollTOR({ dice: armourDice, tn: injTN, featMode: 'normal', weary: false });
         const resisted = pr.passed === true;
         piercingLine = `Piercing - ${resisted ? 'RESISTED' : 'NOT RESISTED'} (TN ${injTN})`;
-        dispatch({ type: 'APPLY_ENEMY_WOUND', enemyId: target.id, injuryTN: injTN, resisted, data: { weapon: w.name, armourDice } } as any);
+        events.push({ type: 'APPLY_ENEMY_WOUND', enemyId: target.id, injuryTN: injTN, resisted, data: { weapon: w.name, armourDice } } as any);
       }
     }
-    dispatch({ type: 'HERO_ACTION_USED', kind: 'attack', data: { weapon: w.name, targetId: target.id } });
+    events.push({ type: 'HERO_ACTION_USED', kind: 'attack', data: { weapon: w.name, targetId: target.id } });
 
     const degrees = r.passed ? (r.icons === 0 ? 'Success' : r.icons === 1 ? 'Great Success' : 'Extraordinary Success') : 'FAIL';
     const txt = `${w.name} - ${r.passed ? 'PASS' : 'FAIL'} — ${degrees}${piercingBlow ? ' - PIERCING BLOW' : ''} • TN ${tn}${r.passed ? ` • Damage ${dmg}` : ''}`;
-    dispatch({ type: 'LOG', text: txt, data: { weapon: w.name, tn, passed: r.passed } });
-    if (piercingLine) dispatch({ type: 'LOG', text: piercingLine, data: { weapon: w.name, targetId: target.id } });
+    events.push({ type: 'LOG', text: txt, data: { weapon: w.name, tn, passed: r.passed } });
+    if (piercingLine) events.push({ type: 'LOG', text: piercingLine, data: { weapon: w.name, targetId: target.id } });
+    dispatchMany(events);
     toast(piercingLine ? `${txt}\n${piercingLine}` : txt, r.passed ? 'success' : 'warning');
     (window as any).__torcLogRollHtml?.(txt);
     setHeroAttackOpen(false);
@@ -427,6 +451,10 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
 
   const beginHeroTask = () => {
     if (!combat || !activeHero || !derived || !stanceTask) return;
+    if (combat.actionsUsed?.hero) {
+      toast('You already used your main action this round.', 'warning');
+      return;
+    }
     // Default feat mode to favoured if the underlying skill is favoured.
     const fav = derived.favouredSkillSet?.has?.(stanceTask.skill) ?? false;
     setHeroTaskFeatMode(fav ? 'favoured' : 'normal');
@@ -436,6 +464,10 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
 
   const resolveHeroTask = () => {
     if (!combat || !activeHero || !derived || !stanceTask) return;
+    if (combat.actionsUsed?.hero) {
+      toast('You already used your main action this round.', 'warning');
+      return;
+    }
 
     const tn = (() => {
       if (stanceTask.attr === 'strength') return Number(derived.strengthTN ?? 0) || 0;
@@ -457,10 +489,12 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
     })();
 
     const r = rollTOR({ dice, tn, featMode: heroTaskFeatMode, weary: heroTaskWeary });
-    dispatch({ type: 'HERO_ACTION_USED', kind: 'task', data: { taskId: stanceTask.id, stance: combat.hero.stance } });
     const degrees = r.passed ? (r.icons === 0 ? 'Success' : r.icons === 1 ? 'Great Success' : 'Extraordinary Success') : 'FAIL';
     const txt = `${stanceTask.name} - ${r.passed ? 'PASS' : 'FAIL'} — ${degrees} • TN ${tn}`;
-    dispatch({ type: 'LOG', text: txt, data: { taskId: stanceTask.id, tn, passed: r.passed } });
+    dispatchMany([
+      { type: 'HERO_ACTION_USED', kind: 'task', data: { taskId: stanceTask.id, stance: combat.hero.stance } },
+      { type: 'LOG', text: txt, data: { taskId: stanceTask.id, tn, passed: r.passed } },
+    ]);
     toast(txt, r.passed ? 'success' : 'warning');
     (window as any).__torcLogRollHtml?.(txt);
     setHeroTaskOpen(false);
@@ -470,11 +504,19 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
   const canRollEscape = combat.hero.stance === 'defensive' && engagedEnemies.length > 0 && (derived?.equippedWeapons?.length ?? 0) > 0;
 
   const doFreeEscape = () => {
+    if (combat.actionsUsed?.hero) {
+      toast('You already used your main action this round.', 'warning');
+      return;
+    }
     dispatch({ type: 'ATTEMPT_ESCAPE', mode: 'FREE' });
   };
 
   const doRollEscape = () => {
     if (!activeHero || !derived) return;
+    if (combat.actionsUsed?.hero) {
+      toast('You already used your main action this round.', 'warning');
+      return;
+    }
     const weapon: any = derived.equippedWeapons?.[0];
     const prof = String(weapon?.proficiency ?? '').toLowerCase();
     const rating = (() => {
@@ -524,7 +566,10 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
               <div key={e.id} className="row" style={{ justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #2a2f3a' }}>
                 <div>
                   <b>{e.name}</b>
-                  <div className="small muted">Parry {e.parry ?? '—'} • Armour {e.armour ?? '—'} • End {e.endurance.current}/{e.endurance.max}{e.wounded ? ' • Wounded' : ''}</div>
+                  <div className="small muted">
+                    Parry {e.parry ?? '—'} • Armour {e.armour ?? '—'} • End {e.endurance.current}/{e.endurance.max}
+                    {Number(e.wounds ?? 0) > 0 ? ` • Wounds ${Number(e.wounds ?? 0)}/${Math.max(1, Number(e.might ?? 1) || 1)}` : ''}
+                  </div>
                 </div>
               </div>
             ))}

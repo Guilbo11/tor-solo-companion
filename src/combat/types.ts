@@ -34,7 +34,8 @@ export type CombatEnemy = {
   attributeLevel: number;
   parry?: number;
   armour?: number;
-  wounded?: boolean;
+  /** Wounds suffered from Piercing Blows. When wounds >= Might, the adversary is slain outright. */
+  wounds?: number;
   hateOrResolve?: { type: 'Hate' | 'Resolve'; value: number };
   combatProficiencies?: Array<{ name: string; rating: number; damage: number; injury: number; specialDamage?: string[] }>;
   distinctiveFeatures?: string[];
