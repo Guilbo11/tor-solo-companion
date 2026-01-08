@@ -14,6 +14,8 @@ export function createCombatId(): string {
 }
 
 export function combatReducer(state: CombatState | null, event: CombatEvent): CombatState | null {
+  const defeatLogEntry = (name: string) => ({ id: uid('log'), at: nowIso(), text: `${name} is defeated.` });
+
   const pruneDefeated = (s: CombatState): CombatState => {
     const aliveIds = new Set(s.enemies.filter((e) => (Number(e.endurance?.current ?? 0) || 0) > 0).map((e) => String(e.id)));
     const heroToEnemies = { ...(s.engagement.heroToEnemies ?? {}) };
@@ -143,6 +145,18 @@ export function combatReducer(state: CombatState | null, event: CombatEvent): Co
       };
     }
 
+    case 'SET_ENEMY_POSITION': {
+      if (!state) return null;
+      const nextEnemies = state.enemies.map((e) =>
+        String(e.id) === String(event.enemyId) ? { ...e, position: event.position } : e
+      );
+      return {
+        ...state,
+        enemies: nextEnemies,
+        log: event.reason ? [...state.log, { id: uid('log'), at: nowIso(), text: event.reason, data: event.data }] : state.log,
+      };
+    }
+
     case 'AUTO_ENGAGE': {
       if (!state) return null;
       const engagement = autoEngage({ heroId: state.heroId, heroStance: state.hero.stance, enemies: state.enemies });
@@ -218,19 +232,23 @@ export function combatReducer(state: CombatState | null, event: CombatEvent): Co
 
     case 'APPLY_ENEMY_ENDURANCE': {
       if (!state) return null;
+      let defeatedNow: { id: string; name: string } | null = null;
       const nextEnemies = state.enemies.map((e) => {
         if (String(e.id) !== String(event.enemyId)) return e;
         const max = Number((e as any)?.endurance?.max ?? (e as any)?.endurance ?? 0) || 0;
         const cur = Number((e as any)?.endurance?.current ?? max) || 0;
         const nextCur = Math.max(0, Math.min(max, cur + Number(event.delta ?? 0)));
+        if (cur > 0 && nextCur === 0) defeatedNow = { id: String(e.id), name: String(e.name ?? 'Enemy') };
         return { ...e, endurance: { max, current: nextCur } };
       });
       const target = state.enemies.find((e) => String(e.id) === String(event.enemyId));
       const label = target?.name ?? 'Enemy';
       const reason = event.reason ? ` (${event.reason})` : '';
+      const log = [...state.log, { id: uid('log'), at: nowIso(), text: `${label} Endurance ${event.delta >= 0 ? '+' : ''}${event.delta}${reason}.`, data: event.data }];
+      if (defeatedNow) log.push(defeatLogEntry(defeatedNow.name));
       return {
         ...pruneDefeated({ ...state, enemies: nextEnemies }),
-        log: [...state.log, { id: uid('log'), at: nowIso(), text: `${label} Endurance ${event.delta >= 0 ? '+' : ''}${event.delta}${reason}.`, data: event.data }],
+        log,
       };
     }
 
@@ -241,6 +259,7 @@ export function combatReducer(state: CombatState | null, event: CombatEvent): Co
       const resisted = !!event.resisted;
       const prevWounds = Number((target as any)?.wounds ?? 0) || 0;
       const might = Math.max(1, Number((target as any)?.might ?? 1) || 1);
+      const prevEnd = Number((target as any)?.endurance?.current ?? (target as any)?.endurance ?? 0) || 0;
 
       // Core: Might indicates the number of Wounds required to slay a foe outright.
       // If not resisted: increment wounds; if wounds >= might -> defeated (Endurance 0).
@@ -263,9 +282,14 @@ export function combatReducer(state: CombatState | null, event: CombatEvent): Co
         ? `${label} resists the Piercing Blow (TN ${event.injuryTN}).`
         : `${label} suffers a Wound (TN ${event.injuryTN}) — Wounds ${prevWounds + 1}/${might}${prevWounds + 1 >= might ? ' — slain!' : ''}`;
 
+      const log = [...state.log, { id: uid('log'), at: nowIso(), text: msg, data: event.data }];
+      if (!resisted && prevEnd > 0 && (prevWounds + 1) >= might) {
+        log.push(defeatLogEntry(label));
+      }
+
       return {
         ...pruneDefeated({ ...state, enemies: nextEnemies }),
-        log: [...state.log, { id: uid('log'), at: nowIso(), text: msg, data: event.data }],
+        log,
       };
     }
 

@@ -46,6 +46,27 @@ export function parseParryModifier(value: any): number {
   return sign * Number(m[2]);
 }
 
+export type WeaponType = 'melee' | 'ranged' | 'melee_thrown' | 'brawling';
+
+export function weaponTypeForEquipment(equipEntry: any): WeaponType | null {
+  if (!equipEntry || equipEntry.category !== 'Weapon') return null;
+  const wt = String((equipEntry as any).weaponType ?? '').trim().toLowerCase();
+  if (wt === 'melee' || wt === 'ranged' || wt === 'melee_thrown' || wt === 'brawling') return wt as WeaponType;
+
+  // Backward-compatible inference for older compendiums
+  const notes = String(equipEntry.notes ?? '').toLowerCase();
+  const prof = String(equipEntry.proficiency ?? '').toLowerCase();
+  if (notes.includes('ranged weapon') || prof === 'bows') return 'ranged';
+  if (notes.includes('can be thrown')) return 'melee_thrown';
+  if (notes.includes('brawling')) return 'brawling';
+  if (prof === 'brawling') return 'brawling';
+  return 'melee';
+}
+
+export function weaponIsRangedCapable(wt: WeaponType | null): boolean {
+  return wt === 'ranged' || wt === 'melee_thrown';
+}
+
 export function computeDerived(hero: any, tnBase: number = 20): Tor2eDerived {
   const strength = hero?.attributes?.strength ?? 2;
   const heart = hero?.attributes?.heart ?? 2;

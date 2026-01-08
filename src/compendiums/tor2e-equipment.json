@@ -94,7 +94,8 @@
       "injury": "18",
       "proficiency": "Axes",
       "notes": "— Long-hafted",
-      "description": ""
+      "description": "",
+      "weaponType": "melee"
     },
     {
       "id": "great-axe",
@@ -105,7 +106,8 @@
       "injury": "18 (1h)/20 (2h)",
       "proficiency": "Axes",
       "notes": "Can be used 1 or 2-handed",
-      "description": ""
+      "description": "",
+      "weaponType": "melee"
     },
     {
       "id": "long-hafted-axe",
@@ -116,7 +118,8 @@
       "injury": "18 (1h)/20 (2h)",
       "proficiency": "Axes",
       "notes": "Can be used 1 or 2-handed",
-      "description": ""
+      "description": "",
+      "weaponType": "melee"
     },
     {
       "id": "bow",
@@ -127,7 +130,8 @@
       "injury": "14",
       "proficiency": "Bows",
       "notes": "Ranged weapon. 2-handed",
-      "description": ""
+      "description": "",
+      "weaponType": "ranged"
     },
     {
       "id": "club",
@@ -138,7 +142,8 @@
       "injury": "14",
       "proficiency": "Brawling",
       "notes": "—",
-      "description": ""
+      "description": "",
+      "weaponType": "brawling"
     },
     {
       "id": "cudgel",
@@ -149,7 +154,8 @@
       "injury": "12",
       "proficiency": "Brawling",
       "notes": "—",
-      "description": ""
+      "description": "",
+      "weaponType": "brawling"
     },
     {
       "id": "dagger",
@@ -160,7 +166,8 @@
       "injury": "14",
       "proficiency": "Brawling",
       "notes": "Can trigger Pierce as if it was a Sword (see page 99)",
-      "description": ""
+      "description": "",
+      "weaponType": "brawling"
     },
     {
       "id": "great-bow",
@@ -171,7 +178,8 @@
       "injury": "16",
       "proficiency": "Bows",
       "notes": "Ranged weapon. 2-handed * Weapons used to make Brawling Attacks (see page 67).",
-      "description": ""
+      "description": "",
+      "weaponType": "ranged"
     },
     {
       "id": "great-spear",
@@ -182,7 +190,8 @@
       "injury": "16",
       "proficiency": "Spears",
       "notes": "2-handed",
-      "description": ""
+      "description": "",
+      "weaponType": "melee"
     },
     {
       "id": "long-sword",
@@ -193,7 +202,8 @@
       "injury": "16 (1h)/18 (2h)",
       "proficiency": "Swords",
       "notes": "Can be used 1 or 2-handed",
-      "description": ""
+      "description": "",
+      "weaponType": "melee"
     },
     {
       "id": "mattock",
@@ -204,7 +214,8 @@
       "injury": "18",
       "proficiency": "Axes",
       "notes": "2-handed",
-      "description": ""
+      "description": "",
+      "weaponType": "melee"
     },
     {
       "id": "short-spear",
@@ -215,7 +226,8 @@
       "injury": "14",
       "proficiency": "Spears",
       "notes": "Can be thrown",
-      "description": ""
+      "description": "",
+      "weaponType": "melee_thrown"
     },
     {
       "id": "short-sword",
@@ -226,7 +238,8 @@
       "injury": "16",
       "proficiency": "Swords",
       "notes": "—",
-      "description": ""
+      "description": "",
+      "weaponType": "melee"
     },
     {
       "id": "spear",
@@ -237,7 +250,8 @@
       "injury": "14 (1h)/16 (2h)",
       "proficiency": "Spears",
       "notes": "Can be 1 or 2-handed. Can be thrown",
-      "description": ""
+      "description": "",
+      "weaponType": "melee_thrown"
     },
     {
       "id": "sword",
@@ -248,7 +262,8 @@
       "injury": "16",
       "proficiency": "Swords",
       "notes": "—",
-      "description": ""
+      "description": "",
+      "weaponType": "melee"
     },
     {
       "id": "unarmed",
@@ -259,7 +274,8 @@
       "injury": "—",
       "proficiency": "Brawling",
       "notes": "Includes throwing stones. Cannot cause a Piercing Blow",
-      "description": ""
+      "description": "",
+      "weaponType": "brawling"
     }
   ]
 }

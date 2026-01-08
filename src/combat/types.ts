@@ -107,5 +107,6 @@ export type CombatEvent =
   | { type: 'APPLY_ENEMY_WOUND'; enemyId: string; injuryTN: number; resisted: boolean; data?: any }
   | { type: 'ADD_HERO_PARRY_BONUS'; delta: number; reason?: string; data?: any }
   | { type: 'SET_ENEMY_DICE_PENALTY'; enemyId: string; penalty: number; reason?: string; data?: any }
+  | { type: 'SET_ENEMY_POSITION'; enemyId: string; position: 'melee' | 'ranged'; reason?: string; data?: any }
   | { type: 'SET_HERO_SEIZED'; seized: boolean; reason?: string; data?: any }
   | { type: 'LOG'; text: string; data?: any };

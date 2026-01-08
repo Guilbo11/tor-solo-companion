@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { compendiums } from '../core/compendiums';
-import { computeDerived } from '../core/tor2e';
+import { computeDerived, weaponIsRangedCapable, weaponTypeForEquipment } from '../core/tor2e';
 import { rollTOR, rollTORAdversary } from '../core/dice';
 import { combatReducer } from '../combat/reducer';
 import { CombatEnemy, CombatOptions, CombatState, Stance } from '../combat/types';
@@ -65,6 +65,16 @@ function profKey(p: string): 'axes'|'bows'|'spears'|'swords'|'brawling'|null {
   return null;
 }
 
+
+function canUseWeaponInStance(weapon: any, stance: Stance, seized: boolean): boolean {
+  // If seized, the hero can only use Brawling in close combat stances.
+  if (seized) return stance !== 'rearward' && stance !== 'skirmish';
+  const wt = weaponTypeForEquipment(weapon);
+  const isRangedCapable = weaponIsRangedCapable(wt);
+  const rangedStance = stance === 'rearward' || stance === 'skirmish';
+  return rangedStance ? isRangedCapable : !isRangedCapable;
+}
+
 export default function CombatPanel({ state, setState }: { state: any; setState: (u: any) => void }) {
   const campId = state.activeCampaignId ?? 'camp-1';
   const heroes = Array.isArray(state.heroes) ? state.heroes.filter((h: any) => String(h.campaignId ?? campId) === String(campId)) : [];
@@ -90,6 +100,11 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
     const filtered = q ? list.filter((e: any) => String(e?.name ?? '').toLowerCase().includes(q)) : list;
     return filtered.slice().sort((a: any, b: any) => String(a?.name ?? '').localeCompare(String(b?.name ?? '')));
   }, [enemySearch]);
+
+  const enemyHasRangedWeapon = (en: CombatEnemy): boolean => {
+    const profs = Array.isArray(en.combatProficiencies) ? en.combatProficiencies : [];
+    return profs.some((p) => String(p?.name ?? '').toLowerCase().includes('bow'));
+  };
 
   const activeHero = useMemo(() => {
     const h = heroes.find((x: any) => String(x.id) === String(combat?.heroId ?? heroId));
@@ -190,7 +205,8 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
 
   const beginEnemyAttack = (forceEnemyId?: string) => {
     if (!combat) return;
-    const alive = (combat.enemies ?? []).filter((e) => (Number(e.endurance?.current ?? 0) || 0) > 0);
+    const aliveAll = (combat.enemies ?? []).filter((e) => (Number(e.endurance?.current ?? 0) || 0) > 0);
+    const alive = (combat.hero.stance === 'rearward') ? aliveAll.filter(enemyHasRangedWeapon) : aliveAll;
     const forced = forceEnemyId ? alive.find((e) => String(e.id) === String(forceEnemyId)) : undefined;
     const firstAvailable = forced ?? (alive.find((e) => !combat.actionsUsed?.enemies?.[e.id]) ?? alive[0] ?? combat.enemies[0]);
     setEnemyAttackEnemyId(firstAvailable?.id ?? '');
@@ -382,6 +398,8 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
       : `${enemy.name} - FAIL — Miss`;
     dispatchMany([
       { type: 'LOG', text: txt, data: { enemyId: enemy.id, weapon: w.name, total, tn, specials: picks } },
+      // Enemy position is determined by the type of their last attack (melee vs ranged).
+      { type: 'SET_ENEMY_POSITION', enemyId: enemy.id, position: String(w?.name ?? '').toLowerCase().includes('bow') ? 'ranged' : 'melee' },
       ...(enemyAttackIsOpeningVolley ? [] : [{ type: 'ENEMY_ACTION_USED', enemyId: enemy.id, kind: 'attack', data: { weapon: w.name } }]),
     ]);
 
@@ -508,6 +526,7 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
   const engagedEnemies = combat?.enemies?.filter((e) => engagedEnemyIds.includes(e.id)) ?? [];
 
   const enemiesAlive = combat?.enemies?.filter((e) => (Number(e.endurance?.current ?? 0) || 0) > 0) ?? [];
+  const enemyActionList = (combat?.hero?.stance === 'rearward') ? enemiesAlive.filter(enemyHasRangedWeapon) : enemiesAlive;
   const heroActionUsed = !!combat?.actionsUsed?.hero;
 
   // Opening Volleys summary - must not rely on combat being non-null across renders.
@@ -679,6 +698,17 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
     if (!target) return;
     const w: any = (derived.equippedWeapons ?? []).find((x: any) => String(x?.name ?? '') === String(heroWeaponName)) ?? null;
     if (!w) return;
+
+    // Enforce weapon usability by stance for normal rounds.
+    if (!heroAttackIsOpeningVolley) {
+      const usable = canUseWeaponInStance(w, combat.hero.stance, !!combat.hero.seized);
+      if (!usable) {
+        toast(combat.hero.stance === 'rearward' || combat.hero.stance === 'skirmish'
+          ? 'You can only use ranged weapons in Rearward/Skirmish.'
+          : 'You can only use melee weapons unless you are in Rearward/Skirmish.', 'warning');
+        return;
+      }
+    }
 
     // Opening volley: thrown spears become Dropped as soon as they are used.
     if (heroAttackIsOpeningVolley && heroAttackDropItemId && activeHero?.id) {
@@ -947,6 +977,34 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
         <button className="btn btn-danger" onClick={endCombat}>End</button>
       </div>
 
+      {/* Summary cards */}
+      <div className="card" style={{ marginTop: 12 }}>
+        <div className="label">Combatants</div>
+        <div className="row" style={{ gap: 10, marginTop: 10, overflowX: 'auto', paddingBottom: 6 }}>
+          <div className="miniCard" style={{ minWidth: 260 }}>
+            <div className="small muted">Hero</div>
+            <div style={{ marginTop: 4 }}><b>{activeHero?.name ?? combat.heroId}</b></div>
+            <div className="small muted" style={{ marginTop: 4 }}>
+              Endurance {Number(activeHero?.endurance?.current ?? 0)}/{Number(activeHero?.endurance?.max ?? activeHero?.endurance?.maximum ?? 0)} • Hope {Number(activeHero?.hope?.current ?? activeHero?.hope ?? 0)}/{Number(activeHero?.hope?.max ?? activeHero?.hopeMax ?? 0)}
+            </div>
+          </div>
+
+          {(combat.enemies ?? []).map((e) => {
+            const hr = e.hateOrResolve?.type === 'Resolve' ? 'Resolve' : (e.hateOrResolve?.type === 'Hate' ? 'Hate' : 'Hate/Resolve');
+            const hv = (e.hateOrResolve?.value ?? 0) as any;
+            return (
+              <div key={e.id} className="miniCard" style={{ minWidth: 220, opacity: (Number(e.endurance?.current ?? 0) || 0) > 0 ? 1 : 0.6 }}>
+                <div className="small muted">Enemy</div>
+                <div style={{ marginTop: 4 }}><b>{e.name}</b></div>
+                <div className="small muted" style={{ marginTop: 4 }}>
+                  Endurance {e.endurance?.current ?? 0}/{e.endurance?.max ?? 0} • {hr} {hv}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       <div className="card" style={{ marginTop: 12 }}>
         <div className="label">Choose stance</div>
         <select className="input" value={combat.hero.stance} onChange={(e) => dispatch({ type: 'SET_HERO_STANCE', stance: e.target.value })}>
@@ -957,14 +1015,13 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
           Potential targets and required stance:
           <div style={{ marginTop: 6 }}>
             {enemiesAlive.length ? enemiesAlive.map((e) => {
-              const isEngaged = engagedEnemyIds.includes(e.id);
-              const req: string[] = [];
-              if (isEngaged) req.push('Forward/Open/Defensive');
-              else req.push('Rearward');
-              if (combat.options.striderMode) req.push('Skirmish');
+              const pos = (e.position ?? 'melee');
+              const req = pos === 'ranged'
+                ? (combat.options.striderMode ? 'Rearward or Skirmish' : 'Rearward')
+                : 'Forward/Open/Defensive';
               return (
                 <div key={e.id} className="small">
-                  • {e.name} — {req.join(' or ')}
+                  • {e.name} — {req}
                 </div>
               );
             }) : <div className="small">• (none)</div>}
@@ -1009,12 +1066,14 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
           const seized = !!combat.hero.seized;
           const weapons = seized ? allWeapons.filter((w) => profKey(w.combatProficiency ?? w.proficiency ?? '') === 'brawling') : allWeapons;
           const hasShield = !!(derived as any)?.equippedShield;
+          const stance = combat.hero.stance;
           if (!weapons.length) {
             return <div className="small muted" style={{ marginTop: 10 }}>Equip one or more weapons to enable hero attacks.</div>;
           }
           return (
             <div className="list" style={{ marginTop: 10 }}>
               {weapons.map((w) => {
+                const usableInStance = canUseWeaponInStance(w, stance, seized);
                 const k = profKey(w.combatProficiency ?? w.proficiency ?? w.category);
                 const cp = (derived as any)?.combatProficiencies ?? {};
                 const baseDice = k ? Number(cp[k] ?? 0) : 0;
@@ -1052,7 +1111,10 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
 
                         <button
                           className="btn"
-                          disabled={heroActionUsed || enemiesAlive.length === 0}
+                          disabled={heroActionUsed || enemiesAlive.length === 0 || !usableInStance}
+                          title={!usableInStance ? (stance === 'rearward' || stance === 'skirmish'
+                            ? 'Only ranged weapons can be used in Rearward/Skirmish.'
+                            : 'Ranged weapons can only be used in Rearward/Skirmish.') : ''}
                           onClick={() => {
                             // keep wield mode in state for Heavy Blow +2H bonus
                             setHeroWieldMode(modeEffective);
@@ -1088,9 +1150,9 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
       <div className="card" style={{ marginTop: 12 }}>
         <div className="label">Enemy actions</div>
         <div className="small muted" style={{ marginTop: 6 }}>Hero Parry TN: <b>{heroParryTN}</b></div>
-        {enemiesAlive.length ? (
+        {enemyActionList.length ? (
           <div className="list" style={{ marginTop: 8 }}>
-            {enemiesAlive.map((e) => {
+            {enemyActionList.map((e) => {
               const acted = !!combat.actionsUsed?.enemies?.[e.id];
               return (
                 <div key={e.id} className="row" style={{ justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid #2a2f3a' }}>
@@ -1106,7 +1168,9 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
             })}
           </div>
         ) : (
-          <div className="small muted" style={{ marginTop: 8 }}>No enemies left.</div>
+          <div className="small muted" style={{ marginTop: 8 }}>
+            {enemiesAlive.length ? 'Hero is in Rearward: no enemies with ranged weapons can attack.' : 'No enemies left.'}
+          </div>
         )}
       </div>
 
@@ -1143,7 +1207,7 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
 
             <div className="label" style={{ marginTop: 10 }}>Enemy</div>
             <select className="input" value={enemyAttackEnemyId} onChange={(e) => { setEnemyAttackEnemyId(e.target.value); setEnemyAttackWeaponName(''); }}>
-              {enemiesAlive.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+              {enemyActionList.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
             </select>
 
             {(() => {
@@ -1254,12 +1318,9 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
                   return n === 'spear' || n === 'short spear' || n.includes('short spear') || n === 'spear (short)';
                 };
                 const isRangedWeapon = (w: any) => {
-                  const k = profKey(w?.combatProficiency ?? w?.proficiency ?? w?.category);
-                  if (k === 'bows') return true;
-                  if (k === 'spears' && isThrowableSpear(w)) return true;
-                  const n = String(w?.name ?? '').toLowerCase();
-                  if (n.includes('bow')) return true;
-                  return false;
+                  const wt = weaponTypeForEquipment(w);
+                  // Ranged-capable = true ranged weapons (bows) + thrown spears.
+                  return weaponIsRangedCapable(wt);
                 };
                 const rangedWeapons = ((derived?.equippedWeapons ?? []) as any[]).filter(isRangedWeapon);
 
@@ -1314,7 +1375,7 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
                       ) : (
                         <div className="list" style={{ marginTop: 8 }}>
                           {rangedWeapons.map((w) => {
-                            const thrown = profKey(w?.combatProficiency ?? w?.proficiency ?? w?.category) === 'spears' && isThrowableSpear(w);
+                            const thrown = weaponTypeForEquipment(w) === 'melee_thrown';
                             return (
                               <div key={String(w.id ?? w.name)} className="row" style={{ justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid #2a2f3a' }}>
                                 <div>
