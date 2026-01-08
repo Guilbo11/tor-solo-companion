@@ -51,8 +51,19 @@ function toCombatEnemy(e: any): CombatEnemy {
   };
 }
 
-const SPECIALS = ['None', 'PIERCE', 'HEAVY BLOW', 'BREAK SHIELD', 'SEIZE'] as const;
-type SpecialPick = (typeof SPECIALS)[number];
+type EnemySpecialPick = 'None' | 'PIERCE' | 'HEAVY BLOW' | 'BREAK SHIELD' | 'SEIZE';
+
+type HeroSpecialPick = 'None' | 'HEAVY BLOW' | 'FEND OFF' | 'PIERCE' | 'SHIELD THRUST' | 'BREAK FREE';
+
+function profKey(p: string): 'axes'|'bows'|'spears'|'swords'|'brawling'|null {
+  const s = String(p ?? '').toLowerCase();
+  if (s.includes('brawling')) return 'brawling';
+  if (s.startsWith('axe')) return 'axes';
+  if (s.startsWith('bow')) return 'bows';
+  if (s.startsWith('spear')) return 'spears';
+  if (s.startsWith('sword')) return 'swords';
+  return null;
+}
 
 export default function CombatPanel({ state, setState }: { state: any; setState: (u: any) => void }) {
   const campId = state.activeCampaignId ?? 'camp-1';
@@ -78,7 +89,7 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
   }, [heroes, combat?.heroId, heroId]);
 
   const derived = useMemo(() => (activeHero ? computeDerived(activeHero, (combat?.options?.striderMode ? 18 : 20)) : null), [activeHero, combat?.options?.striderMode]);
-  const heroParryTN = Number(derived?.parry?.total ?? 0) || 0;
+  const heroParryTN = (Number(derived?.parry?.total ?? 0) || 0) + (Number(combat?.roundMods?.heroParryBonus ?? 0) || 0);
 
   /**
    * IMPORTANT: Combat updates must be reduced against the latest combat state.
@@ -114,7 +125,7 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
   const [enemySpend, setEnemySpend] = useState(0);
 
   const [specialPickerOpen, setSpecialPickerOpen] = useState(false);
-  const [specialChoices, setSpecialChoices] = useState<SpecialPick[]>([]);
+  const [specialChoices, setSpecialChoices] = useState<EnemySpecialPick[]>([]);
   const pendingRef = React.useRef<any>(null);
 
   // --- Hero actions ---
@@ -122,15 +133,23 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
   const [heroAttackTargetId, setHeroAttackTargetId] = useState('');
   const [heroFeatMode, setHeroFeatMode] = useState<'normal' | 'favoured' | 'illFavoured'>('normal');
   const [heroWeaponName, setHeroWeaponName] = useState('');
+  const [heroWieldMode, setHeroWieldMode] = useState<'1h' | '2h'>('1h');
+  const [wieldByWeaponId, setWieldByWeaponId] = useState<Record<string, '1h' | '2h'>>({});
+
+  // Hero special success picker
+  const [heroSpecialOpen, setHeroSpecialOpen] = useState(false);
+  const [heroSpecialChoices, setHeroSpecialChoices] = useState<HeroSpecialPick[]>([]);
+  const heroPendingRef = React.useRef<any>(null);
 
   const [heroTaskOpen, setHeroTaskOpen] = useState(false);
   const [heroTaskFeatMode, setHeroTaskFeatMode] = useState<'normal' | 'favoured' | 'illFavoured'>('normal');
   const [heroTaskWeary, setHeroTaskWeary] = useState(false);
 
-  const beginEnemyAttack = () => {
+  const beginEnemyAttack = (forceEnemyId?: string) => {
     if (!combat) return;
     const alive = (combat.enemies ?? []).filter((e) => (Number(e.endurance?.current ?? 0) || 0) > 0);
-    const firstAvailable = alive.find((e) => !combat.actionsUsed?.enemies?.[e.id]) ?? alive[0] ?? combat.enemies[0];
+    const forced = forceEnemyId ? alive.find((e) => String(e.id) === String(forceEnemyId)) : undefined;
+    const firstAvailable = forced ?? (alive.find((e) => !combat.actionsUsed?.enemies?.[e.id]) ?? alive[0] ?? combat.enemies[0]);
     setEnemyAttackEnemyId(firstAvailable?.id ?? '');
     setEnemyAttackWeaponName('');
     setEnemyFeatMode('normal');
@@ -149,12 +168,34 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
     const weapon = enemy?.combatProficiencies?.find(w => w.name === enemyAttackWeaponName);
     if (!enemy || !weapon) return;
 
-    const dice = Number(weapon.rating ?? 0) + Number(enemySpend ?? 0);
+    const baseDice = Number(weapon.rating ?? 0) + Number(enemySpend ?? 0);
+    const pen = Number(combat.roundMods?.enemyDicePenalty?.[String(enemy.id)] ?? 0) || 0;
+    const dice = Math.max(0, baseDice + pen);
     const tn = heroParryTN;
     const r = rollTORAdversary({ dice, featMode: enemyFeatMode, weary: enemyWeary, tn });
     pendingRef.current = { enemy, weapon, roll: r, tn };
 
     if ((r.icons ?? 0) > 0) {
+      // Auto enemies: if Pierce would turn a normal result into a Piercing Blow, choose it.
+      if (combat.options.enemyAutomation === 'auto') {
+        const opts = new Set<string>();
+        (weapon.specialDamage ?? []).forEach((s: any) => opts.add(String(s)));
+        const canPierce = opts.has('Pierce') || opts.has('PIERCE');
+        const featBase = (r.feat.type === 'Number') ? r.feat.value : (r.feat.type === 'Eye' ? 10 : 0);
+        const would = canPierce ? Math.min(10, featBase + 2) : featBase;
+        const pierceToPB = canPierce && (featBase < 10) && (would >= 10);
+        const picks: EnemySpecialPick[] = Array.from({ length: r.icons }, () => 'None');
+        if (pierceToPB) picks[0] = 'PIERCE';
+        // Fill remaining with HEAVY BLOW if listed in the stat block
+        for (let i = 0; i < picks.length; i++) {
+          if (picks[i] !== 'None') continue;
+          if (opts.has('Heavy Blow') || opts.has('HEAVY BLOW')) picks[i] = 'HEAVY BLOW';
+        }
+        setEnemyAttackOpen(false);
+        finalizeEnemyAttack(picks);
+        return;
+      }
+
       setSpecialChoices(Array.from({ length: r.icons }, () => 'None'));
       setEnemyAttackOpen(false);
       setSpecialPickerOpen(true);
@@ -164,7 +205,7 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
     }
   };
 
-  const finalizeEnemyAttack = (specials: SpecialPick[]) => {
+  const finalizeEnemyAttack = (specials: EnemySpecialPick[]) => {
     if (!combat || !activeHero || !derived) return;
     const ctx = pendingRef.current;
     if (!ctx) return;
@@ -173,9 +214,11 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
     const r = ctx.roll;
     const tn = ctx.tn;
 
-    const picks = (specials ?? []).filter(s => s && s !== 'None');
-    const pierceCount = picks.filter(p => p === 'PIERCE').length;
-    const heavyCount = picks.filter(p => p === 'HEAVY BLOW').length;
+    const picks = (specials ?? []).filter((s) => s && s !== 'None');
+    const pierceCount = picks.filter((p) => p === 'PIERCE').length;
+    const heavyCount = picks.filter((p) => p === 'HEAVY BLOW').length;
+    const breakShield = picks.includes('BREAK SHIELD');
+    const seizedPick = picks.includes('SEIZE');
 
     // Recompute total if PIERCE was selected (adds +2 per pick to Feat number; Eye already best for adversary).
     let featNumber = (r.feat.type === 'Number') ? r.feat.value : (r.feat.type === 'Eye' ? 10 : 0);
@@ -203,6 +246,38 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
         });
         return { ...prev, heroes: nextHeroes };
       });
+    }
+
+    // SEIZE: mark the hero as seized in the combat state (affects hero attacks until broken free).
+    if (passed && seizedPick) {
+      dispatch({ type: 'SET_HERO_SEIZED', seized: true, reason: 'Seized by the enemy.' } as any);
+    }
+
+    // BREAK SHIELD: mirror the Heroes panel behaviour (only if an equipped shield exists and has no rewards).
+    if (passed && breakShield) {
+      try {
+        const shieldEntry: any = (derived as any)?.equippedShield;
+        const inv = Array.isArray(activeHero?.inventory) ? activeHero.inventory : [];
+        const shieldItem: any = shieldEntry
+          ? inv.find((it: any) => it?.equipped && !it?.dropped && it?.ref?.pack === 'tor2e-equipment' && String(it?.ref?.id) === String(shieldEntry.id))
+          : null;
+        const hasRewards = !!shieldItem?.override?.rewards?.length;
+        if (shieldItem && !hasRewards) {
+          const ok = window.confirm('BREAK SHIELD: Remove your equipped shield (no rewards). Drop it now?');
+          if (ok) {
+            setState((prev: any) => {
+              const nextHeroes = (prev.heroes ?? []).map((h: any) => {
+                if (String(h.id) !== String(activeHero.id)) return h;
+                const inv2 = Array.isArray(h.inventory) ? h.inventory.slice() : [];
+                const idx = inv2.findIndex((it: any) => it === shieldItem);
+                if (idx >= 0) inv2[idx] = { ...shieldItem, equipped: false, dropped: true };
+                return { ...h, inventory: inv2 };
+              });
+              return { ...prev, heroes: nextHeroes };
+            });
+          }
+        }
+      } catch {}
     }
 
     // If Piercing Blow was scored, roll Protection against Injury and record Wounded/Injury on the hero.
@@ -380,12 +455,15 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
     return null;
   })();
 
-  const beginHeroAttack = () => {
+  const beginHeroAttack = (weapon?: any) => {
     if (!combat || !activeHero || !derived) return;
     const defaultTarget = (engagedEnemies[0]?.id ?? enemiesAlive[0]?.id ?? '');
     setHeroAttackTargetId(defaultTarget);
-    const w = derived.equippedWeapons?.[0];
+    const w = weapon ?? derived.equippedWeapons?.[0];
     setHeroWeaponName(String(w?.name ?? ''));
+    const hasShield = !!(derived as any)?.equippedShield;
+    const mode = wieldByWeaponId[String(w?.id)] ?? '1h';
+    setHeroWieldMode(hasShield ? '1h' : (mode as any));
     setHeroFeatMode('normal');
     setHeroAttackOpen(true);
   };
@@ -401,51 +479,161 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
     const w: any = (derived.equippedWeapons ?? []).find((x: any) => String(x?.name ?? '') === String(heroWeaponName)) ?? null;
     if (!w) return;
 
-    const prof = String(w?.proficiency ?? '').toLowerCase();
-    const cp = derived?.combatProficiencies ?? {};
-    const rating = (() => {
-      if (prof.startsWith('axe')) return cp.axes ?? 0;
-      if (prof.startsWith('bow')) return cp.bows ?? 0;
-      if (prof.startsWith('spear')) return cp.spears ?? 0;
-      if (prof.startsWith('sword')) return cp.swords ?? 0;
-      return 0;
+    const cp = (derived as any)?.combatProficiencies ?? {};
+    const seized = !!combat.hero.seized;
+    const k = profKey(w.combatProficiency ?? w.proficiency ?? w.category);
+    // If seized, attacks are limited to Brawling and use the best proficiency with -1 Success die.
+    const baseDice = (() => {
+      if (seized) {
+        const best = Math.max(Number(cp.axes ?? 0), Number(cp.bows ?? 0), Number(cp.spears ?? 0), Number(cp.swords ?? 0), Number(cp.brawling ?? 0));
+        return Math.max(0, best - 1);
+      }
+      return k ? Number(cp[k] ?? 0) : 0;
     })();
 
     const tn = Number(target.parry ?? 0) || 0;
-    const r = rollTOR({ dice: Number(rating ?? 0), tn, featMode: heroFeatMode, weary: !!activeHero?.conditions?.weary });
-    const dmg = r.passed ? (Number(w?.damage ?? 0) || 0) : 0;
+    const r = rollTOR({ dice: Number(baseDice ?? 0), tn, featMode: heroFeatMode, weary: !!activeHero?.conditions?.weary });
 
-    // Piercing Blow (hero): on a successful attack, when the Feat die shows 10 or Gandalf.
-    const heroFeatNumber = (r.feat.type === 'Number') ? r.feat.value : (r.feat.type === 'Gandalf' ? 10 : 0);
-    const piercingBlow = !!r.passed && ((r.feat.type === 'Gandalf') || heroFeatNumber >= 10);
+    // Save context for finalize (with or without special success picker)
+    heroPendingRef.current = { roll: r, weapon: w, target, tn, seized, wieldMode: heroWieldMode, hasShield: !!(derived as any)?.equippedShield, strength: Number(activeHero?.attributes?.strength ?? activeHero?.strength ?? 0) || 0 };
 
-    const events: any[] = [];
-    // Apply enemy Endurance damage on hit.
-    if (r.passed && dmg > 0) {
-      events.push({ type: 'APPLY_ENEMY_ENDURANCE', enemyId: target.id, delta: -dmg, reason: 'Hit', data: { weapon: w.name } });
+    // Only on a successful attack with one or more success icons, open the hero Special Success picker.
+    if (r.passed && (r.icons ?? 0) > 0) {
+      setHeroSpecialChoices(Array.from({ length: r.icons }, () => 'None'));
+      setHeroAttackOpen(false);
+      setHeroSpecialOpen(true);
+      return;
     }
 
-    // If Piercing Blow was scored, roll Protection (enemy armour) vs Injury and apply Wounded.
-    let piercingLine = '';
-    if (piercingBlow) {
-      const injTN = Number((w as any)?.injury ?? 0) || 0;
-      const armourDice = Number((target as any)?.armour ?? 0) || 0;
-      if (injTN > 0 && armourDice >= 0) {
-        const pr = rollTOR({ dice: armourDice, tn: injTN, featMode: 'normal', weary: false });
-        const resisted = pr.passed === true;
-        piercingLine = `Piercing - ${resisted ? 'RESISTED' : 'NOT RESISTED'} (TN ${injTN})`;
-        events.push({ type: 'APPLY_ENEMY_WOUND', enemyId: target.id, injuryTN: injTN, resisted, data: { weapon: w.name, armourDice } } as any);
+    // No special choices needed: finalize immediately (no Pierce, no Heavy Blow, etc.)
+    finalizeHeroAttack([]);
+  };
+
+  const finalizeHeroAttack = (specials: HeroSpecialPick[]) => {
+    if (!combat || !activeHero || !derived) return;
+    if (combat.actionsUsed?.hero) return;
+
+    // When called directly (no picker), build a minimal ctx.
+    const ctx = heroPendingRef.current ?? {
+      roll: null,
+      weapon: (derived.equippedWeapons ?? []).find((x: any) => String(x?.name ?? '') === String(heroWeaponName)) ?? null,
+      target: combat.enemies.find((e) => String(e.id) === String(heroAttackTargetId)) ?? null,
+      tn: Number(combat.enemies.find((e) => String(e.id) === String(heroAttackTargetId))?.parry ?? 0) || 0,
+      seized: !!combat.hero.seized,
+      wieldMode: heroWieldMode,
+      hasShield: !!(derived as any)?.equippedShield,
+      strength: Number(activeHero?.attributes?.strength ?? activeHero?.strength ?? 0) || 0,
+    };
+
+    const target = ctx.target;
+    const w: any = ctx.weapon;
+    const r = ctx.roll ?? rollTOR({ dice: 0, tn: ctx.tn, featMode: heroFeatMode, weary: !!activeHero?.conditions?.weary });
+    if (!target || !w || !r) {
+      heroPendingRef.current = null;
+      return;
+    }
+
+    const seized = !!ctx.seized;
+    const k = profKey(w.combatProficiency ?? w.proficiency ?? w.category);
+
+    // Helper: compute Success dice sum (respecting weary) without relying on r.total.
+    const succSum = (r.success ?? []).reduce((a: number, d: any) => {
+      const wearyZero = !!activeHero?.conditions?.weary && (d.value === 1 || d.value === 2 || d.value === 3);
+      return a + (wearyZero ? 0 : d.value);
+    }, 0);
+
+    // Feat number for hero rolls: Eye=0, Gandalf=10 for PB checks.
+    const baseFeatNumber = (r.feat.type === 'Number') ? r.feat.value : (r.feat.type === 'Gandalf' ? 10 : 0);
+
+    const picks = (specials ?? []).filter((s) => s && s !== 'None');
+
+    // Special Success choices
+    const heavyCount = picks.filter((p) => p === 'HEAVY BLOW').length;
+    const fendCount = picks.filter((p) => p === 'FEND OFF').length;
+    const pierceCount = picks.filter((p) => p === 'PIERCE').length;
+    const thrustCount = picks.filter((p) => p === 'SHIELD THRUST').length;
+    const breakFree = picks.includes('BREAK FREE');
+
+    // Apply BREAK FREE first (if Seized)
+    const events: any[] = [];
+    if (breakFree) {
+      events.push({ type: 'SET_HERO_SEIZED', seized: false, reason: 'Broke free from Seize.' });
+    }
+
+    // Pierce bonus depends on weapon type.
+    const pierceBonusPer = (() => {
+      if (seized || k === 'brawling') return 0;
+      if (k === 'swords') return 1;
+      if (k === 'bows') return 2;
+      if (k === 'spears') return 3;
+      return 0;
+    })();
+    const featNumber = Math.min(10, baseFeatNumber + (pierceCount * pierceBonusPer));
+
+    const passed = (r.feat.type === 'Gandalf') ? true : (featNumber + succSum) >= (Number(ctx.tn) || 0);
+
+    // Heavy Blow: +STR endurance loss per icon (+1 extra if 2H)
+    const twoHandBonus = (String(ctx.wieldMode) === '2h') ? 1 : 0;
+    const heavyExtra = heavyCount ? heavyCount * (Number(ctx.strength ?? 0) + twoHandBonus) : 0;
+
+    const baseDmg = Number(w.damage ?? 0) || 0;
+    const dmg = passed ? (baseDmg + heavyExtra) : 0;
+
+    if (passed && dmg > 0) {
+      events.push({ type: 'APPLY_ENEMY_ENDURANCE', enemyId: target.id, delta: -dmg, reason: 'Hit', data: { weapon: w.name, heavyCount, strength: ctx.strength, twoHand: ctx.wieldMode } });
+    }
+
+    // FEND OFF: modify hero Parry for the round
+    if (passed && fendCount) {
+      const fendBonus = (() => {
+        if (k === 'swords') return 2;
+        if (k === 'spears') return 3;
+        // axes and all brawling weapons
+        return 1;
+      })();
+      events.push({ type: 'ADD_HERO_PARRY_BONUS', delta: fendBonus * fendCount, reason: `Fend Off: Parry +${fendBonus * fendCount} this round.` });
+    }
+
+    // SHIELD THRUST: target loses (1d) for the length of the round (only once per target)
+    if (passed && thrustCount) {
+      if (ctx.hasShield && (Number(ctx.strength ?? 0) > Number(target.attributeLevel ?? 0))) {
+        events.push({ type: 'SET_ENEMY_DICE_PENALTY', enemyId: target.id, penalty: -1, reason: `Shield Thrust: ${target.name} loses (1d) this round.` });
+      } else {
+        events.push({ type: 'LOG', text: 'Shield Thrust not applied (missing shield or Strength not greater than target Attribute Level).' });
       }
     }
-    events.push({ type: 'HERO_ACTION_USED', kind: 'attack', data: { weapon: w.name, targetId: target.id } });
 
-    const degrees = r.passed ? (r.icons === 0 ? 'Success' : r.icons === 1 ? 'Great Success' : 'Extraordinary Success') : 'FAIL';
-    const txt = `${w.name} - ${r.passed ? 'PASS' : 'FAIL'} — ${degrees}${piercingBlow ? ' - PIERCING BLOW' : ''} • TN ${tn}${r.passed ? ` • Damage ${dmg}` : ''}`;
-    events.push({ type: 'LOG', text: txt, data: { weapon: w.name, tn, passed: r.passed } });
+    // Piercing Blow (hero): only if not Brawling/Seized, and only on a successful attack when Feat die reaches 10 or Gandalf.
+    const piercingBlow = passed && !seized && k !== 'brawling' && (r.feat.type === 'Gandalf' || featNumber >= 10);
+    let piercingLine = '';
+    if (piercingBlow) {
+      // Injury TN (handle versatile injury values like "12 (1h) / 14 (2h)")
+      const injuryRaw = String((w as any)?.injury ?? '0');
+      const versMatch = injuryRaw.match(/(\d+)\s*\(1h\)\s*\/\s*(\d+)\s*\(2h\)/i);
+      const injuryTN = versMatch ? Number((String(ctx.wieldMode) === '2h' ? versMatch[2] : versMatch[1])) : (Number.parseInt(injuryRaw, 10) || Number((w as any)?.injury ?? 0) || 0);
+      const armourDice = Number((target as any)?.armour ?? 0) || 0;
+      if (injuryTN > 0) {
+        const pr = rollTOR({ dice: armourDice, tn: injuryTN, featMode: 'normal', weary: false });
+        const resisted = pr.passed === true;
+        piercingLine = `Piercing - ${resisted ? 'RESISTED' : 'NOT RESISTED'} (TN ${injuryTN})`;
+        events.push({ type: 'APPLY_ENEMY_WOUND', enemyId: target.id, injuryTN, resisted, data: { weapon: w.name, armourDice } });
+      }
+    }
+
+    events.push({ type: 'HERO_ACTION_USED', kind: 'attack', data: { weapon: w.name, targetId: target.id, selections: picks } });
+
+    const deg = passed ? (r.icons === 0 ? 'Success' : r.icons === 1 ? 'Great Success' : 'Extraordinary Success') : 'FAIL';
+    const selectedTxt = picks.length ? ` • ${picks.join(', ')}` : '';
+    const txt = `${w.name} - ${passed ? 'PASS' : 'FAIL'} — ${deg}${piercingBlow ? ' - PIERCING BLOW' : ''} • TN ${ctx.tn}${passed ? ` • Damage ${dmg}` : ''}${selectedTxt}`;
+    events.push({ type: 'LOG', text: txt, data: { weapon: w.name, tn: ctx.tn, passed, selections: picks } });
     if (piercingLine) events.push({ type: 'LOG', text: piercingLine, data: { weapon: w.name, targetId: target.id } });
+
     dispatchMany(events);
-    toast(piercingLine ? `${txt}\n${piercingLine}` : txt, r.passed ? 'success' : 'warning');
+    toast(piercingLine ? `${txt}\n${piercingLine}` : txt, passed ? 'success' : 'warning');
     (window as any).__torcLogRollHtml?.(txt);
+
+    heroPendingRef.current = null;
+    setHeroSpecialOpen(false);
     setHeroAttackOpen(false);
   };
 
@@ -547,13 +735,31 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
       </div>
 
       <div className="card" style={{ marginTop: 12 }}>
-        <div className="label">1) Choose stance</div>
+        <div className="label">Choose stance</div>
         <select className="input" value={combat.hero.stance} onChange={(e) => dispatch({ type: 'SET_HERO_STANCE', stance: e.target.value })}>
           {heroStances.map(s => <option key={s} value={s}>{stanceLabel[s]}</option>)}
         </select>
 
-        <div className="row" style={{ justifyContent: 'flex-end', gap: 8, marginTop: 10 }}>
-          <button className="btn" onClick={() => dispatch({ type: 'AUTO_ENGAGE' })}>2) Engagement</button>
+        <div className="small muted" style={{ marginTop: 10 }}>
+          Potential targets and required stance:
+          <div style={{ marginTop: 6 }}>
+            {enemiesAlive.length ? enemiesAlive.map((e) => {
+              const isEngaged = engagedEnemyIds.includes(e.id);
+              const req: string[] = [];
+              if (isEngaged) req.push('Forward/Open/Defensive');
+              else req.push('Rearward');
+              if (combat.options.striderMode) req.push('Skirmish');
+              return (
+                <div key={e.id} className="small">
+                  • {e.name} — {req.join(' or ')}
+                </div>
+              );
+            }) : <div className="small">• (none)</div>}
+          </div>
+        </div>
+
+        <div className="row" style={{ justifyContent: 'flex-start', gap: 8, marginTop: 10 }}>
+          <button className="btn" onClick={() => dispatch({ type: 'AUTO_ENGAGE' })}>Engagement</button>
           <button className="btn" onClick={() => dispatch({ type: 'ROUND_BEGIN' })}>Next round</button>
         </div>
       </div>
@@ -585,28 +791,110 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
           One main action per round. Choose an attack (like in Sheet) or the Combat Task tied to your stance.
         </div>
 
-        <div className="row" style={{ gap: 10, marginTop: 10, flexWrap: 'wrap' }}>
-          <button className="btn" disabled={heroActionUsed || enemiesAlive.length === 0 || !(derived?.equippedWeapons?.length)} onClick={beginHeroAttack}>Attack</button>
-          <button className="btn" disabled={heroActionUsed || !stanceTask} onClick={beginHeroTask}>{stanceTask ? `Combat Task: ${stanceTask.name}` : 'Combat Task'}</button>
+        {(() => {
+          const allWeapons = (derived?.equippedWeapons ?? []) as any[];
+          const seized = !!combat.hero.seized;
+          const weapons = seized ? allWeapons.filter((w) => profKey(w.combatProficiency ?? w.proficiency ?? '') === 'brawling') : allWeapons;
+          const hasShield = !!(derived as any)?.equippedShield;
+          if (!weapons.length) {
+            return <div className="small muted" style={{ marginTop: 10 }}>Equip one or more weapons to enable hero attacks.</div>;
+          }
+          return (
+            <div className="list" style={{ marginTop: 10 }}>
+              {weapons.map((w) => {
+                const k = profKey(w.combatProficiency ?? w.proficiency ?? w.category);
+                const cp = (derived as any)?.combatProficiencies ?? {};
+                const baseDice = k ? Number(cp[k] ?? 0) : 0;
+                const injuryRaw = String(w.injury ?? '');
+                const versMatch = injuryRaw.match(/(\d+)\s*\(1h\)\s*\/\s*(\d+)\s*\(2h\)/i);
+                const isVersatile = !!versMatch;
+                const mode = wieldByWeaponId[String(w.id)] ?? '1h';
+                const modeEffective: '1h'|'2h' = hasShield ? '1h' : (mode as any);
+
+                return (
+                  <div key={String(w.id ?? w.name)} className="attackRow">
+                    <div className="attackCol1">
+                      <div className="attackName"><b>{w.name}</b>{seized ? <span className="small muted"> (Brawling)</span> : null}</div>
+                      <div className="attackStats small muted">
+                        DMG {w.damage ?? '—'} • INJ {w.injury ?? '—'} • Dice {Math.max(0, seized ? (baseDice - 1) : baseDice)}
+                      </div>
+                    </div>
+                    <div className="attackCol2">
+                      <div className="row" style={{ gap: 8, alignItems: 'center', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                        {isVersatile ? (
+                          <div className="segRow" title={hasShield ? 'A shield is equipped: forced to 1H' : 'Choose 1H/2H (affects some Special Success effects)'}>
+                            <button
+                              type="button"
+                              className={`seg ${modeEffective === '1h' ? 'active' : ''}`}
+                              onClick={() => setWieldByWeaponId((prev) => ({ ...prev, [String(w.id)]: '1h' }))}
+                            >1H</button>
+                            <button
+                              type="button"
+                              className={`seg ${modeEffective === '2h' ? 'active' : ''}`}
+                              disabled={hasShield}
+                              onClick={() => setWieldByWeaponId((prev) => ({ ...prev, [String(w.id)]: '2h' }))}
+                            >2H</button>
+                          </div>
+                        ) : null}
+
+                        <button
+                          className="btn"
+                          disabled={heroActionUsed || enemiesAlive.length === 0}
+                          onClick={() => {
+                            // keep wield mode in state for Heavy Blow +2H bonus
+                            setHeroWieldMode(modeEffective);
+                            beginHeroAttack(w);
+                          }}
+                        >Roll</button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
+
+        <div className="row" style={{ gap: 10, marginTop: 12, flexWrap: 'wrap' }}>
+          <button className="btn" disabled={heroActionUsed || !stanceTask} onClick={beginHeroTask}>
+            {stanceTask ? `Combat Task: ${stanceTask.name}` : 'Combat Task'}
+          </button>
         </div>
 
-        <div className="small muted" style={{ marginTop: 10 }}>
-          Targeting uses the enemy Parry TN. Damage is applied to enemy Endurance on a hit.
-        </div>
+        {combat.hero.seized ? (
+          <div className="small muted" style={{ marginTop: 10 }}>
+            Seized: you may only attack using Brawling (best proficiency −1 Success die, no Piercing Blow). You may break free by spending a Special Success icon on a successful attack.
+          </div>
+        ) : (
+          <div className="small muted" style={{ marginTop: 10 }}>
+            Targeting uses the enemy Parry TN. Damage is applied to enemy Endurance on a hit.
+          </div>
+        )}
       </div>
 
       <div className="card" style={{ marginTop: 12 }}>
         <div className="label">Enemy actions</div>
         <div className="small muted" style={{ marginTop: 6 }}>Hero Parry TN: <b>{heroParryTN}</b></div>
-        <div className="row" style={{ justifyContent: 'flex-end', gap: 8, marginTop: 10 }}>
-          <button
-            className="btn"
-            disabled={enemiesAlive.length === 0 || enemiesAlive.every(e => !!combat.actionsUsed?.enemies?.[e.id])}
-            onClick={beginEnemyAttack}
-          >
-            {enemiesAlive.every(e => !!combat.actionsUsed?.enemies?.[e.id]) ? 'All enemies acted' : 'From Enemy'}
-          </button>
-        </div>
+        {enemiesAlive.length ? (
+          <div className="list" style={{ marginTop: 8 }}>
+            {enemiesAlive.map((e) => {
+              const acted = !!combat.actionsUsed?.enemies?.[e.id];
+              return (
+                <div key={e.id} className="row" style={{ justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid #2a2f3a' }}>
+                  <div>
+                    <b>{e.name}</b>
+                    <div className="small muted">End {e.endurance.current}/{e.endurance.max}</div>
+                  </div>
+                  <button className="btn" disabled={acted} onClick={() => beginEnemyAttack(e.id)}>
+                    {acted ? 'Already acted' : 'From Enemy'}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="small muted" style={{ marginTop: 8 }}>No enemies left.</div>
+        )}
       </div>
 
       <div className="card" style={{ marginTop: 12 }}>
@@ -642,7 +930,7 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
 
             <div className="label" style={{ marginTop: 10 }}>Enemy</div>
             <select className="input" value={enemyAttackEnemyId} onChange={(e) => { setEnemyAttackEnemyId(e.target.value); setEnemyAttackWeaponName(''); }}>
-              {combat.enemies.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+              {enemiesAlive.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
             </select>
 
             {(() => {
@@ -712,12 +1000,7 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
             </select>
 
             <div className="label" style={{ marginTop: 10 }}>Weapon</div>
-            <select className="input" value={heroWeaponName} onChange={(e) => setHeroWeaponName(e.target.value)}>
-              <option value="">Choose…</option>
-              {(derived?.equippedWeapons ?? []).map((w: any) => (
-                <option key={w.name} value={w.name}>{w.name} — {w.damage}/{w.injury} ({w.proficiency})</option>
-              ))}
-            </select>
+            <div className="small">{heroWeaponName || '—'} {heroWieldMode === '2h' ? '(2H)' : '(1H)'}</div>
 
             <div className="label" style={{ marginTop: 10 }}>Feat die mode</div>
             <select className="input" value={heroFeatMode} onChange={(e) => setHeroFeatMode(e.target.value as any)}>
@@ -727,7 +1010,7 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
             </select>
 
             <div className="row" style={{ justifyContent: 'flex-end', gap: 8, marginTop: 12 }}>
-              <button className="btn" disabled={!heroWeaponName} onClick={resolveHeroAttack}>Roll</button>
+              <button className="btn" onClick={resolveHeroAttack}>Roll</button>
             </div>
           </div>
         </div>
@@ -763,6 +1046,86 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
         </div>
       ) : null}
 
+      {/* Hero Special Success picker */}
+      {heroSpecialOpen ? (
+        <div className="modalOverlay" onMouseDown={() => setHeroSpecialOpen(false)}>
+          <div className="modal" style={{ maxWidth: 520 }} onMouseDown={(e) => e.stopPropagation()}>
+            <div className="modalHeader">
+              <div><b>Special Success</b></div>
+              <button className="btn btn-ghost" onClick={() => setHeroSpecialOpen(false)}>Close</button>
+            </div>
+
+            {(() => {
+              const ctx = heroPendingRef.current;
+              const w = ctx?.weapon;
+              const t = ctx?.target;
+              const r = ctx?.roll;
+              const seized = !!ctx?.seized;
+              const k = profKey(w?.combatProficiency ?? w?.proficiency ?? w?.category);
+              const featBase = (r?.feat?.type === 'Number') ? r.feat.value : (r?.feat?.type === 'Gandalf' ? 10 : 0);
+              const pierceBonusPer = (!seized && k === 'swords') ? 1 : (!seized && k === 'bows') ? 2 : (!seized && k === 'spears') ? 3 : 0;
+              const pierceWould = pierceBonusPer ? Math.min(10, featBase + pierceBonusPer) : featBase;
+
+              const options: HeroSpecialPick[] = ['None', 'HEAVY BLOW', 'FEND OFF'];
+              if (!seized && k !== 'brawling' && (k === 'swords' || k === 'bows' || k === 'spears')) options.push('PIERCE');
+              if (ctx?.hasShield && Number(ctx?.strength ?? 0) > Number(t?.attributeLevel ?? 0)) options.push('SHIELD THRUST');
+              if (seized) options.push('BREAK FREE');
+
+              return (
+                <>
+                  <div className="small muted" style={{ marginTop: 8 }}>
+                    1 choice per Success icon (duplicates allowed). Heavy Blow/Fend Off/Pierce/Shield Thrust follow the core rules.
+                  </div>
+                  <div className="small" style={{ marginTop: 10 }}>
+                    <b>Weapon:</b> {w?.name ?? '—'} {String(ctx?.wieldMode) === '2h' ? '(2H)' : '(1H)'}
+                  </div>
+                  {pierceBonusPer ? (
+                    <div className="small muted" style={{ marginTop: 6 }}>
+                      Feat die: <b>{featBase}</b> — With Pierce (+{pierceBonusPer}): <b>{pierceWould}</b>
+                    </div>
+                  ) : null}
+
+                  <div style={{ marginTop: 10 }}>
+                    {heroSpecialChoices.map((v, idx) => (
+                      <div key={idx} className="row" style={{ gap: 8, marginBottom: 8, alignItems: 'center' }}>
+                        <div className="small" style={{ width: 90 }}>Icon {idx + 1}</div>
+                        <select className="input" value={v} onChange={(e) => {
+                          const next = heroSpecialChoices.slice();
+                          next[idx] = e.target.value as HeroSpecialPick;
+                          setHeroSpecialChoices(next);
+                        }} style={{ flex: 1 }}>
+                          {options.map((op) => (
+                            <option key={op} value={op}>{op}</option>
+                          ))}
+                        </select>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px solid #2a2f3a' }}>
+                    <div className="label">Options selected</div>
+                    {heroSpecialChoices.filter((x) => x && x !== 'None').length ? (
+                      <ul style={{ margin: '8px 0 0 18px' }}>
+                        {heroSpecialChoices.filter((x) => x && x !== 'None').map((x, i) => (
+                          <li key={`${x}-${i}`} className="small">{x}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <div className="small muted" style={{ marginTop: 6 }}>None selected yet.</div>
+                    )}
+                  </div>
+
+                  <div className="row" style={{ justifyContent: 'flex-end', gap: 8, marginTop: 12 }}>
+                    <button className="btn btn-ghost" onClick={() => setHeroSpecialChoices(Array.from({ length: heroSpecialChoices.length }, () => 'None'))}>Reset</button>
+                    <button className="btn" onClick={() => finalizeHeroAttack(heroSpecialChoices)}>Apply</button>
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+        </div>
+      ) : null}
+
       {/* Special success picker */}
       {specialPickerOpen ? (
         <div className="modalOverlay" onMouseDown={() => setSpecialPickerOpen(false)}>
@@ -771,22 +1134,68 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
               <div><b>Special Success</b></div>
               <button className="btn btn-ghost" onClick={() => setSpecialPickerOpen(false)}>Close</button>
             </div>
-            <div className="small muted" style={{ marginTop: 8 }}>1 choice per success icon (duplicates allowed).</div>
-            <div style={{ marginTop: 10 }}>
-              {specialChoices.map((v, idx) => (
-                <div key={idx} className="row" style={{ gap: 8, marginBottom: 8, alignItems: 'center' }}>
-                  <div className="small" style={{ width: 90 }}>Icon {idx + 1}</div>
-                  <select className="input" value={v} onChange={(e) => {
-                    const next = specialChoices.slice();
-                    next[idx] = e.target.value as SpecialPick;
-                    setSpecialChoices(next);
-                  }} style={{ flex: 1 }}>
-                    {SPECIALS.map(op => <option key={op} value={op}>{op}</option>)}
-                  </select>
-                </div>
-              ))}
+            {(() => {
+              const ctx = pendingRef.current;
+              const weapon = ctx?.weapon;
+              const r = ctx?.roll;
+              const opts = new Set<string>();
+              opts.add('None');
+              opts.add('HEAVY BLOW');
+              if (weapon?.specialDamage?.includes('Break Shield')) opts.add('BREAK SHIELD');
+              if (weapon?.specialDamage?.includes('Pierce')) opts.add('PIERCE');
+              if (weapon?.specialDamage?.includes('Seize')) opts.add('SEIZE');
+              const list = Array.from(opts) as EnemySpecialPick[];
+
+              const featBase = (r?.feat?.type === 'Number') ? r.feat.value : (r?.feat?.type === 'Eye' ? 10 : 0);
+              const featPierce = opts.has('PIERCE') ? Math.min(10, featBase + 2) : featBase;
+
+              return (
+                <> 
+                  <div className="small muted" style={{ marginTop: 8 }}>1 choice per success icon (duplicates allowed).</div>
+                  {opts.has('PIERCE') ? (
+                    <div className="small muted" style={{ marginTop: 6 }}>
+                      Actual Feat die result: <b>{featBase}</b> — With Pierce: <b>{featPierce}</b>
+                    </div>
+                  ) : null}
+                  <div style={{ marginTop: 10 }}>
+                    {specialChoices.map((v, idx) => (
+                      <div key={idx} className="row" style={{ gap: 8, marginBottom: 8, alignItems: 'center' }}>
+                        <div className="small" style={{ width: 90 }}>Icon {idx + 1}</div>
+                        <select className="input" value={v} onChange={(e) => {
+                          const next = specialChoices.slice();
+                          next[idx] = e.target.value as EnemySpecialPick;
+                          setSpecialChoices(next);
+                        }} style={{ flex: 1 }}>
+                          {list.map(op => <option key={op} value={op}>{op}</option>)}
+                        </select>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              );
+            })()}
+
+            {/* Selected summary + reset */}
+            <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px solid #2a2f3a' }}>
+              <div className="label">Options selected</div>
+              {specialChoices.filter((x) => x && x !== 'None').length ? (
+                <ul style={{ margin: '8px 0 0 18px' }}>
+                  {specialChoices.filter((x) => x && x !== 'None').map((x, i) => (
+                    <li key={`${x}-${i}`} className="small">{x}</li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="small muted" style={{ marginTop: 6 }}>None selected yet.</div>
+              )}
             </div>
+
             <div className="row" style={{ justifyContent: 'flex-end', gap: 8, marginTop: 12 }}>
+              <button
+                className="btn btn-ghost"
+                onClick={() => setSpecialChoices(Array.from({ length: specialChoices.length }, () => 'None'))}
+              >
+                Reset
+              </button>
               <button className="btn" onClick={() => finalizeEnemyAttack(specialChoices)}>Apply</button>
             </div>
           </div>

@@ -57,6 +57,15 @@ export type CombatState = {
   hero: {
     stance: Stance;
     // Engagement is computed at the round's engagement step.
+    /** If Seized, the hero can only make Brawling attacks (best proficiency -1 Success die) and cannot trigger Piercing Blow. */
+    seized?: boolean;
+  };
+
+  /** Temporary, round-scoped modifiers produced by special success choices (eg. Fend Off, Shield Thrust). */
+  roundMods?: {
+    heroParryBonus?: number;
+    /** Enemy id -> dice penalty (negative) to apply to their rolls this round (eg. Shield Thrust). */
+    enemyDicePenalty?: Record<string, number>;
   };
 
   enemies: CombatEnemy[];
@@ -85,4 +94,7 @@ export type CombatEvent =
   | { type: 'ENEMY_ACTION_USED'; enemyId: string; kind: 'attack' | 'other'; data?: any }
   | { type: 'APPLY_ENEMY_ENDURANCE'; enemyId: string; delta: number; reason?: string; data?: any }
   | { type: 'APPLY_ENEMY_WOUND'; enemyId: string; injuryTN: number; resisted: boolean; data?: any }
+  | { type: 'ADD_HERO_PARRY_BONUS'; delta: number; reason?: string; data?: any }
+  | { type: 'SET_ENEMY_DICE_PENALTY'; enemyId: string; penalty: number; reason?: string; data?: any }
+  | { type: 'SET_HERO_SEIZED'; seized: boolean; reason?: string; data?: any }
   | { type: 'LOG'; text: string; data?: any };
