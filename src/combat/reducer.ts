@@ -39,24 +39,46 @@ export function combatReducer(state: CombatState | null, event: CombatEvent): Co
           ...e,
           endurance: { max, current: Math.max(0, Math.min(max, cur)) },
           wounds: Number((e as any)?.wounds ?? 0) || 0,
+          position: (e as any)?.position ?? 'melee',
         };
       });
+      const surprise = event.surprise ?? undefined;
+      const enemyDicePenalty: Record<string, number> = {};
+      if (surprise?.enemiesSurprised) {
+        // First Close Quarters Round only: all enemies lose (1d) on combat rolls.
+        for (const en of enemies) enemyDicePenalty[String(en.id)] = -1;
+      }
       const s: CombatState = {
         id,
         campaignId: event.campaignId,
         heroId: event.heroId,
-        phase: 'roundStart',
+        phase: 'openingVolleys',
         round: 1,
         distance: 'close',
         hero: { stance: 'open' },
-        roundMods: { heroParryBonus: 0, enemyDicePenalty: {} },
+        surprise,
+        roundMods: { heroParryBonus: 0, enemyDicePenalty },
         enemies,
         engagement: emptyEngagement(),
         options: event.options,
-        log: [{ id: uid('log'), at: nowIso(), text: 'Combat started.' }],
-        actionsUsed: { hero: false, enemies: {} },
+        log: [
+          { id: uid('log'), at: nowIso(), text: 'Combat started.' },
+          ...(surprise?.heroCaughtOffGuard ? [{ id: uid('log'), at: nowIso(), text: 'Ambush! Hero is caught off-guard and cannot act in Round 1.' }] : []),
+          ...(surprise?.enemiesSurprised ? [{ id: uid('log'), at: nowIso(), text: 'Ambush! Enemies are surprised: no opening volleys; -1d on enemy combat rolls in Round 1.' }] : []),
+        ],
+        // If caught off-guard, the hero cannot act in Round 1.
+        actionsUsed: { hero: !!surprise?.heroCaughtOffGuard, enemies: {} },
       };
       return s;
+    }
+
+    case 'COMPLETE_OPENING_VOLLEYS': {
+      if (!state) return null;
+      return {
+        ...state,
+        phase: 'roundStart',
+        log: [...state.log, { id: uid('log'), at: nowIso(), text: 'Opening volleys complete.' }],
+      };
     }
 
     case 'END_COMBAT': {

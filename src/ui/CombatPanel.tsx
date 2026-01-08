@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { compendiums } from '../core/compendiums';
 import { computeDerived } from '../core/tor2e';
 import { rollTOR, rollTORAdversary } from '../core/dice';
@@ -75,6 +75,14 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
   const [enemyIds, setEnemyIds] = useState<string[]>([]);
   const [striderMode, setStriderMode] = useState(false);
   const [enemyAutomation, setEnemyAutomation] = useState<CombatOptions['enemyAutomation']>('manualWithSuggestions');
+  // Ambush / surprise attack
+  const [ambush, setAmbush] = useState(false);
+  const [ambushTarget, setAmbushTarget] = useState<'Heroes' | 'Enemies'>('Heroes');
+
+  // Option A (2.4): prompt for starting position when an enemy can attack at range.
+  const [startPosOpen, setStartPosOpen] = useState(false);
+  const [startPosById, setStartPosById] = useState<Record<string, 'melee' | 'ranged'>>({});
+  const startPosPendingRef = React.useRef<{ heroId: string; enemies: CombatEnemy[]; options: CombatOptions } | null>(null);
 
   const enemiesAll = useMemo(() => {
     const list = (compendiums as any).adversariesCore?.entries ?? [];
@@ -116,6 +124,32 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
     });
   };
 
+  const itemDisplayName = (it: any): string => {
+    const refId = it?.ref?.id;
+    const pack = it?.ref?.pack;
+    if (pack === 'tor2e-equipment' && refId) {
+      const e: any = (compendiums as any).equipment?.entries?.find((x: any) => String(x?.id) === String(refId));
+      if (e?.name) return String(e.name);
+    }
+    return String(it?.name ?? 'Item');
+  };
+
+  const updateHeroInventory = (heroIdToUpdate: string, updater: (inv: any[]) => any[]) => {
+    setState((prev: any) => {
+      const hs = Array.isArray(prev.heroes) ? prev.heroes.slice() : [];
+      const idx = hs.findIndex((h: any) => String(h.id) === String(heroIdToUpdate));
+      if (idx < 0) return prev;
+      const h = hs[idx];
+      const inv = Array.isArray(h.inventory) ? h.inventory.slice() : [];
+      hs[idx] = { ...h, inventory: updater(inv) };
+      return { ...prev, heroes: hs };
+    });
+  };
+
+  const setDroppedByItemId = (heroIdToUpdate: string, itemId: string, dropped: boolean) => {
+    updateHeroInventory(heroIdToUpdate, (inv) => inv.map((it: any) => String(it?.id) === String(itemId) ? { ...it, dropped: !!dropped, equipped: dropped ? false : it.equipped } : it));
+  };
+
   // --- Enemy attack modal (re-uses the "From Enemy" logic but scoped to combat) ---
   const [enemyAttackOpen, setEnemyAttackOpen] = useState(false);
   const [enemyAttackEnemyId, setEnemyAttackEnemyId] = useState('');
@@ -144,6 +178,15 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
   const [heroTaskOpen, setHeroTaskOpen] = useState(false);
   const [heroTaskFeatMode, setHeroTaskFeatMode] = useState<'normal' | 'favoured' | 'illFavoured'>('normal');
   const [heroTaskWeary, setHeroTaskWeary] = useState(false);
+
+  // --- Opening Volleys (pre-combat popup) ---
+  const [ovCycle, setOvCycle] = useState(1);
+  const [ovHeroDone, setOvHeroDone] = useState(false);
+  const [ovEnemyDone, setOvEnemyDone] = useState<Record<string, boolean>>({});
+  const [ovSummary, setOvSummary] = useState('');
+  const [heroAttackIsOpeningVolley, setHeroAttackIsOpeningVolley] = useState(false);
+  const [heroAttackDropItemId, setHeroAttackDropItemId] = useState<string | null>(null);
+  const [enemyAttackIsOpeningVolley, setEnemyAttackIsOpeningVolley] = useState(false);
 
   const beginEnemyAttack = (forceEnemyId?: string) => {
     if (!combat) return;
@@ -339,7 +382,7 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
       : `${enemy.name} - FAIL — Miss`;
     dispatchMany([
       { type: 'LOG', text: txt, data: { enemyId: enemy.id, weapon: w.name, total, tn, specials: picks } },
-      { type: 'ENEMY_ACTION_USED', enemyId: enemy.id, kind: 'attack', data: { weapon: w.name } },
+      ...(enemyAttackIsOpeningVolley ? [] : [{ type: 'ENEMY_ACTION_USED', enemyId: enemy.id, kind: 'attack', data: { weapon: w.name } }]),
     ]);
 
     // Toast (4s, colored) like elsewhere.
@@ -348,6 +391,10 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
 
     pendingRef.current = null;
     setSpecialPickerOpen(false);
+    if (enemyAttackIsOpeningVolley) {
+      setOvEnemyDone((prev) => ({ ...prev, [String(enemy.id)]: true }));
+      setEnemyAttackIsOpeningVolley(false);
+    }
   };
 
   const startCombat = () => {
@@ -355,17 +402,92 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
     const selected = ((compendiums as any).adversariesCore?.entries ?? []).filter((e: any) => enemyIds.includes(String(e.id)));
     const enemies = selected.map(toCombatEnemy);
     const options: CombatOptions = { striderMode, enemyAutomation };
-    dispatch({ type: 'START_COMBAT', campaignId: campId, heroId: pickedHeroId, enemies, options } as any);
+
+    const hasRanged = (en: CombatEnemy) => {
+      const profs = Array.isArray(en.combatProficiencies) ? en.combatProficiencies : [];
+      return profs.some((p) => {
+        const n = String(p.name ?? '').toLowerCase();
+        return n.includes('bow') || n.includes('ranged') || n.includes('sling') || n.includes('javelin');
+      });
+    };
+    const rangedCapable = enemies.filter((e) => hasRanged(e));
+    if (rangedCapable.length) {
+      // Option A: ask the user to set the starting position for each ranged-capable enemy.
+      const init: Record<string, 'melee' | 'ranged'> = {};
+      for (const e of rangedCapable) init[String(e.id)] = 'melee';
+      setStartPosById(init);
+      startPosPendingRef.current = { heroId: pickedHeroId, enemies, options };
+      setStartPosOpen(true);
+      return;
+    }
+
+    doStartCombatWithAmbush({ heroId: pickedHeroId, enemies, options });
+  };
+
+  const doStartCombatWithAmbush = ({ heroId: pickedHeroId, enemies, options }: { heroId: string; enemies: CombatEnemy[]; options: CombatOptions }) => {
+    const h = heroes.find((x: any) => String(x.id) === String(pickedHeroId));
+    const tnBase = options.striderMode ? 18 : 20;
+    const d = h ? computeDerived(h, tnBase) : null;
+
+    let surprise: CombatState['surprise'] | undefined = undefined;
+
+    if (ambush && h && d) {
+      if (ambushTarget === 'Heroes') {
+        // Enemy ambushes: Awareness check.
+        const rating = Number(h?.skillRatings?.awareness ?? 0) || 0;
+        const fav = (d.favouredSkillSet as any)?.has ? (d.favouredSkillSet as any).has('awareness') : false;
+        const rr = rollTOR({ dice: rating, tn: d.strengthTN, featMode: fav ? 'favoured' : 'normal', weary: !!h.conditions?.weary });
+        toast(`Awareness — ${rr.pass ? 'PASS' : 'FAIL'}`, rr.pass ? 'success' : 'warning');
+        if (!rr.pass) surprise = { heroCaughtOffGuard: true };
+      } else {
+        // Hero ambushes: Stealth check.
+        const rating = Number(h?.skillRatings?.stealth ?? 0) || 0;
+        const fav = (d.favouredSkillSet as any)?.has ? (d.favouredSkillSet as any).has('stealth') : false;
+        const rr = rollTOR({ dice: rating, tn: d.witsTN, featMode: fav ? 'favoured' : 'normal', weary: !!h.conditions?.weary });
+        toast(`Stealth — ${rr.pass ? 'PASS' : 'FAIL'}`, rr.pass ? 'success' : 'warning');
+        if (rr.pass) surprise = { enemiesSurprised: true };
+      }
+    }
+
+    dispatch({ type: 'START_COMBAT', campaignId: campId, heroId: pickedHeroId, enemies, options, surprise } as any);
   };
 
   const endCombat = () => {
     if (!combat) return;
     const enemiesLeft = (combat.enemies ?? []).some(e => (Number(e.endurance?.current ?? 0) || 0) > 0);
     const escaped = combat.phase === 'combatEnd' && (combat.log ?? []).some(l => String(l.text ?? '').toLowerCase().includes('escaped combat'));
+    const inv = Array.isArray(activeHero?.inventory) ? activeHero.inventory : [];
+    const droppedItems = inv.filter((it: any) => !!it.dropped);
+
+    const isFleeLike = escaped || enemiesLeft;
+
     if (enemiesLeft && !escaped) {
-      const ok = window.confirm("There are still enemies left and you didn't escape. Want to end the combat anyways?");
+      const itemsLine = droppedItems.length
+        ? `\n\nYou have these items dropped:\n- ${droppedItems.map(itemDisplayName).join('\n- ')}\n\nIf you flee you will lose them.`
+        : '';
+      const ok = window.confirm("There are still enemies left and you didn't escape. Want to end the combat anyways?" + itemsLine);
+      if (!ok) return;
+    } else if (escaped && droppedItems.length) {
+      const ok = window.confirm(`You have these items dropped:\n- ${droppedItems.map(itemDisplayName).join('\n- ')}\n\nIf you flee you will lose them. End the combat?`);
       if (!ok) return;
     }
+
+    // Inventory handling for dropped items:
+    // - If ending normally (no enemies left), automatically recover dropped items.
+    // - If fleeing/abandoning with enemies left, dropped items are lost.
+    if (activeHero?.id) {
+      if (isFleeLike) {
+        if (droppedItems.length) {
+          updateHeroInventory(activeHero.id, (items) => items.filter((it: any) => !it.dropped));
+        }
+      } else {
+        // Recover after combat automatically.
+        if (droppedItems.length) {
+          updateHeroInventory(activeHero.id, (items) => items.map((it: any) => it.dropped ? { ...it, dropped: false } : it));
+        }
+      }
+    }
+
     setState((prev: any) => {
       const by = { ...(prev.combatByCampaign ?? {}) };
       by[campId] = null;
@@ -409,6 +531,18 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
 
         <div className="card" style={{ marginTop: 12 }}>
           <div className="label">Adversaries</div>
+          <div className="row" style={{ gap: 10, marginTop: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+            <label className={"toggle " + (ambush ? 'on' : '')} style={{ display: 'inline-flex' }}>
+              <input type="checkbox" checked={ambush} onChange={(e) => setAmbush(e.target.checked)} /> Ambush
+            </label>
+            <div className="col" style={{ minWidth: 220, opacity: ambush ? 1 : 0.6 }}>
+              <div className="label">Target</div>
+              <select className="input" disabled={!ambush} value={ambushTarget} onChange={(e) => setAmbushTarget(e.target.value as any)}>
+                <option value="Heroes">Heroes</option>
+                <option value="Enemies">Enemies</option>
+              </select>
+            </div>
+          </div>
           <input className="input" placeholder="Search adversary…" value={enemySearch} onChange={(e) => setEnemySearch(e.target.value)} />
 
           <div style={{ marginTop: 10, maxHeight: 340, overflow: 'auto' }}>
@@ -431,6 +565,54 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
             <button className="btn" disabled={!heroId || enemyIds.length === 0} onClick={startCombat}>Start combat</button>
           </div>
         </div>
+
+        {startPosOpen && (() => {
+          const pending = startPosPendingRef.current;
+          if (!pending) return null;
+          const rangedCapable = (pending.enemies ?? []).filter((en) => {
+            const profs = Array.isArray(en.combatProficiencies) ? en.combatProficiencies : [];
+            return profs.some((p) => {
+              const n = String(p.name ?? '').toLowerCase();
+              return n.includes('bow') || n.includes('ranged') || n.includes('sling') || n.includes('javelin');
+            });
+          });
+
+          return (
+            <div className="modalOverlay" onMouseDown={() => setStartPosOpen(false)}>
+              <div className="modal" style={{ maxWidth: 520 }} onMouseDown={(e) => e.stopPropagation()}>
+                <div className="modalHeader">
+                  <div className="h3">Starting positions</div>
+                  <button className="btn btn-ghost" onClick={() => setStartPosOpen(false)}>Close</button>
+                </div>
+                <div className="modalBody">
+                  <div className="small muted">These adversaries can fight at range. Choose whether they start in close combat or at distance.</div>
+                  <div style={{ marginTop: 10 }}>
+                    {rangedCapable.map((en) => (
+                      <div key={en.id} className="row" style={{ gap: 10, alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #2a2f3a' }}>
+                        <div style={{ flex: 1 }}><b>{en.name}</b></div>
+                        <select className="input" style={{ width: 160 }} value={startPosById[String(en.id)] ?? 'melee'} onChange={(e) => setStartPosById((prev) => ({ ...prev, [String(en.id)]: e.target.value as any }))}>
+                          <option value="melee">Close combat</option>
+                          <option value="ranged">At distance</option>
+                        </select>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="modalFooter">
+                  <button className="btn" onClick={() => {
+                    const nextEnemies = (pending.enemies ?? []).map((en) => {
+                      const pos = startPosById[String(en.id)];
+                      return pos ? { ...en, position: pos } : en;
+                    });
+                    setStartPosOpen(false);
+                    startPosPendingRef.current = null;
+                    doStartCombatWithAmbush({ heroId: pending.heroId, enemies: nextEnemies, options: pending.options });
+                  }}>Confirm</button>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
       </div>
     );
   }
@@ -444,6 +626,19 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
 
   const enemiesAlive = combat.enemies.filter(e => (Number(e.endurance?.current ?? 0) || 0) > 0);
   const heroActionUsed = !!combat.actionsUsed?.hero;
+
+  useEffect(() => {
+    if (combat.phase !== 'openingVolleys') return;
+    setOvCycle(1);
+    setOvHeroDone(false);
+    setOvEnemyDone({});
+    const s = combat.surprise;
+    const parts: string[] = [];
+    if (s?.heroCaughtOffGuard) parts.push('Ambush: hero caught off-guard (no hero volleys)');
+    if (s?.enemiesSurprised) parts.push('Ambush: enemies surprised (no enemy volleys; -1d in Round 1)');
+    if (!parts.length) parts.push('No ambush effects');
+    setOvSummary(parts.join(' • '));
+  }, [combat.id, combat.phase]);
 
   const stanceTask = (() => {
     const s = combat.hero.stance;
@@ -470,7 +665,7 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
 
   const resolveHeroAttack = () => {
     if (!combat || !activeHero || !derived) return;
-    if (combat.actionsUsed?.hero) {
+    if (!heroAttackIsOpeningVolley && combat.actionsUsed?.hero) {
       toast('You already used your main action this round.', 'warning');
       return;
     }
@@ -478,6 +673,11 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
     if (!target) return;
     const w: any = (derived.equippedWeapons ?? []).find((x: any) => String(x?.name ?? '') === String(heroWeaponName)) ?? null;
     if (!w) return;
+
+    // Opening volley: thrown spears become Dropped as soon as they are used.
+    if (heroAttackIsOpeningVolley && heroAttackDropItemId && activeHero?.id) {
+      setDroppedByItemId(activeHero.id, heroAttackDropItemId, true);
+    }
 
     const cp = (derived as any)?.combatProficiencies ?? {};
     const seized = !!combat.hero.seized;
@@ -511,7 +711,7 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
 
   const finalizeHeroAttack = (specials: HeroSpecialPick[]) => {
     if (!combat || !activeHero || !derived) return;
-    if (combat.actionsUsed?.hero) return;
+    if (!heroAttackIsOpeningVolley && combat.actionsUsed?.hero) return;
 
     // When called directly (no picker), build a minimal ctx.
     const ctx = heroPendingRef.current ?? {
@@ -620,7 +820,9 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
       }
     }
 
-    events.push({ type: 'HERO_ACTION_USED', kind: 'attack', data: { weapon: w.name, targetId: target.id, selections: picks } });
+    if (!heroAttackIsOpeningVolley) {
+      events.push({ type: 'HERO_ACTION_USED', kind: 'attack', data: { weapon: w.name, targetId: target.id, selections: picks } });
+    }
 
     const deg = passed ? (r.icons === 0 ? 'Success' : r.icons === 1 ? 'Great Success' : 'Extraordinary Success') : 'FAIL';
     const selectedTxt = picks.length ? ` • ${picks.join(', ')}` : '';
@@ -635,6 +837,11 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
     heroPendingRef.current = null;
     setHeroSpecialOpen(false);
     setHeroAttackOpen(false);
+    if (heroAttackIsOpeningVolley) {
+      setOvHeroDone(true);
+      setHeroAttackIsOpeningVolley(false);
+      setHeroAttackDropItemId(null);
+    }
   };
 
   const beginHeroTask = () => {
@@ -1011,6 +1218,162 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
 
             <div className="row" style={{ justifyContent: 'flex-end', gap: 8, marginTop: 12 }}>
               <button className="btn" onClick={resolveHeroAttack}>Roll</button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {/* Opening Volleys (pre-combat) */}
+      {combat.phase === 'openingVolleys' ? (
+        <div className="modalOverlay" onMouseDown={() => { /* block click-through */ }}>
+          <div className="modal" style={{ maxWidth: 640 }} onMouseDown={(e) => e.stopPropagation()}>
+            <div className="modalHeader">
+              <div><b>Opening Volley</b> <span className="small muted">(Cycle {ovCycle})</span></div>
+              <button className="btn btn-ghost" onClick={() => { /* no close: must Start Combat */ }} disabled>Close</button>
+            </div>
+            <div className="modalBody">
+              <div className="small muted">{ovSummary}</div>
+
+              {(() => {
+                const allowHeroOV = !combat.surprise?.heroCaughtOffGuard;
+                const allowEnemyOV = !combat.surprise?.enemiesSurprised;
+                const rangedEnemies = enemiesAlive.filter((e) => String(e.position ?? 'melee') === 'ranged');
+
+                const isThrowableSpear = (w: any) => {
+                  const n = String(w?.name ?? '').toLowerCase();
+                  return n === 'spear' || n === 'short spear' || n.includes('short spear') || n === 'spear (short)';
+                };
+                const isRangedWeapon = (w: any) => {
+                  const k = profKey(w?.combatProficiency ?? w?.proficiency ?? w?.category);
+                  if (k === 'bows') return true;
+                  if (k === 'spears' && isThrowableSpear(w)) return true;
+                  const n = String(w?.name ?? '').toLowerCase();
+                  if (n.includes('bow')) return true;
+                  return false;
+                };
+                const rangedWeapons = ((derived?.equippedWeapons ?? []) as any[]).filter(isRangedWeapon);
+
+                const rollEnemyVolley = (enemyId: string) => {
+                  const en = combat.enemies.find((x) => String(x.id) === String(enemyId));
+                  if (!en) return;
+                  const profs = Array.isArray(en.combatProficiencies) ? en.combatProficiencies : [];
+                  const weapon = profs.find((p) => {
+                    const n = String(p.name ?? '').toLowerCase();
+                    return n.includes('bow') || n.includes('ranged') || n.includes('sling') || n.includes('javelin');
+                  }) ?? profs[0];
+                  if (!weapon) return;
+                  setEnemyAttackIsOpeningVolley(true);
+                  setEnemyAttackEnemyId(en.id);
+                  setEnemyAttackWeaponName(weapon.name);
+                  const tn = heroParryTN;
+                  const r = rollTORAdversary({ dice: Number(weapon.rating ?? 0), featMode: 'normal', weary: false, tn });
+                  pendingRef.current = { enemy: en, weapon, roll: r, tn };
+                  if ((r.icons ?? 0) > 0) {
+                    if (combat.options.enemyAutomation === 'auto') {
+                      // reuse the same auto-pick logic in startEnemyAttackRoll
+                      const opts = new Set<string>();
+                      (weapon.specialDamage ?? []).forEach((s: any) => opts.add(String(s)));
+                      const canPierce = opts.has('Pierce') || opts.has('PIERCE');
+                      const featBase = (r.feat.type === 'Number') ? r.feat.value : (r.feat.type === 'Eye' ? 10 : 0);
+                      const would = canPierce ? Math.min(10, featBase + 2) : featBase;
+                      const pierceToPB = canPierce && (featBase < 10) && (would >= 10);
+                      const picks: EnemySpecialPick[] = Array.from({ length: r.icons }, () => 'None');
+                      if (pierceToPB) picks[0] = 'PIERCE';
+                      for (let i = 0; i < picks.length; i++) {
+                        if (picks[i] !== 'None') continue;
+                        if (opts.has('Heavy Blow') || opts.has('HEAVY BLOW')) picks[i] = 'HEAVY BLOW';
+                      }
+                      finalizeEnemyAttack(picks);
+                      return;
+                    }
+                    setSpecialChoices(Array.from({ length: r.icons }, () => 'None'));
+                    setSpecialPickerOpen(true);
+                    return;
+                  }
+                  finalizeEnemyAttack([]);
+                };
+
+                return (
+                  <>
+                    <div style={{ marginTop: 12 }}>
+                      <div className="label">Hero ranged weapon used</div>
+                      {!allowHeroOV ? (
+                        <div className="small muted">Hero cannot make opening volleys (caught off-guard).</div>
+                      ) : !rangedWeapons.length ? (
+                        <div className="small muted">No ranged weapons equipped.</div>
+                      ) : (
+                        <div className="list" style={{ marginTop: 8 }}>
+                          {rangedWeapons.map((w) => {
+                            const thrown = profKey(w?.combatProficiency ?? w?.proficiency ?? w?.category) === 'spears' && isThrowableSpear(w);
+                            return (
+                              <div key={String(w.id ?? w.name)} className="row" style={{ justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid #2a2f3a' }}>
+                                <div>
+                                  <b>{w.name}</b>{thrown ? <span className="small muted"> (Thrown — Dropped)</span> : null}
+                                  <div className="small muted">DMG {w.damage ?? '—'} • INJ {w.injury ?? '—'}</div>
+                                </div>
+                                <button
+                                  className="btn"
+                                  disabled={ovHeroDone || enemiesAlive.length === 0}
+                                  onClick={() => {
+                                    setHeroAttackIsOpeningVolley(true);
+                                    setHeroAttackDropItemId(thrown ? String(w.id ?? '') : null);
+                                    setHeroAttackTargetId(enemiesAlive[0]?.id ?? '');
+                                    setHeroWieldMode('1h');
+                                    beginHeroAttack(w);
+                                  }}
+                                >
+                                  {ovHeroDone ? 'Done' : 'Roll'}
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                      {allowHeroOV && rangedWeapons.some((w) => profKey(w?.combatProficiency ?? w?.proficiency ?? w?.category) === 'spears') ? (
+                        <div className="small muted" style={{ marginTop: 6 }}>
+                          Thrown Short Spear / Spear becomes Dropped automatically.
+                        </div>
+                      ) : null}
+                    </div>
+
+                    <div style={{ marginTop: 14 }}>
+                      <div className="label">Enemies</div>
+                      {!allowEnemyOV ? (
+                        <div className="small muted">Enemies cannot make opening volleys (surprised).</div>
+                      ) : rangedEnemies.length === 0 ? (
+                        <div className="small muted">No enemies are starting at range.</div>
+                      ) : (
+                        <div className="list" style={{ marginTop: 8 }}>
+                          {rangedEnemies.map((e) => (
+                            <div key={e.id} className="row" style={{ justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid #2a2f3a' }}>
+                              <div>
+                                <b>{e.name}</b>
+                                <div className="small muted">End {e.endurance.current}/{e.endurance.max}</div>
+                              </div>
+                              <button
+                                className="btn"
+                                disabled={!!ovEnemyDone[String(e.id)]}
+                                onClick={() => rollEnemyVolley(e.id)}
+                              >
+                                {ovEnemyDone[String(e.id)] ? 'Done' : 'Roll'}
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+
+            <div className="modalFooter" style={{ justifyContent: 'space-between' }}>
+              <button className="btn btn-ghost" onClick={() => { setOvCycle((c) => c + 1); setOvHeroDone(false); setOvEnemyDone({}); }}>
+                One more
+              </button>
+              <button className="btn" onClick={() => dispatch({ type: 'COMPLETE_OPENING_VOLLEYS' })}>
+                Start Combat
+              </button>
             </div>
           </div>
         </div>

@@ -32,6 +32,8 @@ export type CombatEnemy = {
   endurance: { max: number; current: number };
   might: number;
   attributeLevel: number;
+  /** Current battlefield position for targeting/engagement (melee vs ranged). */
+  position?: 'melee' | 'ranged';
   parry?: number;
   armour?: number;
   /** Wounds suffered from Piercing Blows. When wounds >= Might, the adversary is slain outright. */
@@ -61,6 +63,14 @@ export type CombatState = {
     seized?: boolean;
   };
 
+  /** Ambush / surprise effects that last for the first Close Quarters Round only. */
+  surprise?: {
+    /** If true, the hero was caught off-guard and cannot make opening volleys nor take actions in Round 1. */
+    heroCaughtOffGuard?: boolean;
+    /** If true, enemies were surprised and cannot make opening volleys; they also lose (1d) on all combat rolls in Round 1. */
+    enemiesSurprised?: boolean;
+  };
+
   /** Temporary, round-scoped modifiers produced by special success choices (eg. Fend Off, Shield Thrust). */
   roundMods?: {
     heroParryBonus?: number;
@@ -83,7 +93,8 @@ export type CombatState = {
 };
 
 export type CombatEvent =
-  | { type: 'START_COMBAT'; campaignId: string; heroId: string; enemies: CombatEnemy[]; options: CombatOptions }
+  | { type: 'START_COMBAT'; campaignId: string; heroId: string; enemies: CombatEnemy[]; options: CombatOptions; surprise?: CombatState['surprise'] }
+  | { type: 'COMPLETE_OPENING_VOLLEYS' }
   | { type: 'END_COMBAT'; reason: string }
   | { type: 'ROUND_BEGIN' }
   | { type: 'SET_HERO_STANCE'; stance: Stance }
