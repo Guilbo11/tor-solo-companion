@@ -499,6 +499,45 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
     setEnemyIds((prev) => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
 
+  // --- Combat-derived helpers (defined before any conditional return to keep hook order stable) ---
+  const heroStances: Stance[] = (combat?.options?.striderMode ?? striderMode)
+    ? ['forward', 'open', 'defensive', 'rearward', 'skirmish']
+    : ['forward', 'open', 'defensive', 'rearward'];
+
+  const engagedEnemyIds = combat?.engagement?.heroToEnemies?.[String(combat?.heroId ?? '')] ?? [];
+  const engagedEnemies = combat?.enemies?.filter((e) => engagedEnemyIds.includes(e.id)) ?? [];
+
+  const enemiesAlive = combat?.enemies?.filter((e) => (Number(e.endurance?.current ?? 0) || 0) > 0) ?? [];
+  const heroActionUsed = !!combat?.actionsUsed?.hero;
+
+  // Opening Volleys summary - must not rely on combat being non-null across renders.
+  useEffect(() => {
+    if (!combat || combat.phase !== 'openingVolleys') return;
+    setOvCycle(1);
+    setOvHeroDone(false);
+    setOvEnemyDone({});
+    const s = combat.surprise;
+    const parts: string[] = [];
+    if (s?.heroCaughtOffGuard) parts.push('Ambush: hero caught off-guard (no hero volleys)');
+    if (s?.enemiesSurprised) parts.push('Ambush: enemies surprised (no enemy volleys; -1d in Round 1)');
+    if (!parts.length) parts.push('No ambush effects');
+    const allowHeroOV = !s?.heroCaughtOffGuard;
+    const allowEnemyOV = !s?.enemiesSurprised;
+    parts.push(`Opening volley allowed: Hero ${allowHeroOV ? '✅' : '❌'} / Enemies ${allowEnemyOV ? '✅' : '❌'}`);
+    setOvSummary(parts.join(' • '));
+  }, [combat?.id, combat?.phase]);
+
+  const stanceTask = (() => {
+    const s = combat?.hero?.stance;
+    if (!s) return null;
+    if (s === 'forward') return { id: 'intimidateFoe', name: 'Intimidate Foe', skill: 'awe', attr: 'heart' } as const;
+    if (s === 'open') return { id: 'rallyComrades', name: 'Rally Comrades', skill: 'enhearten', attr: 'heart' } as const;
+    if (s === 'defensive') return { id: 'protectCompanion', name: 'Protect Companion', skill: 'athletics', attr: 'strength' } as const;
+    if (s === 'rearward') return { id: 'prepareShot', name: 'Prepare Shot', skill: 'scan', attr: 'wits' } as const;
+    if (s === 'skirmish') return { id: 'gainGround', name: 'Gain Ground', skill: 'athleticsOrScan', attr: 'strengthOrWits' } as const;
+    return null;
+  })();
+
   if (!combat) {
     return (
       <div style={{ padding: 14 }}>
@@ -616,39 +655,6 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
       </div>
     );
   }
-
-  const heroStances: Stance[] = combat.options.striderMode
-    ? ['forward', 'open', 'defensive', 'rearward', 'skirmish']
-    : ['forward', 'open', 'defensive', 'rearward'];
-
-  const engagedEnemyIds = combat.engagement.heroToEnemies?.[combat.heroId] ?? [];
-  const engagedEnemies = combat.enemies.filter(e => engagedEnemyIds.includes(e.id));
-
-  const enemiesAlive = combat.enemies.filter(e => (Number(e.endurance?.current ?? 0) || 0) > 0);
-  const heroActionUsed = !!combat.actionsUsed?.hero;
-
-  useEffect(() => {
-    if (combat.phase !== 'openingVolleys') return;
-    setOvCycle(1);
-    setOvHeroDone(false);
-    setOvEnemyDone({});
-    const s = combat.surprise;
-    const parts: string[] = [];
-    if (s?.heroCaughtOffGuard) parts.push('Ambush: hero caught off-guard (no hero volleys)');
-    if (s?.enemiesSurprised) parts.push('Ambush: enemies surprised (no enemy volleys; -1d in Round 1)');
-    if (!parts.length) parts.push('No ambush effects');
-    setOvSummary(parts.join(' • '));
-  }, [combat.id, combat.phase]);
-
-  const stanceTask = (() => {
-    const s = combat.hero.stance;
-    if (s === 'forward') return { id: 'intimidateFoe', name: 'Intimidate Foe', skill: 'awe', attr: 'heart' } as const;
-    if (s === 'open') return { id: 'rallyComrades', name: 'Rally Comrades', skill: 'enhearten', attr: 'heart' } as const;
-    if (s === 'defensive') return { id: 'protectCompanion', name: 'Protect Companion', skill: 'athletics', attr: 'strength' } as const;
-    if (s === 'rearward') return { id: 'prepareShot', name: 'Prepare Shot', skill: 'scan', attr: 'wits' } as const;
-    if (s === 'skirmish') return { id: 'gainGround', name: 'Gain Ground', skill: 'athleticsOrScan', attr: 'strengthOrWits' } as const;
-    return null;
-  })();
 
   const beginHeroAttack = (weapon?: any) => {
     if (!combat || !activeHero || !derived) return;
@@ -1194,7 +1200,11 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
 
       {/* Hero attack modal */}
       {heroAttackOpen ? (
-        <div className="modalOverlay" onMouseDown={() => setHeroAttackOpen(false)}>
+        <div
+          className="modalOverlay"
+          style={heroAttackIsOpeningVolley ? { zIndex: 10050 } : undefined}
+          onMouseDown={() => setHeroAttackOpen(false)}
+        >
           <div className="modal" style={{ maxWidth: 520 }} onMouseDown={(e) => e.stopPropagation()}>
             <div className="modalHeader">
               <div><b>Hero Attack</b></div>
@@ -1411,7 +1421,11 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
 
       {/* Hero Special Success picker */}
       {heroSpecialOpen ? (
-        <div className="modalOverlay" onMouseDown={() => setHeroSpecialOpen(false)}>
+        <div
+          className="modalOverlay"
+          style={combat?.phase === 'openingVolleys' ? { zIndex: 10070 } : undefined}
+          onMouseDown={() => setHeroSpecialOpen(false)}
+        >
           <div className="modal" style={{ maxWidth: 520 }} onMouseDown={(e) => e.stopPropagation()}>
             <div className="modalHeader">
               <div><b>Special Success</b></div>
@@ -1491,7 +1505,11 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
 
       {/* Special success picker */}
       {specialPickerOpen ? (
-        <div className="modalOverlay" onMouseDown={() => setSpecialPickerOpen(false)}>
+        <div
+          className="modalOverlay"
+          style={combat?.phase === 'openingVolleys' ? { zIndex: 10060 } : undefined}
+          onMouseDown={() => setSpecialPickerOpen(false)}
+        >
           <div className="modal" style={{ maxWidth: 520 }} onMouseDown={(e) => e.stopPropagation()}>
             <div className="modalHeader">
               <div><b>Special Success</b></div>
