@@ -1119,3 +1119,15 @@ html[data-theme="corebook"] .h1{
 @media (max-width: 420px){
   .h1{ font-size: 28px; }
 }
+
+
+/* MOBILE_PADDING_GUARD: add breathing room on mobile */
+@media (max-width: 420px){
+  body{
+    padding-top: 10px;
+  }
+  .appRoot, .page{
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+}
