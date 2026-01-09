@@ -46,7 +46,30 @@ export default function SettingsPanel({ state, setState, onBackToCampaigns }: { 
         <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
           <div>
             <div style={{ fontWeight: 800 }}>Add rolls to journal</div>
-            <div className="small muted">When enabled, dice + oracle results are appended to the currently active journal chapter.</div>
+            
+      <hr />
+      <div className="h2">Theme</div>
+      <div className="card" style={{ padding: 12, marginTop: 10 }}>
+        <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+          <div>
+            <div style={{ fontWeight: 800 }}>App theme</div>
+            <div className="small muted">Dark = current theme. Corebook = parchment styling inspired by the TOR corebook.</div>
+          </div>
+          <select
+            className="input"
+            style={{ width: 170 }}
+            value={state.settings?.theme === 'corebook' ? 'corebook' : 'dark'}
+            onChange={(e) => {
+              const nextTheme = e.target.value === 'corebook' ? 'corebook' : 'dark';
+              setState(prev => ({ ...prev, settings: { ...(prev.settings ?? {}), theme: nextTheme } }));
+            }}
+          >
+            <option value="dark">Dark</option>
+            <option value="corebook">Corebook</option>
+          </select>
+        </div>
+      </div>
+<div className="small muted">When enabled, dice + oracle results are appended to the currently active journal chapter.</div>
           </div>
           <label className="switch">
             <input
