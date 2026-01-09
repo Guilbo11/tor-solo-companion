@@ -50,7 +50,8 @@ export type StoredState = {
 export type SettingsState = {
   addRollsToJournal: boolean;
   theme?: 'dark' | 'corebook';
-};
+}
+;
 
 export type JournalChapter = {
   id: string;
@@ -586,8 +587,11 @@ function ensureDefaults(s: StoredState): StoredState {
   const npcs: NPC[] = Array.isArray((s as any).npcs) ? (s as any).npcs.map(ensureNpcDefaults) : [];
 
   const settings: SettingsState = (s as any).settings && typeof (s as any).settings === 'object'
-    ? { addRollsToJournal: !!(s as any).settings.addRollsToJournal }
-    : { addRollsToJournal: false };
+    ? {
+        addRollsToJournal: !!(s as any).settings.addRollsToJournal,
+        theme: (s as any).settings.theme === 'corebook' ? 'corebook' : 'dark',
+      }
+    : { addRollsToJournal: false, theme: 'dark' };
 
   // Journal: now per-campaign.
   // Migration rules:

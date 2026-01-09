@@ -510,24 +510,56 @@ canvas { border-radius: 14px; border: 1px solid #1f2a3a; background: #0b0f14; }
 .iconBtn:hover{ background: rgba(255,255,255,.08); }
 .iconBtn:active{ transform: translateY(1px); }
 
-/* === COREBOOK THEME === */
-:root[data-theme="corebook"]{
-  color-scheme: light;
-}
+
+/* ==========================
+   THEME: COREBOOK (parchment)
+   Applied when <html data-theme="corebook">...
+   ========================== */
+
+:root[data-theme="corebook"]{ color-scheme: light; }
+
 :root[data-theme="corebook"] body{
-  background:#F5F1E8;
-  color:#2B2B2B;
-  font-family:"Libre Baskerville", serif;
+  background: #F5F1E8;
+  color: #2B2B2B;
+  font-family: "Libre Baskerville", ui-serif, Georgia, "Times New Roman", Times, serif;
 }
+
+:root[data-theme="corebook"] a{ color: #9B2D2D; }
+
 :root[data-theme="corebook"] .h1,
-:root[data-theme="corebook"] .h2{
-  font-family:"Cinzel", serif;
+:root[data-theme="corebook"] .h2,
+:root[data-theme="corebook"] .panelTitle{
+  font-family: "Cinzel", ui-serif, Georgia, serif;
+  letter-spacing: .3px;
 }
+
 :root[data-theme="corebook"] .card{
-  background:#E9E2D2;
-  border:1px solid #C9B8A3;
+  background: #E9E2D2;
+  border: 1px solid #C9B8A3;
+  border-radius: 12px;
 }
+
+:root[data-theme="corebook"] hr{ border-top: 1px solid #C9B8A3; }
+
+:root[data-theme="corebook"] .input{
+  background: #F5F1E8;
+  border: 1px solid #C9B8A3;
+  color: #2B2B2B;
+}
+
 :root[data-theme="corebook"] .btn{
-  background:#9B2D2D;
-  color:#F5F1E8;
+  background: #9B2D2D;
+  border: 1px solid #7A2424;
+  color: #F5F1E8;
 }
+:root[data-theme="corebook"] .btn:hover{ filter: brightness(1.05); }
+
+:root[data-theme="corebook"] .btn.btn-ghost,
+:root[data-theme="corebook"] .btn-ghost{
+  background: transparent;
+  border: 1px solid #9B2D2D;
+  color: #9B2D2D;
+}
+
+:root[data-theme="corebook"] .iconBtn{ color: rgba(43,43,43,.92); }
+:root[data-theme="corebook"] .iconBtn:hover{ background: rgba(155,45,45,.08); }

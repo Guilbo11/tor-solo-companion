@@ -24,6 +24,7 @@ type AppMode = 'landing' | 'main';
 
 export default function App() {
   const [state, setState] = useState<StoredState>(() => loadState());
+  const theme = (state as any)?.settings?.theme === 'corebook' ? 'corebook' : 'dark';
   const [mode, setMode] = useState<AppMode>('landing');
   const [tab, setTab] = useState<Tab>('Journal');
   const [diceSheetOpen, setDiceSheetOpen] = useState(false);
@@ -57,10 +58,15 @@ export default function App() {
     return computeDerived(combatHero, tnBase);
   }, [combatHero, combat?.options?.striderMode]);
 
-    const theme = (state as any)?.settings?.theme === 'corebook' ? 'corebook' : 'dark';
-
-const toast = (message: string, type: 'info'|'success'|'warning'|'error' = 'info') => {
+  const toast = (message: string, type: 'info'|'success'|'warning'|'error' = 'info') => {
     (window as any).__torcToast?.({ message, type, durationMs: 4000 });
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    const meta = document.querySelector('meta[name="theme-color"]') as HTMLMetaElement | null;
+    if (meta) meta.content = theme === 'corebook' ? '#F5F1E8' : '#0b0f17';
+  }, [theme]);
+
   };
 
   const dispatchCombat = (ev: any) => {
@@ -152,12 +158,11 @@ const toast = (message: string, type: 'info'|'success'|'warning'|'error' = 'info
           >
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <circle cx="12" cy="12" r="3" />
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.33 1.82V22a2 2 0 0 1-4 0v-.08a1.65 1.65 0 0 0-.33-1.82 1.65 1.65 0 0 0-1-.6 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.82-.33H2a2 2 0 0 1 0-4h.08a1.65 1.65 0 0 0 1.82-.33 1.65 1.65 0 0 0 .6-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06A2 2 0 1 1 6.94 3.63l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6 1.65 1.65 0 0 0 .33-1.82V2a2 2 0 0 1 4 0v.08a1.65 1.65 0 0 0 .33 1.82 1.65 1.65 0 0 0 1 .6 1.65 1.65 0 0 0 1.82-.33l.06-.06A2 2 0 1 1 21.37 6.94l-.06.06A1.65 1.65 0 0 0 19.4 9c.18.3.38.58.6 1a1.65 1.65 0 0 0 1.82.33H22a2 2 0 0 1 0 4h-.08a1.65 1.65 0 0 0-1.82.33 1.65 1.65 0 0 0-.6 1z" />
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.07.07a2 2 0 0 1-1.42 3.41h-.2a2 2 0 0 1-1.82-1.1 1.65 1.65 0 0 0-1.51-.9 1.65 1.65 0 0 0-1.5.9 2 2 0 0 1-1.82 1.1h-.2a2 2 0 0 1-1.42-3.41l.07-.07a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.5-1.05 2 2 0 0 1-2-2v-.2a2 2 0 0 1 2-2 1.65 1.65 0 0 0 1.5-1.05 1.65 1.65 0 0 0-.33-1.82l-.07-.07a2 2 0 0 1 1.42-3.41h.2a2 2 0 0 1 1.82 1.1 1.65 1.65 0 0 0 1.5.9 1.65 1.65 0 0 0 1.51-.9 2 2 0 0 1 1.82-1.1h.2a2 2 0 0 1 1.42 3.41l-.07.07a1.65 1.65 0 0 0-.33 1.82 1.65 1.65 0 0 0 1.5 1.05 2 2 0 0 1 2 2v.2a2 2 0 0 1-2 2 1.65 1.65 0 0 0-1.5 1.05Z" />
             </svg>
           </button>
         </div>
       </div>
-    </div>
     );
   }, [state]);
 
@@ -169,14 +174,7 @@ const toast = (message: string, type: 'info'|'success'|'warning'|'error' = 'info
   );
 
   // Global roll logger hook (dice + oracles) -> active journal chapter (works from any tab).
-
   useEffect(() => {
-    document.documentElement.dataset.theme = theme;
-    const meta = document.querySelector('meta[name="theme-color"]') as HTMLMetaElement | null;
-    if (meta) meta.content = theme === 'corebook' ? '#F5F1E8' : '#0b0f17';
-  }, [theme]);
-
-useEffect(() => {
     (window as any).__torcLogRollHtml = (html: string) => {
       const clean = String(html ?? '').trim();
       if (!clean) return;
@@ -283,20 +281,6 @@ useEffect(() => {
           <FloatingDiceSheet state={state} open={diceSheetOpen} onClose={() => setDiceSheetOpen(false)} />
           <OracleSidePanel open={oracleOpen} onClose={() => setOracleOpen(false)}>
             <OraclesPanel state={state} setState={set} compact />
-          </OracleSidePanel>
-          <OracleSidePanel open={dataPanelOpen} onClose={() => setDataPanelOpen(false)} title="Import/Export" ariaLabel="Import and export">
-            <div className="small muted">Export your campaign data or import a saved .torc file.</div>
-            <div className="row" style={{ gap: 10, marginTop: 12, flexWrap: 'wrap' }}>
-              <button className="btn" onClick={handleExport}>Export</button>
-              <label className="btn" style={{cursor:'pointer'}}>
-                Import
-                <input type="file" accept=".torc" style={{display:'none'}} onChange={async (e)=>{
-                  const f = e.target.files?.[0];
-                  await handleImport(f);
-                  (e.target as HTMLInputElement).value = '';
-                }} />
-              </label>
-            </div>
 
             <hr />
             <div className="h2">Theme</div>
@@ -319,6 +303,20 @@ useEffect(() => {
                   <option value="corebook">Corebook</option>
                 </select>
               </div>
+            </div>
+          </OracleSidePanel>
+          <OracleSidePanel open={dataPanelOpen} onClose={() => setDataPanelOpen(false)} title="Import/Export" ariaLabel="Import and export">
+            <div className="small muted">Export your campaign data or import a saved .torc file.</div>
+            <div className="row" style={{ gap: 10, marginTop: 12, flexWrap: 'wrap' }}>
+              <button className="btn" onClick={handleExport}>Export</button>
+              <label className="btn" style={{cursor:'pointer'}}>
+                Import
+                <input type="file" accept=".torc" style={{display:'none'}} onChange={async (e)=>{
+                  const f = e.target.files?.[0];
+                  await handleImport(f);
+                  (e.target as HTMLInputElement).value = '';
+                }} />
+              </label>
             </div>
           </OracleSidePanel>
         </>
