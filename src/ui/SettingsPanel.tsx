@@ -77,6 +77,9 @@ export default function SettingsPanel({
               Corebook
             </button>
           </div>
+          <div className="small muted" style={{ marginTop: 8 }}>
+            Current theme: <b>{currentTheme}</b>
+          </div>
         </div>
       </div>
 

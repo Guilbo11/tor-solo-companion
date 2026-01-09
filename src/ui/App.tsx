@@ -62,9 +62,17 @@ export default function App() {
     (window as any).__torcToast?.({ message, type, durationMs: 4000 });
 
   useEffect(() => {
-    // Apply theme attribute + helper class for maximum CSS compatibility.
+    // Hard-apply theme at runtime so the change is visible immediately even if CSS isn't loading.
     document.documentElement.setAttribute('data-theme', theme);
     document.body.classList.toggle('theme-corebook', theme === 'corebook');
+
+    if (theme === 'corebook') {
+      document.body.style.backgroundColor = '#F5F1E8';
+      document.body.style.color = '#2B2B2B';
+    } else {
+      document.body.style.backgroundColor = '';
+      document.body.style.color = '';
+    }
 
     const meta = document.querySelector('meta[name="theme-color"]') as HTMLMetaElement | null;
     if (meta) meta.content = theme === 'corebook' ? '#F5F1E8' : '#0b0f17';
