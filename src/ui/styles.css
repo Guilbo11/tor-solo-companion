@@ -502,9 +502,10 @@ canvas { border-radius: 14px; border: 1px solid #1f2a3a; background: #0b0f14; }
   align-items: center;
   justify-content: center;
   border-radius: 12px;
-  border: 1px solid rgba(0,0,0,.18);
+  border: none;
   background: transparent;
-  color: rgba(0,0,0,.55);
+  color: rgba(255,255,255,.92);
+  box-shadow: none;
 }
-.iconBtn:hover{ background: rgba(0,0,0,.04); }
+.iconBtn:hover{ background: rgba(255,255,255,.08); }
 .iconBtn:active{ transform: translateY(1px); }
