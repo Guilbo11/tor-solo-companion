@@ -157,9 +157,9 @@ export default function App() {
       <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
           <div className="h1">TOR Companion</div>
-          <div className="muted small">Local-only by default. You can export/import your data anytime.</div>
+          
         </div>
-        <div className="row" style={{ alignItems: 'center' }}>
+        <div className="row" style={{ alignItems: 'center', flexShrink: 0, justifyContent: 'flex-end' }}>
           <button
             type="button"
             className="iconBtn"
@@ -178,7 +178,7 @@ export default function App() {
   }, [state]);
 
   const landingHeader = (
-    <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between', padding: '14px 14px 8px' }}>
+    <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between', padding: '14px 14px 8px', flexWrap: 'nowrap', gap: 10 }}>
       <div className="h1" style={{ margin: 0 }}>TOR Companion</div>
       <div />
     </div>
