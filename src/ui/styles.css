@@ -749,3 +749,66 @@ body.theme-corebook .sidePanel .btn.btn-ghost{
   border-color: #C9B8A3;
   color: #2B2B2B;
 }
+
+
+/* ==========================
+   COREBOOK: remaining dark surfaces fixes
+   ========================== */
+
+/* Journal editable field */
+html[data-theme="corebook"] .richEditor,
+:root[data-theme="corebook"] .richEditor,
+body.theme-corebook .richEditor{
+  background: #E1D6C3 !important;   /* darker parchment */
+  border: 1px solid #C9B8A3 !important;
+  color: #2B2B2B !important;
+}
+html[data-theme="corebook"] .richEditor:focus,
+:root[data-theme="corebook"] .richEditor:focus,
+body.theme-corebook .richEditor:focus{
+  border-color: #9B2D2D88 !important;
+}
+
+/* Journal 'active' badge */
+html[data-theme="corebook"] .badge,
+:root[data-theme="corebook"] .badge,
+body.theme-corebook .badge{
+  background: rgba(155,45,45,.10) !important;
+  border: 1px solid rgba(155,45,45,.35) !important;
+  color: #2B2B2B !important;
+}
+
+/* Drag handle (4 dots) */
+html[data-theme="corebook"] .dragHandle,
+:root[data-theme="corebook"] .dragHandle,
+body.theme-corebook .dragHandle{
+  border: 1px solid #C9B8A3 !important;
+  background: #E1D6C3 !important;
+  color: #2B2B2B !important;
+}
+html[data-theme="corebook"] .dragDots span,
+:root[data-theme="corebook"] .dragDots span,
+body.theme-corebook .dragDots span{
+  background: rgba(43,43,43,.55) !important;
+}
+
+/* NPC labels like Culture / First look */
+html[data-theme="corebook"] .kv .k,
+html[data-theme="corebook"] .k,
+:root[data-theme="corebook"] .kv .k,
+:root[data-theme="corebook"] .k,
+body.theme-corebook .kv .k,
+body.theme-corebook .k{
+  color: rgba(43,43,43,.72) !important;
+}
+
+/* General pale greys → darker for readability */
+html[data-theme="corebook"] .muted,
+html[data-theme="corebook"] .small.muted,
+:root[data-theme="corebook"] .muted,
+:root[data-theme="corebook"] .small.muted,
+body.theme-corebook .muted,
+body.theme-corebook .small.muted{
+  opacity: 1 !important;
+  color: rgba(43,43,43,.72) !important;
+}
