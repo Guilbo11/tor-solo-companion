@@ -469,8 +469,9 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
         const rating = Number(h?.skillRatings?.awareness ?? 0) || 0;
         const fav = (d.favouredSkillSet as any)?.has ? (d.favouredSkillSet as any).has('awareness') : false;
         const rr = rollTOR({ dice: rating, tn: d.strengthTN, featMode: fav ? 'favoured' : 'normal', weary: !!h.conditions?.weary });
-        toast(`Awareness — ${rr.passed ? 'PASS' : 'FAIL'}`, rr.passed ? 'success' : 'warning');
-        if (!rr.passed) surprise = { heroCaughtOffGuard: true };
+        const passed = typeof rr.passed === 'boolean' ? rr.passed : (rr.isAutomaticSuccess || rr.total >= d.strengthTN);
+        toast(`Awareness — ${passed ? 'PASS' : 'FAIL'}`, passed ? 'success' : 'warning');
+        if (!passed) surprise = { heroCaughtOffGuard: true };
       } else {
         // Hero ambushes: Stealth check.
         const rating = Number(h?.skillRatings?.stealth ?? 0) || 0;
@@ -479,8 +480,9 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
         const rr = rollTOR({ dice: rating, tn, featMode: fav ? 'favoured' : 'normal', weary: !!h.conditions?.weary });
         const html = formatTorRoll(rr, { label: 'Stealth', tn });
         const plain = String(html).replace(/<[^>]*>/g,'').replace(/\s+/g,' ').trim();
-        toast(plain, rr.pass ? 'success' : 'warning');
-        if (rr.pass) surprise = { enemiesSurprised: true };
+        const passed = typeof rr.passed === 'boolean' ? rr.passed : (rr.isAutomaticSuccess || rr.total >= tn);
+        toast(plain, passed ? 'success' : 'warning');
+        if (passed) surprise = { enemiesSurprised: true };
       }
     }
 
