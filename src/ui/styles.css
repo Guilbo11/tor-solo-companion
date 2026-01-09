@@ -888,7 +888,8 @@ body.theme-corebook .landingContainer{
   --cb-flourish: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44' viewBox='0 0 44 44'%3E%3Cpath d='M6 38c10-2 10-12 6-16-4-4-10-2-10 3 0 4 5 6 9 3' fill='none' stroke='%239B2D2D' stroke-width='1.4' stroke-linecap='round'/%3E%3Cpath d='M14 24c6-2 10-8 10-14' fill='none' stroke='%239B2D2D' stroke-width='1.1' stroke-linecap='round' opacity='.65'/%3E%3Cpath d='M24 10c2 6 8 10 14 10' fill='none' stroke='%239B2D2D' stroke-width='1.1' stroke-linecap='round' opacity='.55'/%3E%3C/svg%3E");
 }
 
-/* Cards: double red line border + corner flourishes (subtle) */
+
+/* Cards: double red line border + OUTER corner flourishes (touch the border, outside the card) */
 html[data-theme="corebook"] .card,
 :root[data-theme="corebook"] .card,
 body.theme-corebook .card{
@@ -906,20 +907,36 @@ html[data-theme="corebook"] .card::before,
 body.theme-corebook .card::before{
   content: "";
   position: absolute;
-  inset: 6px;
   pointer-events: none;
-  background-image: var(--cb-flourish), var(--cb-flourish);
-  background-repeat: no-repeat, no-repeat;
-  background-position: left top, right bottom;
-  background-size: 34px 34px, 34px 34px;
-  opacity: .22; /* keep it decorative, never hurts readability */
+  /* outside the card but touching the edge */
+  inset: -12px;
+  background-image:
+    var(--cb-flourish), var(--cb-flourish), var(--cb-flourish), var(--cb-flourish);
+  background-repeat: no-repeat;
+  background-position:
+    left top, right top, left bottom, right bottom;
+  background-size: 44px 44px;
+  opacity: .34;
+  filter: saturate(1.05);
 }
 
-/* Side panel cards and modal cards already inherit .card, but ensure their background matches */
-html[data-theme="corebook"] .sidePanel .card,
-body.theme-corebook .sidePanel .card{
-  background: var(--cb-parchment-2);
+/* Add a second, smaller flourish layer for richer corners */
+html[data-theme="corebook"] .card::after,
+:root[data-theme="corebook"] .card::after,
+body.theme-corebook .card::after{
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  inset: -8px;
+  background-image:
+    var(--cb-flourish), var(--cb-flourish), var(--cb-flourish), var(--cb-flourish);
+  background-repeat: no-repeat;
+  background-position:
+    8px 8px, calc(100% - 8px) 8px, 8px calc(100% - 8px), calc(100% - 8px) calc(100% - 8px);
+  background-size: 30px 30px;
+  opacity: .22;
 }
+
 
 /* Inputs: slightly lighter paper with red focus ring */
 html[data-theme="corebook"] .input,
@@ -961,5 +978,111 @@ body.theme-corebook .tab.active{
   body.theme-corebook .card::before{
     opacity: .16;
     background-size: 28px 28px, 28px 28px;
+  }
+}
+
+
+html[data-theme="corebook"] .h1,
+:root[data-theme="corebook"] .h1,
+body.theme-corebook .h1{
+  font-family: "Cinzel", ui-serif, Georgia, serif;
+  font-variant: small-caps;
+  letter-spacing: .8px;
+}
+
+
+/* Headings: stronger small caps + decorative underline */
+html[data-theme="corebook"] .h2,
+:root[data-theme="corebook"] .h2,
+body.theme-corebook .h2{
+  font-family: "Cinzel", ui-serif, Georgia, serif;
+  font-variant: small-caps;
+  letter-spacing: .6px;
+  position: relative;
+  padding-bottom: 8px;
+  margin-bottom: 6px;
+}
+
+html[data-theme="corebook"] .h2::after,
+:root[data-theme="corebook"] .h2::after,
+body.theme-corebook .h2::after{
+  content: "";
+  display: block;
+  height: 2px;
+  margin-top: 6px;
+  background:
+    linear-gradient(to right, transparent, rgba(155,45,45,.65), rgba(155,45,45,.65), transparent);
+  border-radius: 999px;
+}
+
+html[data-theme="corebook"] .h2::before,
+:root[data-theme="corebook"] .h2::before,
+body.theme-corebook .h2::before{
+  content: "❦";
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: -2px;
+  font-size: 14px;
+  color: rgba(155,45,45,.55);
+  background: var(--cb-parchment-2);
+  padding: 0 6px;
+}
+
+
+/* Chapter separators: double rule + micro motif */
+html[data-theme="corebook"] hr,
+:root[data-theme="corebook"] hr,
+body.theme-corebook hr{
+  border: none;
+  height: 10px;
+  margin: 18px 0;
+  background:
+    linear-gradient(to right, transparent 0%, rgba(155,45,45,.55) 12%, rgba(155,45,45,.55) 88%, transparent 100%);
+  position: relative;
+}
+
+html[data-theme="corebook"] hr::before,
+:root[data-theme="corebook"] hr::before,
+body.theme-corebook hr::before{
+  content: "";
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  top: 2px;
+  height: 1px;
+  background: rgba(155,45,45,.40);
+}
+
+html[data-theme="corebook"] hr::after,
+:root[data-theme="corebook"] hr::after,
+body.theme-corebook hr::after{
+  content: "❦";
+  position: absolute;
+  left: 50%;
+  top: 0px;
+  transform: translateX(-50%);
+  color: rgba(155,45,45,.55);
+  font-size: 14px;
+  background: var(--cb-parchment);
+  padding: 0 8px;
+}
+
+
+@media (max-width: 420px){
+  html[data-theme="corebook"] .card::before,
+  body.theme-corebook .card::before{
+    inset: -10px;
+    background-size: 38px 38px;
+    opacity: .28;
+  }
+  html[data-theme="corebook"] .card::after,
+  body.theme-corebook .card::after{
+    inset: -6px;
+    background-size: 26px 26px;
+    opacity: .18;
+  }
+  html[data-theme="corebook"] .h2::before{
+    font-size: 13px;
   }
 }
