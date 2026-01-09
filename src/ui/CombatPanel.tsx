@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { compendiums } from '../core/compendiums';
 import { computeDerived, weaponIsRangedCapable, weaponTypeForEquipment } from '../core/tor2e';
-import { rollTOR, rollTORAdversary } from '../core/dice';
+import { formatTorRoll, rollTOR, rollTORAdversary } from '../core/dice';
 import { combatReducer } from '../combat/reducer';
+import { getSkillTN } from '../core/skills';
 import { CombatEnemy, CombatOptions, CombatState, Stance } from '../combat/types';
 
 const stanceLabel: Record<Stance, string> = {
@@ -87,7 +88,7 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
   const [enemyAutomation, setEnemyAutomation] = useState<CombatOptions['enemyAutomation']>('manualWithSuggestions');
   // Ambush / surprise attack
   const [ambush, setAmbush] = useState(false);
-  const [ambushTarget, setAmbushTarget] = useState<'Heroes' | 'Enemies'>('Heroes');
+  const [ambushTarget, setAmbushTarget] = useState<'Heroes' | 'Enemies'>('Enemies');
 
   // Option A (2.4): prompt for starting position when an enemy can attack at range.
   const [startPosOpen, setStartPosOpen] = useState(false);
@@ -473,8 +474,11 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
         // Hero ambushes: Stealth check.
         const rating = Number(h?.skillRatings?.stealth ?? 0) || 0;
         const fav = (d.favouredSkillSet as any)?.has ? (d.favouredSkillSet as any).has('stealth') : false;
-        const rr = rollTOR({ dice: rating, tn: d.witsTN, featMode: fav ? 'favoured' : 'normal', weary: !!h.conditions?.weary });
-        toast(`Stealth — ${rr.pass ? 'PASS' : 'FAIL'}`, rr.pass ? 'success' : 'warning');
+        const tn = getSkillTN(h, 'stealth', tnBase);
+        const rr = rollTOR({ dice: rating, tn, featMode: fav ? 'favoured' : 'normal', weary: !!h.conditions?.weary });
+        const html = formatTorRoll(rr, { label: 'Stealth', tn });
+        const plain = String(html).replace(/<[^>]*>/g,'').replace(/\s+/g,' ').trim();
+        toast(plain, rr.pass ? 'success' : 'warning');
         if (rr.pass) surprise = { enemiesSurprised: true };
       }
     }
@@ -568,6 +572,21 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
   })();
 
   const engageLimitOk = engageCounts.human <= 3 && engageCounts.large <= 2;
+
+  const defeatedToastRef = React.useRef<{ combatId: string | null; lastAlive: number }>({ combatId: null, lastAlive: 0 });
+
+  useEffect(() => {
+    if (!combat) return;
+    const aliveCount = enemiesAlive.length;
+    if (defeatedToastRef.current.combatId !== combat.id) {
+      defeatedToastRef.current = { combatId: combat.id, lastAlive: aliveCount };
+      return;
+    }
+    if (defeatedToastRef.current.lastAlive > 0 && aliveCount === 0) {
+      toast('All enemies defeated!', 'success');
+    }
+    defeatedToastRef.current.lastAlive = aliveCount;
+  }, [combat?.id, enemiesAlive.length]);
 
   const applyEngagementSelection = (ids: string[]) => {
     if (!combat) return;
@@ -1094,7 +1113,7 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
                         applyEngagementSelection([String(e.id)]);
                       }}
                     >
-                      Target
+                      Engage
                     </button>
                   ) : null}
                 </div>
@@ -1103,23 +1122,6 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
           </div>
         </div>
 
-        <div className="row" style={{ justifyContent: 'flex-start', gap: 8, marginTop: 10 }}>
-          <button className="btn" onClick={() => {
-            // If multiple engageable enemies exist in a melee stance, ask the player to choose.
-            if (combat.hero.stance === 'rearward' || combat.hero.stance === 'skirmish') {
-              dispatch({ type: 'AUTO_ENGAGE' });
-              return;
-            }
-            if (engageableEnemies.length <= 1) {
-              dispatch({ type: 'AUTO_ENGAGE' });
-              return;
-            }
-            const cur = (combat.engagement?.heroToEnemies?.[String(combat.heroId)] ?? []).map(String);
-            setEngageSelectedIds(cur.length ? cur : [String(engageableEnemies[0].id)]);
-            setEngageOpen(true);
-          }}>Engagement</button>
-          <button className="btn" onClick={() => dispatch({ type: 'ROUND_BEGIN' })}>Next round</button>
-        </div>
       </div>
 
       {/* Engagement chooser */}
@@ -1302,7 +1304,7 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
                     <div className="small muted">End {e.endurance.current}/{e.endurance.max}</div>
                   </div>
                   <button className="btn" disabled={acted} onClick={() => beginEnemyAttack(e.id)}>
-                    {acted ? 'Already acted' : 'From Enemy'}
+                    {acted ? 'Already acted' : 'Attack'}
                   </button>
                 </div>
               );
@@ -1658,7 +1660,7 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
             </div>
 
             <div className="modalFooter" style={{ justifyContent: 'space-between' }}>
-              <button className="btn btn-ghost" onClick={() => { setOvCycle((c) => c + 1); setOvHeroDone(false); setOvEnemyDone({}); }}>
+              <button className="btn btn-ghost" onClick={() => { setOvCycle((c) => c + 1); setOvHeroDone(false); }}>
                 One more
               </button>
               <button className="btn" onClick={() => dispatch({ type: 'COMPLETE_OPENING_VOLLEYS' })}>
