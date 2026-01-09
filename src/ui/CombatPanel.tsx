@@ -210,6 +210,7 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
 
   const beginEnemyAttack = (forceEnemyId?: string) => {
     if (!combat) return;
+    if (combat.surprise?.enemiesSurprised && combat.round === 1) return;
     const aliveAll = (combat.enemies ?? []).filter((e) => (Number(e.endurance?.current ?? 0) || 0) > 0);
     const alive = (combat.hero.stance === 'rearward') ? aliveAll.filter(enemyHasRangedWeapon) : aliveAll;
     const forced = forceEnemyId ? alive.find((e) => String(e.id) === String(forceEnemyId)) : undefined;
@@ -608,7 +609,7 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
     const s = combat.surprise;
     const parts: string[] = [];
     if (s?.heroCaughtOffGuard) parts.push('Ambush: hero caught off-guard (no hero volleys)');
-    if (s?.enemiesSurprised) parts.push('Ambush: enemies surprised (no enemy volleys; no enemy attacks in Round 1)');
+    if (s?.enemiesSurprised) parts.push('Ambush success: enemies surprised (no enemy volleys; no enemy attacks in Round 1)');
     if (!parts.length) parts.push('No ambush effects');
     const allowHeroOV = !s?.heroCaughtOffGuard;
     const allowEnemyOV = !s?.enemiesSurprised;
