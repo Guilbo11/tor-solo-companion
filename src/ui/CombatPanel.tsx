@@ -469,8 +469,8 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
         const rating = Number(h?.skillRatings?.awareness ?? 0) || 0;
         const fav = (d.favouredSkillSet as any)?.has ? (d.favouredSkillSet as any).has('awareness') : false;
         const rr = rollTOR({ dice: rating, tn: d.strengthTN, featMode: fav ? 'favoured' : 'normal', weary: !!h.conditions?.weary });
-        toast(`Awareness — ${rr.pass ? 'PASS' : 'FAIL'}`, rr.pass ? 'success' : 'warning');
-        if (!rr.pass) surprise = { heroCaughtOffGuard: true };
+        toast(`Awareness — ${rr.passed ? 'PASS' : 'FAIL'}`, rr.passed ? 'success' : 'warning');
+        if (!rr.passed) surprise = { heroCaughtOffGuard: true };
       } else {
         // Hero ambushes: Stealth check.
         const rating = Number(h?.skillRatings?.stealth ?? 0) || 0;
