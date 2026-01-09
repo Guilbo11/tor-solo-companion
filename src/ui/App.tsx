@@ -154,6 +154,31 @@ export default function App() {
             </svg>
           </button>
         </div>
+        <hr />
+        <div className="h2">Theme</div>
+        <div className="card" style={{ padding: 12, marginTop: 10 }}>
+          <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+            <div>
+              <div style={{ fontWeight: 800 }}>App theme</div>
+              <div className="small muted">
+                Dark = current theme. Corebook = TOR parchment style.
+              </div>
+            </div>
+            <select
+              className="input"
+              style={{ width: 170 }}
+              value={theme}
+              onChange={(e) => {
+                const nextTheme = e.target.value === 'corebook' ? 'corebook' : 'dark';
+                set((prev) => ({ ...prev, settings: { ...(prev.settings ?? {}), theme: nextTheme } } as any));
+              }}
+            >
+              <option value="dark">Dark</option>
+              <option value="corebook">Corebook</option>
+            </select>
+          </div>
+        </div>
+
       </div>
     );
   }, [state]);
