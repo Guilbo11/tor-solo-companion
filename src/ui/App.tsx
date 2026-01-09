@@ -291,39 +291,7 @@ export default function App() {
           </div>
           <FloatingDiceSheet state={state} open={diceSheetOpen} onClose={() => setDiceSheetOpen(false)} />
           <OracleSidePanel open={oracleOpen} onClose={() => setOracleOpen(false)}>
-            <OraclesPanel state={state} setState={set} compact />
-
-            <hr />
-            <div className="h2">Theme</div>
-            <div className="card" style={{ padding: 12, marginTop: 10 }}>
-              <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
-                <div>
-                  <div style={{ fontWeight: 800 }}>App theme</div>
-                  <div className="small muted">Dark = current theme. Corebook = parchment styling inspired by the TOR corebook.</div>
-                </div>
-                <div className="segRow" aria-label="Theme selection">
-                  <button
-                    type="button"
-                    className={`seg ${theme === 'dark' ? 'active' : ''}`}
-                    onClick={() => {
-                      set((prev) => ({ ...prev, settings: { ...(prev.settings ?? {}), theme: 'dark' } } as any));
-                      document.documentElement.setAttribute('data-theme', 'dark');
-                      document.body.classList.toggle('theme-corebook', false);
-                    }}
-                  >Dark</button>
-                  <button
-                    type="button"
-                    className={`seg ${theme === 'corebook' ? 'active' : ''}`}
-                    onClick={() => {
-                      set((prev) => ({ ...prev, settings: { ...(prev.settings ?? {}), theme: 'corebook' } } as any));
-                      document.documentElement.setAttribute('data-theme', 'corebook');
-                      document.body.classList.toggle('theme-corebook', true);
-                    }}
-                  >Corebook</button>
-                </div>
-              </div>
-            </div>
-          </OracleSidePanel>
+            <OraclesPanel state={state} setState={set} compact /></OracleSidePanel>
           <OracleSidePanel open={dataPanelOpen} onClose={() => setDataPanelOpen(false)} title="Import/Export" ariaLabel="Import and export">
             <div className="small muted">Export your campaign data or import a saved .torc file.</div>
             <div className="row" style={{ gap: 10, marginTop: 12, flexWrap: 'wrap' }}>
