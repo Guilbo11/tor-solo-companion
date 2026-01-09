@@ -268,6 +268,17 @@ export type OracleState = {
 
 const KEY = 'tor_solo_companion_state_v1';
 
+function applyThemePreference(s: StoredState): StoredState {
+  try {
+    const t = localStorage.getItem('tor-theme');
+    if (t === 'corebook' || t === 'dark') {
+      return { ...(s as any), settings: { ...((s as any).settings ?? {}), theme: t } } as any;
+    }
+  } catch {}
+  return s;
+}
+
+
 export function loadState(): StoredState {
   const raw = localStorage.getItem(KEY);
   if (!raw) return defaultState();
@@ -277,17 +288,17 @@ export function loadState(): StoredState {
 
     // Migrate v3 -> v4 (campaigns)
     if (parsed?.version === 3) {
-      return ensureDefaults(migrateV3ToV4(parsed as any));
+      return applyThemePreference(ensureDefaults(migrateV3ToV4(parsed as any)));
     }
 
     // Migrate v4 -> v5 (journal chapters, settings, NPCs, multi-map)
     if ((parsed as any)?.version === 4) {
-      return ensureDefaults(migrateV4ToV5(parsed as any));
+      return applyThemePreference(ensureDefaults(migrateV4ToV5(parsed as any)));
     }
 
     // Migrate v5 -> v6 (make fellowship/oracle per-campaign)
     if ((parsed as any)?.version === 5) {
-      return ensureDefaults(migrateV5ToV6(parsed as any));
+      return applyThemePreference(ensureDefaults(migrateV5ToV6(parsed as any)));
     }
 
     // Migrate v6 -> v7 (combat per-campaign)
@@ -296,7 +307,7 @@ export function loadState(): StoredState {
     }
 
     // Ensure defaults exist even if older saved state is missing new fields
-    return ensureDefaults(parsed as any);
+    return applyThemePreference(ensureDefaults(parsed as any));
   } catch {
     return defaultState();
   }
@@ -304,6 +315,10 @@ export function loadState(): StoredState {
 
 export function saveState(state: StoredState) {
   localStorage.setItem(KEY, JSON.stringify(state));
+  try {
+    const t = (state as any)?.settings?.theme;
+    if (t === 'corebook' || t === 'dark') localStorage.setItem('tor-theme', t);
+  } catch {}
 }
 
 export function defaultState(): StoredState {

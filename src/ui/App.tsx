@@ -320,6 +320,7 @@ export default function App() {
                     className={`seg ${theme === 'dark' ? 'active' : ''}`}
                     onClick={() => {
                       set((prev) => ({ ...prev, settings: { ...(prev.settings ?? {}), theme: 'dark' } } as any));
+                      localStorage.setItem('tor-theme','dark');
                       document.documentElement.setAttribute('data-theme', 'dark');
                       document.body.classList.toggle('theme-corebook', false);
                       document.body.style.backgroundColor = '';
@@ -331,6 +332,7 @@ export default function App() {
                     className={`seg ${theme === 'corebook' ? 'active' : ''}`}
                     onClick={() => {
                       set((prev) => ({ ...prev, settings: { ...(prev.settings ?? {}), theme: 'corebook' } } as any));
+                      localStorage.setItem('tor-theme','corebook');
                       document.documentElement.setAttribute('data-theme', 'corebook');
                       document.body.classList.toggle('theme-corebook', true);
                       document.body.style.backgroundColor = '#F5F1E8';
