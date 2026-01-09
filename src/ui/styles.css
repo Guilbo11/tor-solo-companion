@@ -577,3 +577,44 @@ body.theme-corebook .card{
   background: #E9E2D2;
   border: 1px solid #C9B8A3;
 }
+
+
+/* COREBOOK SURFACES: replace dark panels with darker parchment */
+html[data-theme="corebook"] .sidePanel,
+:root[data-theme="corebook"] .sidePanel,
+body.theme-corebook .sidePanel{
+  background: #E1D6C3 !important; /* darker parchment than #F5F1E8 */
+  border-left: 1px solid #C9B8A3 !important;
+  color: #2B2B2B;
+}
+
+html[data-theme="corebook"] .bs-sheet,
+:root[data-theme="corebook"] .bs-sheet,
+body.theme-corebook .bs-sheet{
+  background: #E1D6C3 !important;
+  border: 1px solid #C9B8A3 !important;
+  color: #2B2B2B;
+}
+
+html[data-theme="corebook"] .modal,
+:root[data-theme="corebook"] .modal,
+body.theme-corebook .modal{
+  background: #E1D6C3 !important;
+  border: 1px solid #C9B8A3 !important;
+  color: #2B2B2B;
+}
+
+html[data-theme="corebook"] .toast,
+:root[data-theme="corebook"] .toast,
+body.theme-corebook .toast{
+  background: #E1D6C3 !important;
+  border: 1px solid #C9B8A3 !important;
+  color: #2B2B2B;
+}
+
+/* Keep overlay dim, but slightly warmer */
+html[data-theme="corebook"] .sidePanelOverlay,
+:root[data-theme="corebook"] .sidePanelOverlay,
+body.theme-corebook .sidePanelOverlay{
+  background: rgba(43, 30, 20, 0.35);
+}
