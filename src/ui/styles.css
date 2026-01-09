@@ -1113,3 +1113,9 @@ html[data-theme="corebook"] .h1{
   font-weight: 700;
   letter-spacing: 1.6px;
 }
+
+/* TITLE_SCALE_130: increase main title size ~30% */
+.h1{ font-size: 30px; line-height: 1.05; } /* was ~23px-ish, keep readable */
+@media (max-width: 420px){
+  .h1{ font-size: 28px; }
+}
