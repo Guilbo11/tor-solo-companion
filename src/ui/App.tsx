@@ -162,14 +162,14 @@ export default function App() {
         <div className="row" style={{ alignItems: 'center', flexShrink: 0, justifyContent: 'flex-end' }}>
           <button
             type="button"
-            className="iconBtn"
+            className={"iconBtn " + (dataPanelOpen ? "gearSpin" : "")}
             aria-label="Open import/export panel"
             title="Import/Export"
             onClick={() => setDataPanelOpen(true)}
           >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <circle cx="12" cy="12" r="3" />
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.33 1.82V22a2 2 0 0 1-4 0v-.08a1.65 1.65 0 0 0-.33-1.82 1.65 1.65 0 0 0-1-.6 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.82-.33H2a2 2 0 0 1 0-4h.08a1.65 1.65 0 0 0 1.82-.33 1.65 1.65 0 0 0 .6-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06A2 2 0 1 1 6.94 3.63l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6 1.65 1.65 0 0 0 .33-1.82V2a2 2 0 0 1 4 0v.08a1.65 1.65 0 0 0 .33 1.82 1.65 1.65 0 0 0 1 .6 1.65 1.65 0 0 0 1.82-.33l.06-.06A2 2 0 1 1 21.37 6.94l-.06.06A1.65 1.65 0 0 0 19.4 9c.18.3.38.58.6 1a1.65 1.65 0 0 0 1.82.33H22a2 2 0 0 1 0 4h-.08a1.65 1.65 0 0 0-1.82.33 1.65 1.65 0 0 0-.6 1z" />
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+              <path d="M19.4 15a1.8 1.8 0 0 0 .36 1.99l.03.03a2.2 2.2 0 0 1-1.56 3.76h-.05a1.8 1.8 0 0 0-1.55 1.13l-.02.05A2.2 2.2 0 0 1 12 23.2a2.2 2.2 0 0 1-2.08-1.46l-.02-.05A1.8 1.8 0 0 0 8.35 20.6h-.05a2.2 2.2 0 0 1-1.56-3.76l.03-.03A1.8 1.8 0 0 0 7.13 15l-.02-.05A1.8 1.8 0 0 0 5.98 13.4h-.05A2.2 2.2 0 0 1 2.2 12a2.2 2.2 0 0 1 1.46-2.08l.05-.02A1.8 1.8 0 0 0 5 8.6V8.55a2.2 2.2 0 0 1 3.76-1.56l.03.03A1.8 1.8 0 0 0 11 6.87l.05-.02A2.2 2.2 0 0 1 12 2.8a2.2 2.2 0 0 1 2.08 1.46l.02.05A1.8 1.8 0 0 0 15.4 5.98h.05A2.2 2.2 0 0 1 19.2 7.54v.05a1.8 1.8 0 0 0 1.13 1.55l.05.02A2.2 2.2 0 0 1 21.8 12a2.2 2.2 0 0 1-1.46 2.08l-.05.02A1.8 1.8 0 0 0 19.4 15Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round"/>
             </svg>
           </button>
         </div>

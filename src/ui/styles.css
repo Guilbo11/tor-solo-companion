@@ -1096,3 +1096,13 @@ body.theme-corebook hr::after{
 @media (max-width: 420px){
   .iconBtn{ width: 44px; height: 44px; }
 }
+
+
+/* GEAR_SPIN_ANIM: rotate the gear when the Import/Export panel is open */
+@keyframes gearSpinOnce {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(180deg); }
+}
+.gearSpin svg{
+  animation: gearSpinOnce 240ms ease-out;
+}
