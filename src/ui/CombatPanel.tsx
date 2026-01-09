@@ -479,8 +479,8 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
         const rr = rollTOR({ dice: rating, tn, featMode: fav ? 'favoured' : 'normal', weary: !!h.conditions?.weary });
         const html = formatTorRoll(rr, { label: 'Stealth', tn });
         const plain = String(html).replace(/<[^>]*>/g,'').replace(/\s+/g,' ').trim();
-        toast(plain, rr.passed ? 'success' : 'warning');
-        if (rr.passed) surprise = { enemiesSurprised: true };
+        toast(plain, rr.pass ? 'success' : 'warning');
+        if (rr.pass) surprise = { enemiesSurprised: true };
       }
     }
 
@@ -1661,7 +1661,7 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
             </div>
 
             <div className="modalFooter" style={{ justifyContent: 'space-between' }}>
-              <button className="btn btn-ghost" onClick={() => { setOvCycle((c) => c + 1); setOvHeroDone(false); setOvEnemyDone({}); }}>
+              <button className="btn btn-ghost" onClick={() => { setOvCycle((c) => c + 1); setOvHeroDone(false); }}>
                 One more
               </button>
               <button className="btn" onClick={() => dispatch({ type: 'COMPLETE_OPENING_VOLLEYS' })}>
