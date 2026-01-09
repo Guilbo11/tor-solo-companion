@@ -162,15 +162,19 @@ export default function App() {
         <div className="row" style={{ alignItems: 'center', flexShrink: 0, justifyContent: 'flex-end' }}>
           <button
             type="button"
-            className={"iconBtn " + (dataPanelOpen ? "gearSpin" : "")}
+            className="iconBtn"
             aria-label="Open import/export panel"
             title="Import/Export"
             onClick={() => setDataPanelOpen(true)}
           >
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
-              <path d="M19.4 15a1.8 1.8 0 0 0 .36 1.99l.03.03a2.2 2.2 0 0 1-1.56 3.76h-.05a1.8 1.8 0 0 0-1.55 1.13l-.02.05A2.2 2.2 0 0 1 12 23.2a2.2 2.2 0 0 1-2.08-1.46l-.02-.05A1.8 1.8 0 0 0 8.35 20.6h-.05a2.2 2.2 0 0 1-1.56-3.76l.03-.03A1.8 1.8 0 0 0 7.13 15l-.02-.05A1.8 1.8 0 0 0 5.98 13.4h-.05A2.2 2.2 0 0 1 2.2 12a2.2 2.2 0 0 1 1.46-2.08l.05-.02A1.8 1.8 0 0 0 5 8.6V8.55a2.2 2.2 0 0 1 3.76-1.56l.03.03A1.8 1.8 0 0 0 11 6.87l.05-.02A2.2 2.2 0 0 1 12 2.8a2.2 2.2 0 0 1 2.08 1.46l.02.05A1.8 1.8 0 0 0 15.4 5.98h.05A2.2 2.2 0 0 1 19.2 7.54v.05a1.8 1.8 0 0 0 1.13 1.55l.05.02A2.2 2.2 0 0 1 21.8 12a2.2 2.2 0 0 1-1.46 2.08l-.05.02A1.8 1.8 0 0 0 19.4 15Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round"/>
-            </svg>
+  <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-1.42 3.42h-.09a1.65 1.65 0 0 0-1.56 1.12l-.03.09a2 2 0 0 1-3.84 0l-.03-.09a1.65 1.65 0 0 0-1.56-1.12h-.09a2 2 0 0 1-1.42-3.42l.06-.06A1.65 1.65 0 0 0 4.6 15l-.03-.09a1.65 1.65 0 0 0-1.12-1.56l-.09-.03a2 2 0 0 1 0-3.84l.09-.03A1.65 1.65 0 0 0 4.6 9l.03-.09a1.65 1.65 0 0 0-.33-1.82l-.06-.06A2 2 0 0 1 5.66 3.6h.09a1.65 1.65 0 0 0 1.56-1.12l.03-.09a2 2 0 0 1 3.84 0l.03.09A1.65 1.65 0 0 0 12.78 3.6h.09a2 2 0 0 1 1.42 3.42l-.06.06A1.65 1.65 0 0 0 19.4 9l.03.09a1.65 1.65 0 0 0 1.12 1.56l.09.03a2 2 0 0 1 0 3.84l-.09.03A1.65 1.65 0 0 0 19.4 15z"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"/>
+</svg>
           </button>
         </div>
       </div>

@@ -1106,3 +1106,10 @@ body.theme-corebook hr::after{
 .gearSpin svg{
   animation: gearSpinOnce 240ms ease-out;
 }
+
+/* Corebook title font */
+html[data-theme="corebook"] .h1{
+  font-family: "Cinzel Decorative", "Cinzel", ui-serif, Georgia, serif;
+  font-weight: 700;
+  letter-spacing: 1.6px;
+}
