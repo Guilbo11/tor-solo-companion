@@ -618,3 +618,134 @@ html[data-theme="corebook"] .sidePanelOverlay,
 body.theme-corebook .sidePanelOverlay{
   background: rgba(43, 30, 20, 0.35);
 }
+
+
+/* ==========================
+   COREBOOK EXTENDED OVERRIDES
+   Make all remaining dark UI surfaces parchment-like while preserving contrast.
+   ========================== */
+
+/* Tabs bar */
+html[data-theme="corebook"] .tabs,
+:root[data-theme="corebook"] .tabs,
+body.theme-corebook .tabs{
+  background: transparent;
+}
+
+html[data-theme="corebook"] .tab,
+:root[data-theme="corebook"] .tab,
+body.theme-corebook .tab{
+  background: #E1D6C3;              /* darker parchment pill */
+  border: 1px solid #C9B8A3;
+  color: #2B2B2B;
+}
+
+html[data-theme="corebook"] .tab:hover,
+:root[data-theme="corebook"] .tab:hover,
+body.theme-corebook .tab:hover{
+  filter: brightness(1.03);
+}
+
+html[data-theme="corebook"] .tab.active,
+:root[data-theme="corebook"] .tab.active,
+body.theme-corebook .tab.active{
+  background: #D7C9B2;              /* a touch darker for active */
+  border-color: #9B2D2D55;
+  color: #2B2B2B;
+}
+
+/* Floating action buttons */
+html[data-theme="corebook"] .fab-btn,
+:root[data-theme="corebook"] .fab-btn,
+body.theme-corebook .fab-btn{
+  background: #D7C9B2 !important;
+  border: 1px solid #C9B8A3 !important;
+  color: #2B2B2B !important;
+  box-shadow: 0 10px 24px rgba(0,0,0,.18);
+}
+
+html[data-theme="corebook"] .fab-btn:hover,
+:root[data-theme="corebook"] .fab-btn:hover,
+body.theme-corebook .fab-btn:hover{
+  filter: brightness(1.04);
+}
+
+/* NPC list rows + expand toggle */
+html[data-theme="corebook"] .npcRow,
+:root[data-theme="corebook"] .npcRow,
+body.theme-corebook .npcRow{
+  background: #E1D6C3 !important;
+  border: 1px solid #C9B8A3 !important;
+  color: #2B2B2B;
+}
+
+html[data-theme="corebook"] .npcToggle,
+:root[data-theme="corebook"] .npcToggle,
+body.theme-corebook .npcToggle{
+  background: #D7C9B2 !important;
+  border: 1px solid #C9B8A3 !important;
+  color: #2B2B2B !important;
+}
+
+html[data-theme="corebook"] .npcToggle:hover,
+:root[data-theme="corebook"] .npcToggle:hover,
+body.theme-corebook .npcToggle:hover{
+  filter: brightness(1.04);
+}
+
+/* Generic cards and surfaces already covered, but enforce readability on dark-specific classes if any remain */
+html[data-theme="corebook"] .container,
+:root[data-theme="corebook"] .container,
+body.theme-corebook .container{
+  background: transparent;
+}
+
+/* Ensure muted text remains readable on parchment */
+html[data-theme="corebook"] .muted,
+html[data-theme="corebook"] .small.muted,
+:root[data-theme="corebook"] .muted,
+:root[data-theme="corebook"] .small.muted,
+body.theme-corebook .muted,
+body.theme-corebook .small.muted{
+  color: rgba(43,43,43,.72) !important;
+}
+
+/* Ghost buttons: keep readable */
+html[data-theme="corebook"] .btn-ghost,
+html[data-theme="corebook"] .btn.btn-ghost,
+:root[data-theme="corebook"] .btn-ghost,
+:root[data-theme="corebook"] .btn.btn-ghost,
+body.theme-corebook .btn-ghost,
+body.theme-corebook .btn.btn-ghost{
+  background: transparent;
+  border: 1px solid #9B2D2D55;
+  color: #9B2D2D;
+}
+
+/* Segmented control border in Corebook */
+html[data-theme="corebook"] .segRow,
+:root[data-theme="corebook"] .segRow,
+body.theme-corebook .segRow{
+  border: 1px solid #C9B8A3;
+}
+
+html[data-theme="corebook"] .segRow .seg,
+:root[data-theme="corebook"] .segRow .seg,
+body.theme-corebook .segRow .seg{
+  background: #E1D6C3;
+  color: #2B2B2B;
+}
+
+html[data-theme="corebook"] .segRow .seg.active,
+:root[data-theme="corebook"] .segRow .seg.active,
+body.theme-corebook .segRow .seg.active{
+  background: #D7C9B2;
+}
+
+/* Side panel close button in corebook */
+html[data-theme="corebook"] .sidePanel .btn.btn-ghost,
+:root[data-theme="corebook"] .sidePanel .btn.btn-ghost,
+body.theme-corebook .sidePanel .btn.btn-ghost{
+  border-color: #C9B8A3;
+  color: #2B2B2B;
+}
