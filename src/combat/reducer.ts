@@ -46,9 +46,9 @@ export function combatReducer(state: CombatState | null, event: CombatEvent): Co
       });
       const surprise = event.surprise ?? undefined;
       const enemyDicePenalty: Record<string, number> = {};
+      const enemiesActionUsed: Record<string, boolean> = {};
       if (surprise?.enemiesSurprised) {
-        // First Close Quarters Round only: all enemies lose (1d) on combat rolls.
-        for (const en of enemies) enemyDicePenalty[String(en.id)] = -1;
+        for (const en of enemies) enemiesActionUsed[String(en.id)] = true;
       }
       const s: CombatState = {
         id,
@@ -66,10 +66,10 @@ export function combatReducer(state: CombatState | null, event: CombatEvent): Co
         log: [
           { id: uid('log'), at: nowIso(), text: 'Combat started.' },
           ...(surprise?.heroCaughtOffGuard ? [{ id: uid('log'), at: nowIso(), text: 'Ambush! Hero is caught off-guard and cannot act in Round 1.' }] : []),
-          ...(surprise?.enemiesSurprised ? [{ id: uid('log'), at: nowIso(), text: 'Ambush! Enemies are surprised: no opening volleys; -1d on enemy combat rolls in Round 1.' }] : []),
+          ...(surprise?.enemiesSurprised ? [{ id: uid('log'), at: nowIso(), text: 'Ambush! Enemies are surprised: no opening volleys and cannot attack in Round 1.' }] : []),
         ],
-        // If caught off-guard, the hero cannot act in Round 1.
-        actionsUsed: { hero: !!surprise?.heroCaughtOffGuard, enemies: {} },
+        // If caught off-guard, the hero cannot act in Round 1. If enemies are surprised, they cannot act either.
+        actionsUsed: { hero: !!surprise?.heroCaughtOffGuard, enemies: enemiesActionUsed },
       };
       return s;
     }

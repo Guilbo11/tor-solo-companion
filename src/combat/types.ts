@@ -67,7 +67,7 @@ export type CombatState = {
   surprise?: {
     /** If true, the hero was caught off-guard and cannot make opening volleys nor take actions in Round 1. */
     heroCaughtOffGuard?: boolean;
-    /** If true, enemies were surprised and cannot make opening volleys; they also lose (1d) on all combat rolls in Round 1. */
+    /** If true, enemies were surprised and cannot make opening volleys or attack in Round 1. */
     enemiesSurprised?: boolean;
   };
 
