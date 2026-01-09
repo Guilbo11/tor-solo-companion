@@ -608,7 +608,7 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
     const s = combat.surprise;
     const parts: string[] = [];
     if (s?.heroCaughtOffGuard) parts.push('Ambush: hero caught off-guard (no hero volleys)');
-    if (s?.enemiesSurprised) parts.push('Ambush: enemies surprised (no enemy volleys; -1d in Round 1)');
+    if (s?.enemiesSurprised) parts.push('Ambush: enemies surprised (no enemy volleys; no enemy attacks in Round 1)');
     if (!parts.length) parts.push('No ambush effects');
     const allowHeroOV = !s?.heroCaughtOffGuard;
     const allowEnemyOV = !s?.enemiesSurprised;
