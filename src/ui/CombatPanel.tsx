@@ -1661,7 +1661,7 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
             </div>
 
             <div className="modalFooter" style={{ justifyContent: 'space-between' }}>
-              <button className="btn btn-ghost" onClick={() => { setOvCycle((c) => c + 1); setOvHeroDone(false); setOvEnemyDone({}); }}>
+              <button className="btn btn-ghost" onClick={() => { setOvCycle((c) => c + 1); setOvHeroDone(false); }}>
                 One more
               </button>
               <button className="btn" onClick={() => dispatch({ type: 'COMPLETE_OPENING_VOLLEYS' })}>
