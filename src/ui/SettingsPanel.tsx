@@ -38,6 +38,30 @@ export default function SettingsPanel({ state, setState, onBackToCampaigns }: { 
       <div className="h2">Settings</div>
       <div className="muted small">
         Configure oracle likelihood thresholds to match Strider Mode exactly (as written in your PDF).
+
+      <hr />
+      <div className="h2">Theme</div>
+      <div className="card" style={{ padding: 12, marginTop: 10 }}>
+        <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+          <div>
+            <div style={{ fontWeight: 800 }}>App theme</div>
+            <div className="small muted">Dark = current theme. Corebook = parchment styling inspired by the TOR corebook.</div>
+          </div>
+          <div className="segRow" aria-label="Theme selection">
+            <button
+              type="button"
+              className={`seg ${(state.settings?.theme === 'corebook') ? '' : 'active'}`}
+              onClick={() => setState(prev => ({ ...prev, settings: { ...(prev.settings ?? {}), theme: 'dark' } }))}
+            >Dark</button>
+            <button
+              type="button"
+              className={`seg ${(state.settings?.theme === 'corebook') ? 'active' : ''}`}
+              onClick={() => setState(prev => ({ ...prev, settings: { ...(prev.settings ?? {}), theme: 'corebook' } }))}
+            >Corebook</button>
+          </div>
+        </div>
+      </div>
+
       </div>
 
       <hr />
@@ -46,13 +70,6 @@ export default function SettingsPanel({ state, setState, onBackToCampaigns }: { 
         <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
           <div>
             <div style={{ fontWeight: 800 }}>Add rolls to journal</div>
-            
-      <hr />
-      <div className="h2">Theme</div>
-      <div className="card" style={{ padding: 12, marginTop: 10 }}>
-        <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
-          <div>
-            <div style={{ fontWeight: 800 }}>App theme</div>
             <div className="small muted">Dark = current theme. Corebook = parchment styling inspired by the TOR corebook.</div>
           </div>
           <select

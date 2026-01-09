@@ -158,7 +158,7 @@ export default function App() {
           >
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <circle cx="12" cy="12" r="3" />
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.07.07a2 2 0 0 1-1.42 3.41h-.2a2 2 0 0 1-1.82-1.1 1.65 1.65 0 0 0-1.51-.9 1.65 1.65 0 0 0-1.5.9 2 2 0 0 1-1.82 1.1h-.2a2 2 0 0 1-1.42-3.41l.07-.07a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.5-1.05 2 2 0 0 1-2-2v-.2a2 2 0 0 1 2-2 1.65 1.65 0 0 0 1.5-1.05 1.65 1.65 0 0 0-.33-1.82l-.07-.07a2 2 0 0 1 1.42-3.41h.2a2 2 0 0 1 1.82 1.1 1.65 1.65 0 0 0 1.5.9 1.65 1.65 0 0 0 1.51-.9 2 2 0 0 1 1.82-1.1h.2a2 2 0 0 1 1.42 3.41l-.07.07a1.65 1.65 0 0 0-.33 1.82 1.65 1.65 0 0 0 1.5 1.05 2 2 0 0 1 2 2v.2a2 2 0 0 1-2 2 1.65 1.65 0 0 0-1.5 1.05Z" />
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.33 1.82V22a2 2 0 0 1-4 0v-.08a1.65 1.65 0 0 0-.33-1.82 1.65 1.65 0 0 0-1-.6 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.82-.33H2a2 2 0 0 1 0-4h.08a1.65 1.65 0 0 0 1.82-.33 1.65 1.65 0 0 0 .6-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06A2 2 0 1 1 6.94 3.63l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6 1.65 1.65 0 0 0 .33-1.82V2a2 2 0 0 1 4 0v.08a1.65 1.65 0 0 0 .33 1.82 1.65 1.65 0 0 0 1 .6 1.65 1.65 0 0 0 1.82-.33l.06-.06A2 2 0 1 1 21.37 6.94l-.06.06A1.65 1.65 0 0 0 19.4 9c.18.3.38.58.6 1a1.65 1.65 0 0 0 1.82.33H22a2 2 0 0 1 0 4h-.08a1.65 1.65 0 0 0-1.82.33 1.65 1.65 0 0 0-.6 1z" />
             </svg>
           </button>
         </div>
@@ -290,18 +290,22 @@ export default function App() {
                   <div style={{ fontWeight: 800 }}>App theme</div>
                   <div className="small muted">Dark = current theme. Corebook = parchment styling inspired by the TOR corebook.</div>
                 </div>
-                <select
-                  className="input"
-                  style={{ width: 170 }}
-                  value={theme}
-                  onChange={(e) => {
-                    const nextTheme = e.target.value === 'corebook' ? 'corebook' : 'dark';
-                    set((prev) => ({ ...prev, settings: { ...(prev.settings ?? {}), theme: nextTheme } } as any));
-                  }}
-                >
-                  <option value="dark">Dark</option>
-                  <option value="corebook">Corebook</option>
-                </select>
+                <div className="segRow" aria-label="Theme selection">
+                  <button
+                    type="button"
+                    className={`seg ${theme === 'dark' ? 'active' : ''}`}
+                    onClick={() => {
+                      set((prev) => ({ ...prev, settings: { ...(prev.settings ?? {}), theme: 'dark' } } as any));
+                    }}
+                  >Dark</button>
+                  <button
+                    type="button"
+                    className={`seg ${theme === 'corebook' ? 'active' : ''}`}
+                    onClick={() => {
+                      set((prev) => ({ ...prev, settings: { ...(prev.settings ?? {}), theme: 'corebook' } } as any));
+                    }}
+                  >Corebook</button>
+                </div>
               </div>
             </div>
           </OracleSidePanel>

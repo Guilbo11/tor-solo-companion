@@ -519,8 +519,9 @@ canvas { border-radius: 14px; border: 1px solid #1f2a3a; background: #0b0f14; }
 :root[data-theme="corebook"]{ color-scheme: light; }
 
 :root[data-theme="corebook"] body{
-  background: #F5F1E8;
-  color: #2B2B2B;
+  /* Force visible change even if other rules set body styles */
+background: #F5F1E8 !important;
+  color: #2B2B2B !important;
   font-family: "Libre Baskerville", ui-serif, Georgia, "Times New Roman", Times, serif;
 }
 
@@ -542,9 +543,9 @@ canvas { border-radius: 14px; border: 1px solid #1f2a3a; background: #0b0f14; }
 :root[data-theme="corebook"] hr{ border-top: 1px solid #C9B8A3; }
 
 :root[data-theme="corebook"] .input{
-  background: #F5F1E8;
+  background: #F5F1E8 !important;
   border: 1px solid #C9B8A3;
-  color: #2B2B2B;
+  color: #2B2B2B !important;
 }
 
 :root[data-theme="corebook"] .btn{
