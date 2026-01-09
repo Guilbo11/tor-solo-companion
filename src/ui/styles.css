@@ -502,9 +502,32 @@ canvas { border-radius: 14px; border: 1px solid #1f2a3a; background: #0b0f14; }
   align-items: center;
   justify-content: center;
   border-radius: 12px;
-  border: 1px solid rgba(0,0,0,.18);
+  border: none;
   background: transparent;
-  color: rgba(0,0,0,.55);
+  color: rgba(255,255,255,.92);
+  box-shadow: none;
 }
-.iconBtn:hover{ background: rgba(0,0,0,.04); }
+.iconBtn:hover{ background: rgba(255,255,255,.08); }
 .iconBtn:active{ transform: translateY(1px); }
+
+/* === COREBOOK THEME === */
+:root[data-theme="corebook"]{
+  color-scheme: light;
+}
+:root[data-theme="corebook"] body{
+  background:#F5F1E8;
+  color:#2B2B2B;
+  font-family:"Libre Baskerville", serif;
+}
+:root[data-theme="corebook"] .h1,
+:root[data-theme="corebook"] .h2{
+  font-family:"Cinzel", serif;
+}
+:root[data-theme="corebook"] .card{
+  background:#E9E2D2;
+  border:1px solid #C9B8A3;
+}
+:root[data-theme="corebook"] .btn{
+  background:#9B2D2D;
+  color:#F5F1E8;
+}

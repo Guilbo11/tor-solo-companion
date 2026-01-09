@@ -49,6 +49,7 @@ export type StoredState = {
 
 export type SettingsState = {
   addRollsToJournal: boolean;
+  theme?: 'dark' | 'corebook';
 };
 
 export type JournalChapter = {
@@ -423,7 +424,7 @@ export function defaultState(): StoredState {
     heroes: [],
     ui: {},
 
-    settings: { addRollsToJournal: false },
+    settings: { addRollsToJournal: false, theme: 'dark' },
 
     combatByCampaign: { [campId]: null },
   });

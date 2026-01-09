@@ -1,6 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { defaultState, loadState, saveState, StoredState } from '../core/storage';
 import { exportToTorc, importFromTorc } from '../core/torc';
+import { computeDerived } from '../core/tor2e';
+import { rollTOR } from '../core/dice';
+import { combatReducer } from '../combat/reducer';
 import JournalPanel from './JournalPanel';
 import MapPanel from './MapPanel';
 import OraclesPanel from './OraclesPanel';
@@ -25,6 +28,7 @@ export default function App() {
   const [tab, setTab] = useState<Tab>('Journal');
   const [diceSheetOpen, setDiceSheetOpen] = useState(false);
   const [oracleOpen, setOracleOpen] = useState(false);
+  const [dataPanelOpen, setDataPanelOpen] = useState(false);
 
   // When on the landing page, render a clean page (no app header/tabs/dice)
   // like Pocketforge. Campaign management only happens there.
@@ -41,7 +45,93 @@ export default function App() {
     });
   };
 
-  // (Settings button reverted back to a tab; no gear icon)
+  const campId = state.activeCampaignId ?? 'camp-1';
+  const combat = (state.combatByCampaign?.[campId] ?? null) as any;
+  const combatHero = useMemo(() => {
+    if (!combat) return null;
+    return (state.heroes ?? []).find((h: any) => String(h.id) === String(combat.heroId)) ?? null;
+  }, [combat, state.heroes]);
+  const combatDerived = useMemo(() => {
+    if (!combatHero) return null;
+    const tnBase = combat?.options?.striderMode ? 18 : 20;
+    return computeDerived(combatHero, tnBase);
+  }, [combatHero, combat?.options?.striderMode]);
+
+  const toast = (message: string, type: 'info'|'success'|'warning'|'error' = 'info') => {
+    (window as any).__torcToast?.({ message, type, durationMs: 4000 });
+  };
+
+  const dispatchCombat = (ev: any) => {
+    setState((prev: any) => {
+      const current = (prev.combatByCampaign?.[campId] ?? null) as any;
+      const next = combatReducer(current, ev);
+      const by = { ...(prev.combatByCampaign ?? {}) };
+      by[campId] = next;
+      return { ...prev, combatByCampaign: by };
+    });
+  };
+
+  const handleExport = () => {
+    const blob = exportToTorc(state);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `tor-companion-${new Date().toISOString().slice(0,10)}.torc`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImport = async (file: File | undefined) => {
+    if (!file) return;
+    try {
+      const next = await importFromTorc(file);
+      set(next);
+      toast('Imported!', 'success');
+    } catch (err:any) {
+      toast(err?.message ?? 'Import failed.', 'error');
+    }
+  };
+
+  const engagedEnemyIds = combat?.engagement?.heroToEnemies?.[String(combat?.heroId ?? '')] ?? [];
+  const engagedEnemies = combat?.enemies?.filter((e: any) => engagedEnemyIds.includes(e.id)) ?? [];
+  const canFreeEscape = combat?.hero?.stance === 'rearward';
+  const canRollEscape = combat?.hero?.stance === 'defensive' && engagedEnemies.length > 0 && (combatDerived?.equippedWeapons?.length ?? 0) > 0;
+  const showEscapeFab = !!combat && (combat.hero.stance === 'rearward' || combat.hero.stance === 'skirmish');
+
+  const handleEscapeFab = () => {
+    if (!combat || !combatHero || !combatDerived) return;
+    if (combat.actionsUsed?.hero) {
+      toast('You already used your main action this round.', 'warning');
+      return;
+    }
+    if (canFreeEscape) {
+      dispatchCombat({ type: 'ATTEMPT_ESCAPE', mode: 'FREE' });
+      toast('Escaped combat (Rearward stance).', 'success');
+      return;
+    }
+    if (!canRollEscape) {
+      toast('Escape is not available in this stance.', 'warning');
+      return;
+    }
+    const weapon: any = combatDerived.equippedWeapons?.[0];
+    const prof = String(weapon?.proficiency ?? '').toLowerCase();
+    const rating = (() => {
+      const cp = combatDerived?.combatProficiencies ?? {};
+      if (prof.startsWith('axe')) return cp.axes ?? 0;
+      if (prof.startsWith('bow')) return cp.bows ?? 0;
+      if (prof.startsWith('spear')) return cp.spears ?? 0;
+      if (prof.startsWith('sword')) return cp.swords ?? 0;
+      return 0;
+    })();
+    const target = engagedEnemies[0];
+    const tn = Number(target?.parry ?? 0) || 0;
+    const r = rollTOR({ dice: rating, tn, weary: !!combatHero?.conditions?.weary });
+    dispatchCombat({ type: 'ATTEMPT_ESCAPE', mode: 'ROLL', rollPassed: !!r.passed });
+    dispatchCombat({ type: 'LOG', text: `Escape roll (${weapon?.name ?? 'weapon'}): ${r.passed ? 'PASS' : 'FAIL'} (TN ${tn}).` });
+    const toastMsg = `Escape roll (${weapon?.name ?? 'weapon'}): ${r.passed ? 'PASS' : 'FAIL'} (TN ${tn}).`;
+    toast(toastMsg, r.passed ? 'success' : 'warning');
+    (window as any).__torcLogRollHtml?.(`Escape - ${r.passed ? 'PASS' : 'FAIL'}. TN ${tn}.`);
+  };
 
   const header = useMemo(() => {
     return (
@@ -51,34 +141,18 @@ export default function App() {
           <div className="muted small">Local-only by default. You can export/import your data anytime.</div>
         </div>
         <div className="row" style={{ alignItems: 'center' }}>
-          <button className="btn" onClick={() => {
-            const blob = exportToTorc(state);
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `tor-companion-${new Date().toISOString().slice(0,10)}.torc`;
-            a.click();
-            URL.revokeObjectURL(url);
-          }}>Export</button>
-
-          <label className="btn" style={{cursor:'pointer'}}>
-            Import
-            <input type="file" accept=".torc" style={{display:'none'}} onChange={async (e)=>{
-              const f = e.target.files?.[0];
-              if (!f) return;
-              try {
-                const next = await importFromTorc(f);
-                set(next);
-                alert('Imported!');
-              } catch (err:any) {
-                alert(err?.message ?? 'Import failed.');
-              } finally {
-                (e.target as HTMLInputElement).value = '';
-              }
-            }} />
-          </label>
-
-          {/* Reset removed (too risky) */}
+          <button
+            type="button"
+            className="iconBtn"
+            aria-label="Open import/export panel"
+            title="Import/Export"
+            onClick={() => setDataPanelOpen(true)}
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.07.07a2 2 0 0 1-1.42 3.41h-.2a2 2 0 0 1-1.82-1.1 1.65 1.65 0 0 0-1.51-.9 1.65 1.65 0 0 0-1.5.9 2 2 0 0 1-1.82 1.1h-.2a2 2 0 0 1-1.42-3.41l.07-.07a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.5-1.05 2 2 0 0 1-2-2v-.2a2 2 0 0 1 2-2 1.65 1.65 0 0 0 1.5-1.05 1.65 1.65 0 0 0-.33-1.82l-.07-.07a2 2 0 0 1 1.42-3.41h.2a2 2 0 0 1 1.82 1.1 1.65 1.65 0 0 0 1.5.9 1.65 1.65 0 0 0 1.51-.9 2 2 0 0 1 1.82-1.1h.2a2 2 0 0 1 1.42 3.41l-.07.07a1.65 1.65 0 0 0-.33 1.82 1.65 1.65 0 0 0 1.5 1.05 2 2 0 0 1 2 2v.2a2 2 0 0 1-2 2 1.65 1.65 0 0 0-1.5 1.05Z" />
+            </svg>
+          </button>
         </div>
       </div>
     );
@@ -92,7 +166,16 @@ export default function App() {
   );
 
   // Global roll logger hook (dice + oracles) -> active journal chapter (works from any tab).
+  
+  const theme = (state as any)?.settings?.theme === 'corebook' ? 'corebook' : 'dark';
+
   useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    const meta = document.querySelector('meta[name="theme-color"]') as HTMLMetaElement | null;
+    if (meta) meta.content = theme === 'corebook' ? '#F5F1E8' : '#0b0f17';
+  }, [theme]);
+
+useEffect(() => {
     (window as any).__torcLogRollHtml = (html: string) => {
       const clean = String(html ?? '').trim();
       if (!clean) return;
@@ -183,12 +266,36 @@ export default function App() {
       {!isCampaignLanding ? (
         <>
           <div className="fab-row">
+            {showEscapeFab ? (
+              <button type="button" className="fab-btn" aria-label="Escape" title="Escape" onClick={handleEscapeFab} disabled={combat?.actionsUsed?.hero || (!canFreeEscape && !canRollEscape)}>
+                🏃
+              </button>
+            ) : null}
+            {combat ? (
+              <button type="button" className="fab-btn" aria-label="Next round" title="Next round" onClick={() => dispatchCombat({ type: 'ROUND_BEGIN' })}>
+                ⏭
+              </button>
+            ) : null}
             <FloatingDieButton onClick={() => setDiceSheetOpen(true)} />
             <FloatingOracleButton onClick={() => setOracleOpen(true)} />
           </div>
           <FloatingDiceSheet state={state} open={diceSheetOpen} onClose={() => setDiceSheetOpen(false)} />
           <OracleSidePanel open={oracleOpen} onClose={() => setOracleOpen(false)}>
             <OraclesPanel state={state} setState={set} compact />
+          </OracleSidePanel>
+          <OracleSidePanel open={dataPanelOpen} onClose={() => setDataPanelOpen(false)} title="Import/Export" ariaLabel="Import and export">
+            <div className="small muted">Export your campaign data or import a saved .torc file.</div>
+            <div className="row" style={{ gap: 10, marginTop: 12, flexWrap: 'wrap' }}>
+              <button className="btn" onClick={handleExport}>Export</button>
+              <label className="btn" style={{cursor:'pointer'}}>
+                Import
+                <input type="file" accept=".torc" style={{display:'none'}} onChange={async (e)=>{
+                  const f = e.target.files?.[0];
+                  await handleImport(f);
+                  (e.target as HTMLInputElement).value = '';
+                }} />
+              </label>
+            </div>
           </OracleSidePanel>
         </>
       ) : null}
