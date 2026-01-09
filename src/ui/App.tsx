@@ -62,12 +62,15 @@ export default function App() {
     (window as any).__torcToast?.({ message, type, durationMs: 4000 });
 
   useEffect(() => {
-    document.documentElement.dataset.theme = theme;
+    // Apply theme attribute + helper class for maximum CSS compatibility.
+    document.documentElement.setAttribute('data-theme', theme);
+    document.body.classList.toggle('theme-corebook', theme === 'corebook');
+
     const meta = document.querySelector('meta[name="theme-color"]') as HTMLMetaElement | null;
     if (meta) meta.content = theme === 'corebook' ? '#F5F1E8' : '#0b0f17';
   }, [theme]);
 
-  };
+};
 
   const dispatchCombat = (ev: any) => {
     setState((prev: any) => {
@@ -296,6 +299,8 @@ export default function App() {
                     className={`seg ${theme === 'dark' ? 'active' : ''}`}
                     onClick={() => {
                       set((prev) => ({ ...prev, settings: { ...(prev.settings ?? {}), theme: 'dark' } } as any));
+                      document.documentElement.setAttribute('data-theme', 'dark');
+                      document.body.classList.toggle('theme-corebook', false);
                     }}
                   >Dark</button>
                   <button
@@ -303,6 +308,8 @@ export default function App() {
                     className={`seg ${theme === 'corebook' ? 'active' : ''}`}
                     onClick={() => {
                       set((prev) => ({ ...prev, settings: { ...(prev.settings ?? {}), theme: 'corebook' } } as any));
+                      document.documentElement.setAttribute('data-theme', 'corebook');
+                      document.body.classList.toggle('theme-corebook', true);
                     }}
                   >Corebook</button>
                 </div>

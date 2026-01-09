@@ -564,3 +564,16 @@ background: #F5F1E8 !important;
 
 :root[data-theme="corebook"] .iconBtn{ color: rgba(43,43,43,.92); }
 :root[data-theme="corebook"] .iconBtn:hover{ background: rgba(155,45,45,.08); }
+
+
+/* Compatibility: reinforce theme application if other rules override body styles */
+html[data-theme="corebook"] body,
+body.theme-corebook{
+  background: #F5F1E8 !important;
+  color: #2B2B2B !important;
+}
+html[data-theme="corebook"] .card,
+body.theme-corebook .card{
+  background: #E9E2D2;
+  border: 1px solid #C9B8A3;
+}
