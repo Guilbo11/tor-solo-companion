@@ -140,8 +140,8 @@ canvas { border-radius: 14px; border: 1px solid #1f2a3a; background: #0b0f14; }
 
 /* --- Mobile-first hero sheet (PocketForge-ish) --- */
 .innerTabs{ display:flex; gap:8px; flex-wrap:wrap; margin: 6px 0 12px; }
-.innerTab{ border:1px solid rgba(255,255,255,0.18); background: rgba(255,255,255,0.06); color:#fff; padding:6px 10px; border-radius:10px; cursor:pointer; }
-.innerTab.active{ background: rgba(255,255,255,0.18); }
+.innerTab{ padding:6px 10px; border-radius:10px; cursor:pointer; }
+.innerTab.active{ filter: brightness(1.08); }
 
 .grid2{ display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .grid3{ display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }

@@ -818,7 +818,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                     {(['Sheet','Skills','Gear','Experience'] as const).map(t => (
                       <button
                         key={t}
-                        className={"innerTab " + (activeTab===t ? 'active' : '')}
+                        className={"btn innerTab " + (activeTab===t ? 'active' : '')}
                         onClick={()=>setHeroTab(prev => ({ ...prev, [hero.id]: t }))}
                       >{t}</button>
                     ))}
@@ -3153,7 +3153,7 @@ function AttackSection({ hero, derived, updateHero, recentEnemyIds, onEnemyUsed 
           <div style={{pointerEvents:'auto', background:'#11161f', border:'1px solid #2a2f3a', borderRadius: 12, padding:'10px 12px', boxShadow:'0 8px 24px rgba(0,0,0,0.35)', display:'flex', gap:10, alignItems:'center'}}>
             <div className="small"><b>Next attack</b> ({seq.remaining} left)</div>
             <button className="btn" onClick={()=>setEnemyRollOpen(true)}>Next attack</button>
-            <button className="btn btn-danger" onClick={()=>{ setSeq(null); setEnemyRollOpen(false); setSpecialPickerOpen(false); pendingRef.current=null; }}>Skip</button>
+            <button className="btn btn-danger" onClick={()=>{ setSeq(null); setEnemyRollOpen(false); setSpecialPickerOpen(false); pendingRef.current=null; }}>Next Round</button>
           </div>
         </div>
       ) : null}
