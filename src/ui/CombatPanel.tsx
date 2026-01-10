@@ -175,18 +175,28 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
     updateHeroInventory(heroIdToUpdate, (inv) => inv.map((it: any) => String(it?.id) === String(itemId) ? { ...it, dropped: !!dropped, equipped: dropped ? false : it.equipped } : it));
   };
 
-  const buildCombatJournalEntry = (current: CombatState, escaped: boolean, enemiesLeft: boolean) => {
+  const buildCombatJournalEntry = (current: CombatState, hero: any, escaped: boolean, enemiesLeft: boolean) => {
     const totalEnemies = (current.enemies ?? []).length;
     const defeatedCount = (current.enemies ?? []).filter((e) => (Number(e.endurance?.current ?? 0) || 0) <= 0).length;
     const rounds = Number(current.round ?? 1) || 1;
     const outcome = enemiesLeft
       ? (escaped ? 'Escaped' : 'Ended with enemies remaining')
       : 'Victory';
+    const heroEnd = Number(hero?.endurance?.current ?? 0) || 0;
+    const heroEndMax = Number(hero?.endurance?.max ?? hero?.endurance?.maximum ?? 0) || 0;
+    const heroHope = Number(hero?.hope?.current ?? hero?.hope ?? 0) || 0;
+    const heroHopeMax = Number(hero?.hope?.max ?? hero?.hopeMax ?? 0) || 0;
+    const lastLog = (current.log ?? []).slice(-1)[0]?.text ?? '';
+    const summary = [
+      `Outcome: ${outcome}`,
+      `Rounds: ${rounds}`,
+      `Defeated: ${defeatedCount}/${totalEnemies}`,
+      `Hero Endurance: ${heroEnd}/${heroEndMax}`,
+      `Hope: ${heroHope}/${heroHopeMax}`,
+      lastLog ? `Last: ${lastLog}` : '',
+    ].filter(Boolean).join(' • ');
     const summaryLines = [
-      `<div><b>Combat Summary</b></div>`,
-      `<div>Outcome: ${escapeHtml(outcome)}</div>`,
-      `<div>Rounds: ${escapeHtml(String(rounds))}</div>`,
-      `<div>Enemies defeated: ${escapeHtml(String(defeatedCount))}/${escapeHtml(String(totalEnemies))}</div>`,
+      `<div><b>Combat Summary</b> — ${escapeHtml(summary)}</div>`,
     ];
 
     const logLines = (current.log ?? [])
@@ -520,6 +530,16 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
     dispatch({ type: 'START_COMBAT', campaignId: campId, heroId: pickedHeroId, enemies, options, surprise } as any);
   };
 
+  const combatSummaryLoggedRef = React.useRef<Set<string>>(new Set());
+
+  const ensureCombatSummaryLogged = (current: CombatState, hero: any, escaped: boolean, enemiesLeft: boolean) => {
+    if (!current?.id) return;
+    if (combatSummaryLoggedRef.current.has(current.id)) return;
+    const summaryHtml = buildCombatJournalEntry(current, hero, escaped, enemiesLeft);
+    window.dispatchEvent(new CustomEvent('torc:journal-insert-html', { detail: { html: summaryHtml, campaignId: campId } }));
+    combatSummaryLoggedRef.current.add(current.id);
+  };
+
   const endCombat = () => {
     if (!combat) return;
     const enemiesLeft = (combat.enemies ?? []).some(e => (Number(e.endurance?.current ?? 0) || 0) > 0);
@@ -556,8 +576,7 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
       }
     }
 
-    const summaryHtml = buildCombatJournalEntry(combat, escaped, enemiesLeft);
-    window.dispatchEvent(new CustomEvent('torc:journal-insert-html', { detail: { html: summaryHtml, campaignId: campId } }));
+    ensureCombatSummaryLogged(combat, activeHero, escaped, enemiesLeft);
 
     setState((prev: any) => {
       const by = { ...(prev.combatByCampaign ?? {}) };
