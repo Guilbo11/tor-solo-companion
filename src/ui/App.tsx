@@ -283,12 +283,12 @@ export default function App() {
       {!isCampaignLanding ? (
         <>
           <div className="fab-row">
-            {showEscapeFab ? (
+            {tab === 'Combat' && showEscapeFab ? (
               <button type="button" className="fab-btn" aria-label="Escape" title="Escape" onClick={handleEscapeFab} disabled={combat?.actionsUsed?.hero || (!canFreeEscape && !canRollEscape)}>
                 🏃
               </button>
             ) : null}
-            {combat ? (
+            {tab === 'Combat' && combat ? (
               <button type="button" className="fab-btn" aria-label="Next round" title="Next round" onClick={() => dispatchCombat({ type: 'ROUND_BEGIN' })}>
                 ⏭
               </button>
