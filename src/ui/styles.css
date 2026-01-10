@@ -1030,43 +1030,7 @@ body.theme-corebook .h2::before{
 }
 
 
-/* Chapter separators: double rule + micro motif */
-html[data-theme="corebook"] hr,
-:root[data-theme="corebook"] hr,
-body.theme-corebook hr{
-  border: none;
-  height: 10px;
-  margin: 18px 0;
-  background:
-    linear-gradient(to right, transparent 0%, rgba(155,45,45,.55) 12%, rgba(155,45,45,.55) 88%, transparent 100%);
-  position: relative;
-}
-
-html[data-theme="corebook"] hr::before,
-:root[data-theme="corebook"] hr::before,
-body.theme-corebook hr::before{
-  content: "";
-  position: absolute;
-  left: 6%;
-  right: 6%;
-  top: 2px;
-  height: 1px;
-  background: rgba(155,45,45,.40);
-}
-
-html[data-theme="corebook"] hr::after,
-:root[data-theme="corebook"] hr::after,
-body.theme-corebook hr::after{
-  content: "❦";
-  position: absolute;
-  left: 50%;
-  top: 0px;
-  transform: translateX(-50%);
-  color: rgba(155,45,45,.55);
-  font-size: 14px;
-  background: var(--cb-parchment);
-  padding: 0 8px;
-}
+/* Chapter separators: double rule (no center motif) */
 
 
 @media (max-width: 420px){
@@ -1130,4 +1094,10 @@ html[data-theme="corebook"] .h1{
     padding-left: 10px;
     padding-right: 10px;
   }
+}
+
+/* COREBOOK HR: ensure no center symbol */
+html[data-theme="corebook"] hr::after,
+body.theme-corebook hr::after{
+  content: none !important;
 }

@@ -635,7 +635,7 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
       <div style={{ padding: 14 }}>
         <div className="h2">Combat</div>
         <div className="small muted" style={{ marginTop: 4 }}>
-          This is a first stable combat loop scaffold: stance → engagement → actions. Enemy attacks are supported ("From Enemy"-style).
+          
         </div>
 
         <div className="card" style={{ marginTop: 12 }}>
