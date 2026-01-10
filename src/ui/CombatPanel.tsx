@@ -66,6 +66,15 @@ function profKey(p: string): 'axes'|'bows'|'spears'|'swords'|'brawling'|null {
   return null;
 }
 
+function escapeHtml(value: string): string {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 
 function canUseWeaponInStance(weapon: any, stance: Stance, seized: boolean): boolean {
   // If seized, the hero can only use Brawling in close combat stances.
@@ -164,6 +173,29 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
 
   const setDroppedByItemId = (heroIdToUpdate: string, itemId: string, dropped: boolean) => {
     updateHeroInventory(heroIdToUpdate, (inv) => inv.map((it: any) => String(it?.id) === String(itemId) ? { ...it, dropped: !!dropped, equipped: dropped ? false : it.equipped } : it));
+  };
+
+  const buildCombatJournalEntry = (current: CombatState, escaped: boolean, enemiesLeft: boolean) => {
+    const totalEnemies = (current.enemies ?? []).length;
+    const defeatedCount = (current.enemies ?? []).filter((e) => (Number(e.endurance?.current ?? 0) || 0) <= 0).length;
+    const rounds = Number(current.round ?? 1) || 1;
+    const outcome = enemiesLeft
+      ? (escaped ? 'Escaped' : 'Ended with enemies remaining')
+      : 'Victory';
+    const summaryLines = [
+      `<div><b>Combat Summary</b></div>`,
+      `<div>Outcome: ${escapeHtml(outcome)}</div>`,
+      `<div>Rounds: ${escapeHtml(String(rounds))}</div>`,
+      `<div>Enemies defeated: ${escapeHtml(String(defeatedCount))}/${escapeHtml(String(totalEnemies))}</div>`,
+    ];
+
+    const logLines = (current.log ?? [])
+      .map((l) => `<div>${escapeHtml(String(l.text ?? ''))}</div>`)
+      .join('');
+    const detailsBlock = logLines
+      ? `<details><summary>Combat log</summary>${logLines}</details>`
+      : '';
+    return `${summaryLines.join('')}${detailsBlock}`;
   };
 
   // --- Enemy attack modal (re-uses the "From Enemy" logic but scoped to combat) ---
@@ -524,6 +556,9 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
       }
     }
 
+    const summaryHtml = buildCombatJournalEntry(combat, escaped, enemiesLeft);
+    window.dispatchEvent(new CustomEvent('torc:journal-insert-html', { detail: { html: summaryHtml, campaignId: campId } }));
+
     setState((prev: any) => {
       const by = { ...(prev.combatByCampaign ?? {}) };
       by[campId] = null;
@@ -587,7 +622,9 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
       return;
     }
     if (defeatedToastRef.current.lastAlive > 0 && aliveCount === 0) {
-      toast('All enemies defeated!', 'success');
+      const message = 'All enemies are defeated!';
+      toast(message, 'success');
+      dispatch({ type: 'LOG', text: message });
     }
     defeatedToastRef.current.lastAlive = aliveCount;
   }, [combat?.id, enemiesAlive.length]);
