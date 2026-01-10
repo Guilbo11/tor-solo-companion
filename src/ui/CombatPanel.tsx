@@ -206,7 +206,6 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
   const [ovSummary, setOvSummary] = useState('');
   const [heroAttackIsOpeningVolley, setHeroAttackIsOpeningVolley] = useState(false);
   const [heroAttackDropItemId, setHeroAttackDropItemId] = useState<string | null>(null);
-  const [enemyAttackIsOpeningVolley, setEnemyAttackIsOpeningVolley] = useState(false);
 
   const beginEnemyAttack = (forceEnemyId?: string) => {
     if (!combat) return;
@@ -238,7 +237,7 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
     const dice = Math.max(0, baseDice + pen);
     const tn = heroParryTN;
     const r = rollTORAdversary({ dice, featMode: enemyFeatMode, weary: enemyWeary, tn });
-    pendingRef.current = { enemy, weapon, roll: r, tn };
+    pendingRef.current = { enemy, weapon, roll: r, tn, openingVolley: false };
 
     if ((r.icons ?? 0) > 0) {
       // Auto enemies: if Pierce would turn a normal result into a Piercing Blow, choose it.
@@ -276,6 +275,7 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
     if (!ctx) return;
     const enemy: CombatEnemy = ctx.enemy;
     const w = ctx.weapon;
+    const openingVolley = !!ctx.openingVolley;
     // Update enemy position based on the type of attack made.
     // If the enemy attacks with a ranged weapon, they are considered to be at distance; otherwise melee.
     try {
@@ -414,7 +414,7 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
       { type: 'LOG', text: txt, data: { enemyId: enemy.id, weapon: w.name, total, tn, specials: picks } },
       // Enemy position is determined by the type of their last attack (melee vs ranged).
       { type: 'SET_ENEMY_POSITION', enemyId: enemy.id, position: String(w?.name ?? '').toLowerCase().includes('bow') ? 'ranged' : 'melee' },
-      ...(enemyAttackIsOpeningVolley ? [] : [{ type: 'ENEMY_ACTION_USED', enemyId: enemy.id, kind: 'attack', data: { weapon: w.name } }]),
+      ...(openingVolley ? [] : [{ type: 'ENEMY_ACTION_USED', enemyId: enemy.id, kind: 'attack', data: { weapon: w.name } }]),
     ]);
 
     // Toast (4s, colored) like elsewhere.
@@ -423,9 +423,8 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
 
     pendingRef.current = null;
     setSpecialPickerOpen(false);
-    if (enemyAttackIsOpeningVolley) {
+    if (openingVolley) {
       setOvEnemyDone((prev) => ({ ...prev, [String(enemy.id)]: true }));
-      setEnemyAttackIsOpeningVolley(false);
     }
   };
 
@@ -559,7 +558,9 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
   const engageableEnemies = (() => {
     if (!combat) return [] as any[];
     if (combat.hero.stance === 'rearward' || combat.hero.stance === 'skirmish') return [] as any[];
-    return enemiesAlive.filter((e: any) => String(e.position ?? 'melee') !== 'ranged');
+    const meleeAlive = enemiesAlive.filter((e: any) => String(e.position ?? 'melee') !== 'ranged');
+    if (meleeAlive.length === 0) return enemiesAlive;
+    return meleeAlive;
   })();
 
   const engageCounts = (() => {
@@ -1103,22 +1104,9 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
               const req = pos === 'ranged'
                 ? (combat.options.striderMode ? 'Rearward or Skirmish' : 'Rearward')
                 : 'Forward/Open/Defensive';
-              const canEngageNow = (combat.hero.stance !== 'rearward' && combat.hero.stance !== 'skirmish' && String(pos) !== 'ranged');
               return (
                 <div key={e.id} className="row" style={{ justifyContent: 'space-between', gap: 10, alignItems: 'center', padding: '2px 0' }}>
                   <div className="small">• {e.name} — {req}</div>
-                  {canEngageNow ? (
-                    <button
-                      className="btn btn-ghost"
-                      style={{ padding: '4px 8px' }}
-                      onClick={() => {
-                        setEngageSelectedIds([String(e.id)]);
-                        applyEngagementSelection([String(e.id)]);
-                      }}
-                    >
-                      Engage
-                    </button>
-                  ) : null}
                 </div>
               );
             }) : <div className="small">• (none)</div>}
@@ -1603,12 +1591,11 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
                     return n.includes('bow') || n.includes('ranged') || n.includes('sling') || n.includes('javelin');
                   }) ?? profs[0];
                   if (!weapon) return;
-                  setEnemyAttackIsOpeningVolley(true);
                   setEnemyAttackEnemyId(en.id);
                   setEnemyAttackWeaponName(weapon.name);
                   const tn = heroParryTN;
                   const r = rollTORAdversary({ dice: Number(weapon.rating ?? 0), featMode: 'normal', weary: false, tn });
-                  pendingRef.current = { enemy: en, weapon, roll: r, tn };
+                  pendingRef.current = { enemy: en, weapon, roll: r, tn, openingVolley: true };
                   if ((r.icons ?? 0) > 0) {
                     if (combat.options.enemyAutomation === 'auto') {
                       // reuse the same auto-pick logic in startEnemyAttackRoll
