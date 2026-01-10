@@ -1153,7 +1153,23 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
                         type="checkbox"
                         checked={checked}
                         onChange={() => {
-                          setEngageSelectedIds((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
+                          setEngageSelectedIds((prev) => {
+                            const next = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
+                            // Enforce limits: up to 3 human-sized, up to 2 large.
+                            let human = 0;
+                            let large = 0;
+                            for (const nid of next) {
+                              const en = engageableEnemies.find((x: any) => String(x.id) === String(nid));
+                              if (!en) continue;
+                              if (String(en.size ?? 'human') === 'large') large += 1;
+                              else human += 1;
+                            }
+                            if (human > 3 || large > 2) {
+                              toast('Engagement limit exceeded (max 3 human, max 2 large).', 'warning');
+                              return prev;
+                            }
+                            return next;
+                          });
                         }}
                       />
                       <div style={{ flex: 1 }}>
@@ -1181,7 +1197,37 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
       ) : null}
 
       <div className="card" style={{ marginTop: 12 }}>
-        <div className="label">Engaged with</div>
+        <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+          <div className="label">Engaged with</div>
+          {engageableEnemies.length ? (
+            <button
+              className="btn engageBtn"
+              onClick={() => {
+                // Start from current engagement selection
+                setEngageSelectedIds(engagedEnemyIds);
+                setEngageOpen(true);
+              }}
+            >
+              Engage
+            </button>
+          ) : (
+            <button className="btn engageBtn" disabled title="Engagement is available in Forward/Open/Defensive stances only.">Engage</button>
+          )}
+        </div>
+        <div className="small muted" style={{ marginTop: 6 }}>
+          {(() => {
+            let human = 0;
+            let large = 0;
+            for (const id of engagedEnemyIds) {
+              const en = (combat?.enemies ?? []).find((x: any) => String(x.id) === String(id));
+              if (!en) continue;
+              if (String(en.size ?? 'human') === 'large') large += 1;
+              else human += 1;
+            }
+            return `${human}/3 humanoid • ${large}/2 large`;
+          })()}
+        </div>
+
         {engagedEnemies.length ? (
           <div className="list" style={{ marginTop: 8 }}>
             {engagedEnemies.map(e => (

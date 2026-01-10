@@ -1101,3 +1101,12 @@ html[data-theme="corebook"] hr::after,
 body.theme-corebook hr::after{
   content: none !important;
 }
+
+/* COREBOOK ENGAGE BUTTON: ensure Engage matches Roll button styling */
+html[data-theme="corebook"] .engageBtn,
+:root[data-theme="corebook"] .engageBtn,
+body.theme-corebook .engageBtn{
+  background: var(--cb-red, #9B2D2D) !important;
+  border: 1px solid rgba(90,20,20,.75) !important;
+  color: #F5F1E8 !important;
+}
