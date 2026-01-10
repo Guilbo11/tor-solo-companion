@@ -540,13 +540,6 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
     combatSummaryLoggedRef.current.add(current.id);
   };
 
-  useEffect(() => {
-    if (!combat || combat.phase !== 'combatEnd') return;
-    const enemiesLeft = (combat.enemies ?? []).some(e => (Number(e.endurance?.current ?? 0) || 0) > 0);
-    const escaped = (combat.log ?? []).some(l => String(l.text ?? '').toLowerCase().includes('escaped combat'));
-    ensureCombatSummaryLogged(combat, activeHero, escaped, enemiesLeft);
-  }, [combat?.id, combat?.phase, activeHero]);
-
   const endCombat = () => {
     if (!combat) return;
     const enemiesLeft = (combat.enemies ?? []).some(e => (Number(e.endurance?.current ?? 0) || 0) > 0);
