@@ -144,7 +144,7 @@ export default function App() {
     })();
     const target = engagedEnemies[0];
     const tn = Number(target?.parry ?? 0) || 0;
-    const r = rollTOR({ dice: rating, tn, weary: !!combatHero?.conditions?.weary });
+    const r = rollTOR({ dice: rating, tn, weary: !!combatHero?.conditions?.weary, miserable: !!combatHero?.conditions?.miserable });
     dispatchCombat({ type: 'ATTEMPT_ESCAPE', mode: 'ROLL', rollPassed: !!r.passed });
     dispatchCombat({ type: 'LOG', text: `Escape roll (${weapon?.name ?? 'weapon'}): ${r.passed ? 'PASS' : 'FAIL'} (TN ${tn}).` });
     const toastMsg = `Escape roll (${weapon?.name ?? 'weapon'}): ${r.passed ? 'PASS' : 'FAIL'} (TN ${tn}).`;

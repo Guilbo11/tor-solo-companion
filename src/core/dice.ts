@@ -11,6 +11,7 @@ export type RollOptions = {
   // Back-compat (older UI): favoured -> featMode='favoured'
   favoured?: boolean;
   weary?: boolean;       // (prototype) if weary, 1-3 success dice count as 0
+  miserable?: boolean;   // if miserable, Eye (Sauron) is automatic failure
   tn?: number;           // optional target number for success/fail
 };
 
@@ -131,10 +132,11 @@ export function rollTOR(opts: RollOptions): RollResult {
   const total = featDieValue(feat) + successSum;
   const isAutomaticSuccess = feat.type === 'Gandalf';
   const isEye = feat.type === 'Eye';
+  const isAutomaticFailure = !!opts.miserable && isEye;
 
   let passed: boolean | undefined = undefined;
   if (typeof opts.tn === 'number') {
-    passed = isAutomaticSuccess ? true : total >= opts.tn;
+    passed = isAutomaticFailure ? false : (isAutomaticSuccess ? true : total >= opts.tn);
   }
 
   let degrees: RollResult['degrees'] = undefined;

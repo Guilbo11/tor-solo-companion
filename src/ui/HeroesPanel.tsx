@@ -1257,7 +1257,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                                       const parry = Number.parseInt(String(txt).trim() || '0', 10);
                                       const parryMod = Number.isFinite(parry) ? parry : 0;
                                       const tn = Number(derived?.strengthTN ?? 0) + parryMod;
-                                      const rr = rollTOR({ dice: cur, featMode: 'normal', weary: !!hero.conditions?.weary, tn });
+                                      const rr = rollTOR({ dice: cur, featMode: 'normal', weary: !!hero.conditions?.weary, miserable: !!hero.conditions?.miserable, tn });
                                       const html = `<div>${formatTorRoll(rr, { label: r.label, tn })}</div>`;
                                       try { (window as any).__torcLogRollHtml?.(html); } catch {}
                                       const plain = String(html).replace(/<[^>]*>/g,'').replace(/\s+/g,' ').trim();
@@ -1350,7 +1350,7 @@ export default function HeroesPanel({ state, setState, onOpenCampaign, mode = 'm
                                           <button className="btn btn-ghost" disabled={!canEdit || rating>=maxAllowed || !canIncByBudget} onClick={()=>updateHero(hero.id,{skillRatings:{...(hero.skillRatings??{}),[s.id]:Math.min(maxAllowed, rating+1)}})}>+</button>
                                           <button className="btn btn-ghost" onClick={()=>{
                                             const tn = getSkillTN(hero, s.id, tnBaseHero);
-                                            const rr = rollTOR({ dice: Number(rating), featMode: isFav ? 'favoured' : 'normal', weary: !!hero.conditions?.weary, tn });
+                                            const rr = rollTOR({ dice: Number(rating), featMode: isFav ? 'favoured' : 'normal', weary: !!hero.conditions?.weary, miserable: !!hero.conditions?.miserable, tn });
                                             const html = `<div>${formatTorRoll(rr, { label: s.name, tn })}</div>`;
                                             try { (window as any).__torcLogRollHtml?.(html); } catch {}
                                             const plain = String(html).replace(/<[^>]*>/g,'').replace(/\s+/g,' ').trim();
@@ -2820,7 +2820,7 @@ function AttackSection({ hero, derived, updateHero, recentEnemyIds, onEnemyUsed 
     let extraToast = '';
     if (pb) {
       const injTN = Number(w.injury ?? 0) || 0;
-      const prRaw = rollTOR({ dice: heroProtectionDice, featMode: 'normal', weary: !!hero.conditions?.weary, tn: injTN });
+      const prRaw = rollTOR({ dice: heroProtectionDice, featMode: 'normal', weary: !!hero.conditions?.weary, miserable: !!hero.conditions?.miserable, tn: injTN });
       const bonus = Number((derived as any)?.protectionPiercingBonus ?? 0) || 0;
       const pr = bonus ? ({ ...prRaw, total: (prRaw.total ?? 0) + bonus, passed: ((prRaw.total ?? 0) + bonus) >= injTN }) : prRaw;
       // Custom formatting for the piercing resistance roll:
@@ -2969,7 +2969,7 @@ function AttackSection({ hero, derived, updateHero, recentEnemyIds, onEnemyUsed 
                       : null;
 
                     const tn = Number(derived?.strengthTN ?? 0) + parryMod;
-                    const r = rollTOR({ dice, featMode, weary, tn });
+                    const r = rollTOR({ dice, featMode, weary, miserable: !!hero?.conditions?.miserable, tn });
                     // Gandalf = guaranteed success + PB display
                     const isGandalf = r.feat.type === 'Gandalf';
                     const pbThreshold = Number((w as any)?.piercingThreshold ?? 10);

@@ -402,7 +402,7 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
       const injTN = Number(w.injury ?? 0) || 0;
       const protectionDice = Number((derived as any)?.protection?.total ?? 0) || 0;
       const bonus = Number((derived as any)?.protectionPiercingBonus ?? 0) || 0; // Close-fitting etc.
-      const prRaw = rollTOR({ dice: protectionDice, featMode: 'normal', weary: !!activeHero?.conditions?.weary, tn: injTN });
+      const prRaw = rollTOR({ dice: protectionDice, featMode: 'normal', weary: !!activeHero?.conditions?.weary, miserable: !!activeHero?.conditions?.miserable, tn: injTN });
       const pr = bonus
         ? ({ ...prRaw, total: (prRaw.total ?? 0) + bonus, passed: ((prRaw.total ?? 0) + bonus) >= injTN } as any)
         : prRaw;
@@ -509,7 +509,7 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
         // Enemy ambushes: Awareness check.
         const rating = Number(h?.skillRatings?.awareness ?? 0) || 0;
         const fav = (d.favouredSkillSet as any)?.has ? (d.favouredSkillSet as any).has('awareness') : false;
-        const rr = rollTOR({ dice: rating, tn: d.strengthTN, featMode: fav ? 'favoured' : 'normal', weary: !!h.conditions?.weary });
+        const rr = rollTOR({ dice: rating, tn: d.strengthTN, featMode: fav ? 'favoured' : 'normal', weary: !!h.conditions?.weary, miserable: !!h.conditions?.miserable });
         const passed = typeof rr.passed === 'boolean' ? rr.passed : (rr.isAutomaticSuccess || rr.total >= d.strengthTN);
         toast(`Awareness — ${passed ? 'PASS' : 'FAIL'}`, passed ? 'success' : 'warning');
         if (!passed) surprise = { heroCaughtOffGuard: true };
@@ -518,7 +518,7 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
         const rating = Number(h?.skillRatings?.stealth ?? 0) || 0;
         const fav = (d.favouredSkillSet as any)?.has ? (d.favouredSkillSet as any).has('stealth') : false;
         const tn = getSkillTN(h, 'stealth', tnBase);
-        const rr = rollTOR({ dice: rating, tn, featMode: fav ? 'favoured' : 'normal', weary: !!h.conditions?.weary });
+        const rr = rollTOR({ dice: rating, tn, featMode: fav ? 'favoured' : 'normal', weary: !!h.conditions?.weary, miserable: !!h.conditions?.miserable });
         const html = formatTorRoll(rr, { label: 'Stealth', tn });
         const plain = String(html).replace(/<[^>]*>/g,'').replace(/\s+/g,' ').trim();
         const passed = typeof rr.passed === 'boolean' ? rr.passed : (rr.isAutomaticSuccess || rr.total >= tn);
@@ -869,7 +869,7 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
     })();
 
     const tn = Number(target.parry ?? 0) || 0;
-    const r = rollTOR({ dice: Number(baseDice ?? 0), tn, featMode: heroFeatMode, weary: !!activeHero?.conditions?.weary });
+    const r = rollTOR({ dice: Number(baseDice ?? 0), tn, featMode: heroFeatMode, weary: !!activeHero?.conditions?.weary, miserable: !!activeHero?.conditions?.miserable });
 
     // Save context for finalize (with or without special success picker)
     heroPendingRef.current = { roll: r, weapon: w, target, tn, seized, wieldMode: heroWieldMode, hasShield: !!(derived as any)?.equippedShield, strength: Number(activeHero?.attributes?.strength ?? activeHero?.strength ?? 0) || 0 };
@@ -904,7 +904,7 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
 
     const target = ctx.target;
     const w: any = ctx.weapon;
-    const r = ctx.roll ?? rollTOR({ dice: 0, tn: ctx.tn, featMode: heroFeatMode, weary: !!activeHero?.conditions?.weary });
+    const r = ctx.roll ?? rollTOR({ dice: 0, tn: ctx.tn, featMode: heroFeatMode, weary: !!activeHero?.conditions?.weary, miserable: !!activeHero?.conditions?.miserable });
     if (!target || !w || !r) {
       heroPendingRef.current = null;
       return;
@@ -1060,7 +1060,7 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
       return Number(activeHero?.skillRatings?.[stanceTask.skill] ?? 0) || 0;
     })();
 
-    const r = rollTOR({ dice, tn, featMode: heroTaskFeatMode, weary: heroTaskWeary });
+    const r = rollTOR({ dice, tn, featMode: heroTaskFeatMode, weary: heroTaskWeary, miserable: !!activeHero?.conditions?.miserable });
     const degrees = r.passed ? (r.icons === 0 ? 'Success' : r.icons === 1 ? 'Great Success' : 'Extraordinary Success') : 'FAIL';
     const txt = `${stanceTask.name} - ${r.passed ? 'PASS' : 'FAIL'} — ${degrees} • TN ${tn}`;
     dispatchMany([
@@ -1101,7 +1101,7 @@ export default function CombatPanel({ state, setState }: { state: any; setState:
     })();
     const target = engagedEnemies[0];
     const tn = Number(target.parry ?? 0) || 0;
-    const r = rollTOR({ dice: rating, tn, weary: !!activeHero?.conditions?.weary });
+    const r = rollTOR({ dice: rating, tn, weary: !!activeHero?.conditions?.weary, miserable: !!activeHero?.conditions?.miserable });
     dispatch({ type: 'ATTEMPT_ESCAPE', mode: 'ROLL', rollPassed: !!r.passed });
     dispatch({ type: 'LOG', text: `Escape roll (${weapon?.name ?? 'weapon'}): ${r.passed ? 'PASS' : 'FAIL'} (TN ${tn}).` });
     // Also log to journal if enabled
