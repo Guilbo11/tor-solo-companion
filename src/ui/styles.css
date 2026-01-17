@@ -33,7 +33,10 @@ button, input, select, textarea { font: inherit; }
   max-width: 1100px;
   margin: 0 auto;
   /* Same safe-area handling as main container */
-  padding: env(safe-area-inset-top) 0 0;
+  padding: env(safe-area-inset-top)
+    calc(16px + env(safe-area-inset-right))
+    0
+    calc(16px + env(safe-area-inset-left));
 }
 .card { background: #111826; border: 1px solid #1f2a3a; border-radius: 16px; padding: 16px; }
 .row { display: flex; gap: 12px; flex-wrap: wrap; }
